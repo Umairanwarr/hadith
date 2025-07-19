@@ -149,10 +149,10 @@ export default function DiplomasPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-amiri font-bold text-green-700">
-                الديبلومات والإجازات
+                الديبلومات الجامعية
               </h1>
               <p className="text-gray-600 mt-2">
-                نظام الشهادات والإجازات العلمية في جامعة الإمام الزُّهري لعلوم الحديث
+                نظام الشهادات والديبلومات الجامعية المعتمدة في جامعة الإمام الزُّهري لعلوم الحديث
               </p>
             </div>
             <Link href="/dashboard">

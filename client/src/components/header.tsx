@@ -83,7 +83,7 @@ export default function Header() {
                     className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    الديبلومات والإجازات
+                    الديبلومات الجامعية
                   </button>
                 </Link>
                 <button className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold">
