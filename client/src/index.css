@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(158, 40%, 34%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+  
+  /* Islamic/University theme colors */
+  --primary-green: hsl(158, 40%, 34%);
+  --secondary-gold: hsl(45, 76%, 58%);
+  --accent-green: hsl(158, 46%, 47%);
+  --light-green: hsl(158, 58%, 75%);
+  --dark-green: hsl(158, 55%, 20%);
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(158, 40%, 34%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    direction: rtl;
+    font-family: 'Cairo', sans-serif;
+  }
+
+  .font-amiri {
+    font-family: 'Amiri', serif;
+  }
+
+  .font-cairo {
+    font-family: 'Cairo', sans-serif;
+  }
+}
+
+@layer components {
+  .islamic-pattern {
+    background-image: 
+      radial-gradient(circle at 25% 25%, var(--secondary-gold) 2px, transparent 2px),
+      radial-gradient(circle at 75% 75%, var(--primary-green) 1px, transparent 1px);
+    background-size: 50px 50px;
+    background-position: 0 0, 25px 25px;
+  }
+  
+  .certificate-border {
+    border-image: repeating-linear-gradient(45deg, var(--secondary-gold), var(--secondary-gold) 10px, var(--primary-green) 10px, var(--primary-green) 20px) 4;
+  }
+  
+  .video-progress {
+    background: linear-gradient(90deg, var(--primary-green) 0%, var(--primary-green) var(--progress, 0%), #e5e7eb var(--progress, 0%), #e5e7eb 100%);
+  }
+  
+  .hover-scale {
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+
+  .btn-primary {
+    @apply bg-[hsl(158,40%,34%)] text-white hover:bg-[hsl(158,46%,47%)] transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-[hsl(45,76%,58%)] text-white hover:bg-yellow-600 transition-colors;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+/* Arabic fonts */
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700&display=swap');
