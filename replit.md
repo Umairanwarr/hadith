@@ -19,6 +19,8 @@ This is a full-stack Islamic educational platform built for "جامعة الإم
 - **Admin Button Cleanup**: Hidden "ترقية إلى مدير" (promote to admin) button from home page dashboard
 - **Course Card Optimization**: Further reduced course card sizes to show more courses (6 per row) with compact design
 - **Logo Update**: Replaced university logo with new official branding featuring mosque, crescent, and Arabic text
+- **Complete Course Addition**: Added all 6 comprehensive university program courses from PDF (Diploma through Doctorate levels)
+- **Hero Section Redesign**: Made dashboard hero section more compact and space-efficient while maintaining visual appeal
 
 ## User Preferences
 
