@@ -22,15 +22,7 @@ export default function Footer() {
             </p>
           </div>
           
-          <div>
-            <h6 className="font-semibold mb-4">روابط سريعة</h6>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="text-green-200 hover:text-white">عن الجامعة</a></li>
-              <li><a href="#" className="text-green-200 hover:text-white">هيئة التدريس</a></li>
-              <li><a href="#" className="text-green-200 hover:text-white">المناهج</a></li>
-              <li><a href="#" className="text-green-200 hover:text-white">القبول</a></li>
-            </ul>
-          </div>
+          
           
           <div>
             <h6 className="font-semibold mb-4">خدمات الطلاب</h6>
