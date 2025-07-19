@@ -12,13 +12,13 @@ export default function Header() {
 
   return (
     <header className="bg-white shadow-lg border-b-2 border-green-500">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-reverse space-x-6">
             <img 
               src={logoPath} 
               alt="شعار الجامعة" 
-              className="h-24 w-24 object-contain" 
+              className="h-32 w-32 object-contain" 
             />
             <div className="mr-4">
               <h1 className="text-2xl font-amiri font-bold text-green-700">
