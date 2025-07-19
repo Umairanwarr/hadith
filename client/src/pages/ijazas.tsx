@@ -30,7 +30,7 @@ const ijazaCategories: IjazaCategory[] = [
   {
     id: 'listening',
     name: 'إجازات السماع',
-    description: 'الإجازات العلمية لسماع كتب الحديث المعتمدة والمشهورة',
+    description: 'مجالس السماع المسجلة لكتب الحديث - يجب الاستماع الكامل للحصول على الإجازة',
     icon: 'fas fa-headphones',
     color: 'text-blue-700',
     bgColor: 'bg-blue-100',
@@ -130,7 +130,7 @@ const ijazaCategories: IjazaCategory[] = [
   {
     id: 'reading',
     name: 'إجازات القراءة',
-    description: 'الإجازات العلمية لقراءة كتب المصطلح وعلوم الحديث والعلل وشروحها',
+    description: 'مجالس القراءة المباشرة - تابع الأحداث على التلجرام والجدول الزمني',
     icon: 'fas fa-book-open',
     color: 'text-green-700',
     bgColor: 'bg-green-100',
@@ -212,7 +212,7 @@ const ijazaCategories: IjazaCategory[] = [
   {
     id: 'memorization',
     name: 'إجازات الحفظ',
-    description: 'الإجازات العلمية لحفظ متون الحديث والمنظومات العلمية',
+    description: 'جلسات اختبار الحفظ المباشرة - تابع الأحداث على التلجرام والجدول الزمني',
     icon: 'fas fa-brain',
     color: 'text-purple-700',
     bgColor: 'bg-purple-100',
@@ -323,20 +323,20 @@ export default function IjazasPage() {
                 <p className="text-green-700 leading-relaxed mb-4">
                   الإجازة العلمية هي إذن من العالم للطالب بأن يروي عنه ما تعلمه أو سمعه منه. 
                   وهي من أهم وسائل نقل العلم في التراث الإسلامي، وتضمن سلامة النقل وصحة الإسناد.
-                  تنقسم الإجازات إلى ثلاثة أنواع رئيسية: السماع والقراءة والحفظ.
+                  تنقسم الإجازات إلى ثلاثة أنواع رئيسية حسب طريقة التحصيل.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div className="bg-white rounded-lg p-3 border border-green-200">
                     <div className="font-semibold text-green-800">إجازات السماع</div>
-                    <div className="text-green-600">للكتب الحديثية الكبرى</div>
+                    <div className="text-green-600">مجالس مسجلة للاستماع الكامل</div>
                   </div>
                   <div className="bg-white rounded-lg p-3 border border-green-200">
                     <div className="font-semibold text-green-800">إجازات القراءة</div>
-                    <div className="text-green-600">لكتب العلوم والشروح</div>
+                    <div className="text-green-600">أحداث مباشرة على التلجرام</div>
                   </div>
                   <div className="bg-white rounded-lg p-3 border border-green-200">
                     <div className="font-semibold text-green-800">إجازات الحفظ</div>
-                    <div className="text-green-600">للمتون والمنظومات</div>
+                    <div className="text-green-600">جلسات اختبار مجدولة</div>
                   </div>
                 </div>
               </div>
@@ -416,9 +416,23 @@ export default function IjazasPage() {
                                 {book.description}
                               </p>
                               <div className="mt-4 pt-3 border-t border-gray-200">
-                                <Button size="sm" variant="outline" className="w-full">
-                                  طلب الإجازة
-                                </Button>
+                                {category.id === 'listening' ? (
+                                  <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                                    <i className="fas fa-play ml-2"></i>
+                                    استماع المجلس
+                                  </Button>
+                                ) : (
+                                  <div className="space-y-2">
+                                    <Button size="sm" variant="outline" className="w-full">
+                                      <i className="fab fa-telegram ml-2"></i>
+                                      تابع التلجرام
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="w-full">
+                                      <i className="fas fa-calendar ml-2"></i>
+                                      الجدول الزمني
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
                             </CardContent>
                           </Card>
@@ -436,37 +450,71 @@ export default function IjazasPage() {
         <Card className="mt-8 bg-blue-50 border-blue-200 max-w-7xl mx-auto">
           <CardContent className="p-6">
             <h3 className="font-amiri font-bold text-blue-800 text-xl mb-4">
-              كيفية الحصول على الإجازة
+              طرق الحصول على الإجازات
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <i className="fas fa-book-reader text-blue-600"></i>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i className="fas fa-headphones text-blue-600 text-xl"></i>
                 </div>
-                <h4 className="font-semibold text-blue-800 mb-2">الدراسة والتحضير</h4>
-                <p className="text-blue-700 text-sm">دراسة الكتاب والتحضير الجيد للمادة العلمية</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <i className="fas fa-user-graduate text-blue-600"></i>
+                <h4 className="font-semibold text-blue-800 mb-3">إجازات السماع</h4>
+                <p className="text-blue-700 text-sm mb-3">استماع كامل للمجالس المسجلة</p>
+                <div className="bg-white rounded p-2 text-xs text-blue-600">
+                  مجالس مسجلة متاحة للاستماع الفوري
                 </div>
-                <h4 className="font-semibold text-blue-800 mb-2">حضور الدروس</h4>
-                <p className="text-blue-700 text-sm">حضور جلسات القراءة أو السماع مع الشيخ المجيز</p>
               </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <i className="fas fa-clipboard-check text-blue-600"></i>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i className="fab fa-telegram text-green-600 text-xl"></i>
                 </div>
-                <h4 className="font-semibold text-blue-800 mb-2">الاختبار</h4>
-                <p className="text-blue-700 text-sm">اجتياز الاختبار النهائي في الكتاب المطلوب</p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <i className="fas fa-certificate text-blue-600"></i>
+                <h4 className="font-semibold text-green-800 mb-3">إجازات القراءة والحفظ</h4>
+                <p className="text-green-700 text-sm mb-3">متابعة الأحداث المباشرة</p>
+                <div className="space-y-2">
+                  <div className="bg-white rounded p-2 text-xs text-green-600">
+                    قناة التلجرام الرسمية
+                  </div>
+                  <div className="bg-white rounded p-2 text-xs text-green-600">
+                    الجدول الزمني على الموقع
+                  </div>
                 </div>
-                <h4 className="font-semibold text-blue-800 mb-2">منح الإجازة</h4>
-                <p className="text-blue-700 text-sm">الحصول على الإجازة العلمية بالسند المتصل</p>
               </div>
+              <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i className="fas fa-certificate text-yellow-600 text-xl"></i>
+                </div>
+                <h4 className="font-semibold text-yellow-800 mb-3">الحصول على الإجازة</h4>
+                <p className="text-yellow-700 text-sm mb-3">بعد إتمام المتطلبات</p>
+                <div className="bg-white rounded p-2 text-xs text-yellow-600">
+                  إجازة رسمية بالسند المتصل
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Official Channels */}
+        <Card className="mt-8 max-w-7xl mx-auto">
+          <CardContent className="p-6">
+            <div className="text-center">
+              <h3 className="font-amiri font-bold text-gray-800 text-xl mb-4">
+                القنوات الرسمية للمتابعة
+              </h3>
+              <p className="text-gray-600 mb-6">
+                تابع الأحداث والجلسات المباشرة للحصول على الإجازات العلمية
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md mx-auto">
+                <Button className="gap-2 bg-blue-500 hover:bg-blue-600 text-white py-3">
+                  <i className="fab fa-telegram text-lg"></i>
+                  قناة التلجرام الرسمية
+                </Button>
+                <Button variant="outline" className="gap-2 py-3">
+                  <i className="fas fa-calendar text-lg"></i>
+                  الجدول الزمني
+                </Button>
+              </div>
+              <p className="text-gray-500 text-sm mt-4">
+                جميع الإجازات عدا إجازات السماع تتطلب متابعة الأحداث المباشرة
+              </p>
             </div>
           </CardContent>
         </Card>

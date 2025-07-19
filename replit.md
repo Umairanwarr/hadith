@@ -26,7 +26,7 @@ This is a full-stack Islamic educational platform built for "جامعة الإم
 - **Color-Coded Level System**: Each academic level has unique color scheme and icons for visual distinction
 - **Levels Button**: Added dedicated levels button in header for easy access to academic progression overview
 - **University Diplomas Page**: Created comprehensive page explaining university certification system accessible from menu with title "الديبلومات الجامعية"
-- **Ijazas Page**: Added comprehensive scholarly certifications page with three categories: listening ijazas for hadith books, reading ijazas for methodology books, and memorization ijazas for texts
+- **Ijazas Page**: Added comprehensive scholarly certifications page with proper implementation - listening ijazas as recorded sessions, reading/memorization ijazas via Telegram and schedule tracking
 
 ## User Preferences
 
