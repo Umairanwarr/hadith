@@ -40,12 +40,7 @@ export default function Header() {
               />
             </div>
             
-            {/* Levels button on right */}
-            <Link href="/levels">
-              <button className="p-2 text-green-700 hover:bg-green-50 rounded-lg transition-colors">
-                <i className="fas fa-layer-group text-xl"></i>
-              </button>
-            </Link>
+            
           </div>
         </div>
       </header>
