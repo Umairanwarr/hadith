@@ -19,6 +19,14 @@ export default function Header() {
       <header className="fixed top-0 left-0 right-0 z-40 bg-white shadow-lg border-b-2 border-green-500">
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
+            {/* Menu button on left */}
+            <button 
+              className="p-2 text-green-700 hover:text-green-800 transition-colors"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <i className="fas fa-bars text-xl"></i>
+            </button>
+            
             {/* Logo centered */}
             <div className="flex-1 flex justify-center pl-[-3px] pr-[-3px] ml-[2px] mr-[2px] mt-[-47px] mb-[-47px]">
               <img 
@@ -28,13 +36,8 @@ export default function Header() {
               />
             </div>
             
-            {/* Menu button on right */}
-            <button 
-              className="p-2 text-green-700 hover:text-green-800 transition-colors"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              <i className="fas fa-bars text-xl"></i>
-            </button>
+            {/* Empty space on right for balance */}
+            <div className="p-2 w-8"></div>
           </div>
         </div>
       </header>

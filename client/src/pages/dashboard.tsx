@@ -154,19 +154,10 @@ export default function Dashboard() {
           <div className="bg-gradient-to-l from-green-600 to-green-700 rounded-3xl text-white p-8 mb-8 shadow-xl">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
-                <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-2xl md:text-3xl font-amiri font-bold flex-1">
+                <div className="mb-4">
+                  <h2 className="text-2xl md:text-3xl font-amiri font-bold">
                     أهلاً وسهلاً بك في رحلتك العلمية
                   </h2>
-                  <Button 
-                    onClick={() => promoteToAdminMutation.mutate()}
-                    disabled={promoteToAdminMutation.isPending}
-                    variant="outline"
-                    size="sm"
-                    className="bg-white/20 border-white/30 text-white hover:bg-white/30 ml-4"
-                  >
-                    ترقية إلى مدير
-                  </Button>
                 </div>
                 <p className="text-lg mb-6 text-green-100">
                   ادرس علوم الحديث الشريف مع نخبة من العلماء المختصين واحصل على شهادات معتمدة
@@ -305,7 +296,7 @@ export default function Dashboard() {
           </section>
         )}
 
-        {/* Available Courses */}
+        {/* Available Courses - Small Cards */}
         <section className="mb-12">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-2xl font-amiri font-bold text-green-700">
@@ -329,45 +320,38 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {availableCourses.map((course) => (
                 <Card key={course.id} className="hover-scale overflow-hidden">
-                  <div className="h-32 bg-gradient-to-br from-green-400 to-green-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                  <div className="h-20 bg-gradient-to-br from-green-400 to-green-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
                     <div className="absolute inset-0 bg-black/10"></div>
                     <div className="relative z-10 text-center">
-                      <i className="fas fa-book-quran text-3xl mb-2"></i>
-                      <h4 className="font-amiri text-sm font-bold opacity-95 px-2">
-                        {course.title}
+                      <i className="fas fa-book-quran text-lg mb-1"></i>
+                      <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                        {course.title.length > 20 ? course.title.substring(0, 20) + '...' : course.title}
                       </h4>
-                      <p className="text-xs opacity-80 mt-1">{course.instructor}</p>
                     </div>
                   </div>
-                  <CardContent className="p-3">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-amiri font-bold text-sm flex-1">{course.title}</h4>
+                  <CardContent className="p-2">
+                    <h4 className="font-amiri font-bold text-xs mb-1 leading-tight">
+                      {course.title.length > 25 ? course.title.substring(0, 25) + '...' : course.title}
+                    </h4>
+                    <p className="text-gray-600 mb-1 text-xs truncate">{course.instructor}</p>
+                    <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
                       <Badge className={`${getLevelColor(course.level)} text-xs px-1 py-0`}>
                         {course.level}
                       </Badge>
-                    </div>
-                    <p className="text-gray-600 mb-2 text-xs">{course.instructor}</p>
-                    <p className="text-xs text-gray-500 mb-3 line-clamp-2">{course.description}</p>
-                    <div className="flex justify-between items-center text-xs text-gray-600 mb-3">
-                      <span>
-                        <i className="fas fa-clock text-xs ml-1"></i> 
+                      <span className="text-xs">
                         {Math.round(course.duration / 60)}س
-                      </span>
-                      <span>
-                        <i className="fas fa-video text-xs ml-1"></i> 
-                        {course.totalLessons}
                       </span>
                     </div>
                     <Button 
                       onClick={() => handleEnroll(course.id)}
                       disabled={enrollMutation.isPending}
                       size="sm"
-                      className="w-full bg-white text-green-700 hover:bg-gray-50 border border-green-700 text-xs"
+                      className="w-full bg-white text-green-700 hover:bg-gray-50 border border-green-700 text-xs py-1 h-6"
                     >
-                      {enrollMutation.isPending ? "جاري..." : "التسجيل"}
+                      {enrollMutation.isPending ? "..." : "تسجيل"}
                     </Button>
                   </CardContent>
                 </Card>
