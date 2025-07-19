@@ -12,6 +12,9 @@ This is a full-stack Islamic educational platform built for "جامعة الإم
 - **Bottom Navigation**: Added fixed bottom navigation bar for main app functions
 - **Admin Access**: Added temporary admin promotion button for testing admin functionality
 - **PDF Integration**: University program document accessible via slide-out menu
+- **Authentic Content Integration**: Updated landing page with 8 foundational pillars from actual university program
+- **6-Level Course System**: Added authentic course initialization reflecting the real university structure
+- **Course Content Overhaul**: Courses now match actual curriculum from preparatory to doctoral level
 
 ## User Preferences
 
@@ -51,20 +54,27 @@ Preferred communication style: Simple, everyday language.
 - **Authorization**: Route-level protection with middleware
 
 ### Database Schema
-- **Users**: Profile information, specialization, learning level
-- **Courses**: Arabic course content with instructor details
-- **Lessons**: Video content with duration and ordering
-- **Enrollments**: User-course relationships with progress tracking
-- **Exams**: Multiple-choice assessments with scoring
-- **Certificates**: Generated achievements with custom designs
-- **Progress Tracking**: Lesson completion and watch time
+- **Users**: Profile information, specialization, learning level, admin roles
+- **Courses**: Authentic 6-level university program content with proper Islamic scholarship progression
+- **Lessons**: Video content with duration and ordering for each course level
+- **Enrollments**: User-course relationships with progress tracking across all levels
+- **Exams**: Multiple-choice assessments with scoring aligned to university standards
+- **Certificates**: Generated achievements matching university diploma system
+- **Progress Tracking**: Comprehensive lesson completion and watch time across all 6 levels
 
 ### Learning Management Features
-- **Course Catalog**: Browse available Hadith courses
-- **Video Player**: Custom player with progress tracking
-- **Exam System**: Timed multiple-choice assessments
-- **Certificate Generation**: Canvas-based Arabic certificates
-- **Progress Dashboard**: Personal learning analytics
+- **6-Level Course System**: Complete progression from preparatory diploma to doctoral level
+  - Level 1: Preparatory Diploma in Hadith Sciences (120 hours)
+  - Level 2: Intermediate Diploma (180 hours) 
+  - Level 3: Certificate in Hadith Sciences (240 hours)
+  - Level 4: Bachelor's in Hadith Science (300 hours)
+  - Level 5: Master's Scholar in Hadith (360 hours)
+  - Level 6: Doctor in Hadith Studies (480 hours)
+- **8 Foundational Pillars**: Memorization, explanation, practical application, instrumental sciences, review, scholarly gatherings, self-study, assessment
+- **Video Player**: Custom player with progress tracking across all levels
+- **Exam System**: Timed assessments aligned with university standards
+- **Certificate Generation**: Canvas-based Arabic certificates matching university diploma system
+- **Progress Dashboard**: Comprehensive analytics across 6 educational levels
 
 ### UI/UX Design
 - **RTL Support**: Full right-to-left Arabic interface

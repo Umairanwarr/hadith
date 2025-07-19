@@ -12,6 +12,62 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useEffect } from "react";
 
+function InitializeCoursesButton() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const initializeMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("/api/admin/initialize-courses", { method: "POST" });
+    },
+    onSuccess: () => {
+      toast({
+        title: "تم بنجاح",
+        description: "تم تحديث المواد الدراسية وفقاً لبرنامج الجامعة الأصيل",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard"] });
+    },
+    onError: (error: any) => {
+      if (error.message?.includes("already exist")) {
+        toast({
+          title: "تنبيه", 
+          description: "المواد الدراسية موجودة بالفعل",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "غير مصرح",
+          description: "تم تسجيل خروجك. جاري تسجيل الدخول مرة أخرى...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "خطأ",
+        description: "فشل في تحديث المواد الدراسية",
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <Button 
+      onClick={() => initializeMutation.mutate()}
+      disabled={initializeMutation.isPending}
+      className="bg-blue-600 hover:bg-blue-700 text-white"
+    >
+      <i className="fas fa-university mr-2"></i>
+      {initializeMutation.isPending ? "جاري التحديث..." : "تحديث المواد وفقاً للبرنامج الأصيل"}
+    </Button>
+  );
+}
+
 interface AdminStats {
   totalUsers: number;
   totalCourses: number;
@@ -191,14 +247,17 @@ export default function AdminDashboard() {
           </TabsList>
 
           <TabsContent value="courses" className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-4">
               <h2 className="text-2xl font-bold">المواد الدراسية</h2>
-              <Link href="/admin/create-course">
-                <Button>
-                  <PlusCircle className="ml-2 h-4 w-4" />
-                  إضافة مادة جديدة
-                </Button>
-              </Link>
+              <div className="flex gap-2 flex-wrap">
+                <InitializeCoursesButton />
+                <Link href="/admin/create-course">
+                  <Button>
+                    <PlusCircle className="ml-2 h-4 w-4" />
+                    إضافة مادة جديدة
+                  </Button>
+                </Link>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

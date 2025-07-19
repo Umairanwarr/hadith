@@ -658,6 +658,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Initialize authentic university courses
+  app.post("/api/admin/initialize-courses", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== "admin") {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Check if courses already exist
+      const existingCourses = await storage.getAllCourses();
+      if (existingCourses.length > 0) {
+        return res.status(400).json({ message: "Courses already exist" });
+      }
+
+      // Create authentic university program courses
+      const coursesData = [
+        {
+          title: "المستوى الأول: الديبلوم التمهيدي في علوم الحديث",
+          description: "مرحلة التأسيس حيث تُبنى القواعد ويأخذ الطالب مفاتيح العلم. يشمل حفظ جزء عمّ وجزء تبارك، والأربعين النووية مع زيادات ابن رجب، والبيقونية في مصطلح الحديث، وتحفة الأطفال في التجويد. مع دراسة السيرة النبوية وأصول النحو والعقيدة الطحاوية.",
+          instructor: "الشيخ محمد الزهري",
+          duration: 120,
+          level: "تمهيدي"
+        },
+        {
+          title: "المستوى الثاني: الدبلوم المتوسط في علوم الحديث", 
+          description: "حفظ 15 حزباً من القرآن الكريم مع عمدة الأحكام لعبد الغني المقدسي (50 حديثاً)، والسلسلة الذهبية في الإسناد. دراسة نخبة الفكر لابن حجر والورقات للجويني، مع التدريب العملي على البحث في صحة الحديث والمصادر الإلكترونية والشبهات المعاصرة حول السنة.",
+          instructor: "الشيخ أحمد المحدث",
+          duration: 180,
+          level: "متوسط"
+        },
+        {
+          title: "المستوى الثالث: الإجازة في علوم الحديث",
+          description: "حفظ 20 حزباً من القرآن الكريم و200 حديث، مع دراسة التاريخ الإسلامي ومناهج المفسرين. التعمق في علم العلل وعلم التخريج، وأصول التفسير وقواعده، والقواعد الفقهية. مع التعرف على تطبيقات الذكاء الاصطناعي في العلوم الشرعية وعلم طبقات المحدثين.",
+          instructor: "الدكتور عبد الرحمن الفقيه",
+          duration: 240,
+          level: "متقدم"
+        },
+        {
+          title: "المستوى الرابع: بكالوريوس في علم الحديث",
+          description: "حفظ 30 حزباً من القرآن الكريم و200 حديث إضافي. التخصص في علم الرجال والتراجم، وعلم التحقيق، ومناهج المحدّثين. دراسة التفسير المقارن والتحليلي، مع التدريب المتقدم على تحقيق النصوص التراثية ومقارنة التفاسير المختلفة والمخطوطات.",
+          instructor: "الأستاذ الدكتور يوسف الحافظ", 
+          duration: 300,
+          level: "بكالوريوس"
+        },
+        {
+          title: "المستوى الخامس: ماجستير عالم بالحديث",
+          description: "حفظ 40 حزباً من القرآن الكريم مع التخصص المتقدم في مناهج التصنيف ومُختلَف الحديث. دراسة علم الأنساب والقبائل، وتاريخ المحدثين المعاصرين وطرقهم إلى الأئمة، وفقه الأئمة الأربعة. التدريب على علم الجدل ومناهج البحث العلمي مع إعداد رسالة الماجستير.",
+          instructor: "العلامة الدكتور محمد الإمام",
+          duration: 360,
+          level: "ماجستير"
+        },
+        {
+          title: "المستوى السادس: دكتور في الدراسات الحديثية",
+          description: "الوصول لحفظ 60 حزباً من القرآن الكريم و1000 حديث شريف. الحصول على إجازات قراءة أو سماع في الكتب التسعة، وإعداد رسالة دكتوراه أصيلة في تخصص دقيق من علوم الحديث. هذا المستوى يؤهل للوصول إلى مرتبة المحدث المُسنِد والإمام الحافظ.",
+          instructor: "الإمام الحافظ الدكتور علي المسند",
+          duration: 480,
+          level: "دكتوراه"
+        }
+      ];
+
+      const createdCourses = [];
+      for (const courseData of coursesData) {
+        const course = await storage.createCourse(courseData);
+        createdCourses.push(course);
+      }
+
+      res.json({ 
+        message: "University program courses initialized successfully",
+        courses: createdCourses 
+      });
+    } catch (error) {
+      console.error("Error initializing courses:", error);
+      res.status(500).json({ message: "Failed to initialize courses" });
+    }
+  });
+
   // Admin dashboard stats
   app.get('/api/admin/dashboard', isAuthenticated, isAdmin, async (req: any, res) => {
     try {

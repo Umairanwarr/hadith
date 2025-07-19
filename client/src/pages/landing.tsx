@@ -39,10 +39,15 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-gradient-to-l from-[hsl(158,40%,34%)] to-[hsl(158,46%,47%)] rounded-2xl text-white p-12 mb-12 islamic-pattern">
             <h2 className="text-4xl font-amiri font-bold mb-6">
-              أهلاً وسهلاً بكم في منصة تعليم الحديث
+              منهج غير مسبوق لإعداد علماء الحديث
             </h2>
-            <p className="text-xl mb-8 text-green-100">
-              ادرس علوم الحديث الشريف مع نخبة من العلماء المختصين واحصل على شهادات معتمدة
+            <p className="text-lg mb-6 text-green-100 leading-relaxed">
+              في زمن باتت فيه العلوم تُتناقل في القاعات دون سند، وتُدرس في النظم الحديثة دون روح، 
+              جاءت جامعة الزهري بمنهجٍ غير مسبوق يمزج بين عراقة السند وجدّة المنهج الأكاديمي
+            </p>
+            <p className="text-base mb-8 text-green-200">
+              منهجنا لا يُقلّد، بل يُجدِّد. لا يُشابه الموجود، بل يبني هويةً جديدة لطالب العلم 
+              تجمع بين الحفظ والوعي، وبين المهارة والتزكية، وبين الرواية والدراية
             </p>
             <Button 
               onClick={handleLogin} 
@@ -95,14 +100,46 @@ export default function Landing() {
           {/* About Section */}
           <Card className="text-right">
             <CardContent className="p-8">
-              <h3 className="font-amiri font-bold text-2xl mb-4 text-[hsl(158,40%,34%)]">
-                عن جامعة الإمام الزُّهري
+              <h3 className="font-amiri font-bold text-2xl mb-6 text-[hsl(158,40%,34%)]">
+                الأركان الثمانية لبرنامجنا التعليمي
               </h3>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                جامعة الإمام الزُّهري لإعداد علماء الحديث المحدثين هي منصة تعليمية متخصصة تهدف إلى نشر علوم الحديث النبوي الشريف وإعداد جيل من الباحثين والعلماء المتميزين في هذا المجال.
-              </p>
-              <p className="text-gray-700 leading-relaxed">
-                نقدم مناهج علمية أصيلة مع أحدث وسائل التعليم الرقمي، تحت إشراف نخبة من كبار علماء الحديث والمختصين في العلوم الشرعية.
+              <div className="grid md:grid-cols-2 gap-4 mb-8">
+                <div className="text-right p-4 border border-green-200 rounded-lg">
+                  <h4 className="font-bold text-green-700 mb-2">1. الحفظ</h4>
+                  <p className="text-sm text-gray-600">حفظ القرآن والمتون والأحاديث بأعلى درجات الإتقان</p>
+                </div>
+                <div className="text-right p-4 border border-green-200 rounded-lg">
+                  <h4 className="font-bold text-green-700 mb-2">2. الشرح</h4>
+                  <p className="text-sm text-gray-600">فهم النصوص بعمق عبر شروح مؤصلة ومبسطة</p>
+                </div>
+                <div className="text-right p-4 border border-green-200 rounded-lg">
+                  <h4 className="font-bold text-green-700 mb-2">3. التطبيق العملي</h4>
+                  <p className="text-sm text-gray-600">تخريج، عرض، سماع، إجازة، مشاريع علمية</p>
+                </div>
+                <div className="text-right p-4 border border-green-200 rounded-lg">
+                  <h4 className="font-bold text-green-700 mb-2">4. علوم الآلة</h4>
+                  <p className="text-sm text-gray-600">التمكين من الأدوات الأساسية مثل النحو والمصطلح وأصول الفقه</p>
+                </div>
+                <div className="text-right p-4 border border-green-200 rounded-lg">
+                  <h4 className="font-bold text-green-700 mb-2">5. المراجعة</h4>
+                  <p className="text-sm text-gray-600">خطط متابعة دورية تضمن رسوخ العلم وثبات المحفوظ</p>
+                </div>
+                <div className="text-right p-4 border border-green-200 rounded-lg">
+                  <h4 className="font-bold text-green-700 mb-2">6. المجالسة والتزكية</h4>
+                  <p className="text-sm text-gray-600">مجالس علمية مع مشايخ مسندين، تُبني فيها الشخصية والسلوك</p>
+                </div>
+                <div className="text-right p-4 border border-green-200 rounded-lg">
+                  <h4 className="font-bold text-green-700 mb-2">7. المطالعة والتكوين الذاتي</h4>
+                  <p className="text-sm text-gray-600">برنامج قراءة منتظم يُنمي استقلالية الطالب العلمية</p>
+                </div>
+                <div className="text-right p-4 border border-green-200 rounded-lg">
+                  <h4 className="font-bold text-green-700 mb-2">8. الاختبار والتقييم</h4>
+                  <p className="text-sm text-gray-600">آليات دقيقة لقياس التقدم من خلال الامتحانات والالتزام والانضباط</p>
+                </div>
+              </div>
+              <p className="text-gray-700 leading-relaxed text-center">
+                كل مستوى يُمثّل مرحلة تربوية متكاملة، ينتقل فيها الطالب حسب اجتهاده وحضوره واجتيازه، 
+                دون تقييد زمني، لينال في ختام كل مرحلة ديبلوماً علمياً مركباً
               </p>
             </CardContent>
           </Card>
