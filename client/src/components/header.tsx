@@ -12,7 +12,7 @@ export default function Header() {
 
   return (
     <header className="bg-white shadow-lg border-b-2 border-green-500">
-      <div className="container mx-auto px-4 py-2">
+      <div className="container mx-auto px-4 py-2 pt-[0px] pb-[0px] pl-[14px] pr-[14px] ml-[2px] mr-[2px] mt-[-21px] mb-[-21px]">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-reverse space-x-6">
             <img 
