@@ -43,7 +43,7 @@ export default function Header() {
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setIsMenuOpen(false)}>
           <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-lg transform transition-transform duration-300" onClick={e => e.stopPropagation()}>
             {/* Menu Header with Logo */}
-            <div className="p-4 bg-green-50 border-b border-green-200">
+            <div className="p-4 border-b border-green-200 bg-[#ffffff]">
               <div className="flex items-center justify-between">
                 <img src={logoPath} alt="شعار الجامعة" className="h-24 w-24 object-contain ml-[9px] mr-[9px] pl-[-14px] pr-[-14px] pt-[5px] pb-[5px] mt-[-16px] mb-[-16px]" />
                 <button onClick={() => setIsMenuOpen(false)} className="text-green-700 hover:text-green-800">
