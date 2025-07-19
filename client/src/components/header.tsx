@@ -14,18 +14,12 @@ export default function Header() {
     <header className="bg-white shadow-lg border-b-2 border-green-500">
       <div className="container mx-auto px-4 py-2 pt-[0px] pb-[0px] pl-[14px] pr-[14px] ml-[2px] mr-[2px] mt-[-21px] mb-[-21px]">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-reverse space-x-6">
+          <div className="flex items-center">
             <img 
               src={logoPath} 
               alt="شعار الجامعة" 
               className="h-32 w-32 object-contain" 
             />
-            <div className="mr-4">
-              <h1 className="font-amiri font-bold text-green-700 text-[16px]">
-                جامعة الإمام الزُّهري
-              </h1>
-              <p className="text-green-600 text-[12px]">لإعداد علماء الحديث المحدثين</p>
-            </div>
           </div>
           
           <nav className="hidden md:flex items-center space-x-reverse space-x-8">
