@@ -155,7 +155,7 @@ export default function Dashboard() {
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
                 <div className="mb-4">
-                  <h2 className="text-2xl md:text-3xl font-amiri font-bold">
+                  <h2 className="text-lg md:text-xl font-amiri font-bold">
                     أهلاً وسهلاً بك في رحلتك العلمية
                   </h2>
                 </div>
