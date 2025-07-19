@@ -78,9 +78,14 @@ export default function Header() {
                 >
                   برنامج الجامعة
                 </button>
-                <button className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold">
-                  الديبلومات والإجازات
-                </button>
+                <Link href="/diplomas">
+                  <button 
+                    className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    الديبلومات والإجازات
+                  </button>
+                </Link>
                 <button className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold">
                   نماذج الديبلومات
                 </button>

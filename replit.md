@@ -25,6 +25,7 @@ This is a full-stack Islamic educational platform built for "جامعة الإم
 - **Level-Based Course Display**: Dashboard now groups courses by academic progression (preparatory to doctorate)
 - **Color-Coded Level System**: Each academic level has unique color scheme and icons for visual distinction
 - **Levels Button**: Added dedicated levels button in header for easy access to academic progression overview
+- **Diplomas & Ijaza Page**: Created comprehensive page explaining university certification system accessible from menu
 
 ## User Preferences
 
