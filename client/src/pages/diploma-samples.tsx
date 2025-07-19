@@ -120,84 +120,132 @@ export default function DiplomaSamples() {
         </div>
 
         {/* Diploma Samples Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {diplomaSamples.map((diploma) => (
-            <Card key={diploma.id} className={`${diploma.bgColor} ${diploma.borderColor} border-2 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden`}>
-              <CardContent className="p-0">
-                {/* Diploma Header */}
-                <div className="bg-white bg-opacity-80 p-6 border-b-2 border-yellow-300">
-                  <div className="flex items-center justify-between mb-4">
-                    <img 
-                      src={logo_2} 
-                      alt="شعار الجامعة" 
-                      className="h-16 w-16 object-contain"
-                    />
-                    <div className="text-right">
-                      <h3 className="font-amiri font-bold text-sm text-gray-600 mb-1">
-                        جامعة الإمام الزُّهري
+            <div key={diploma.id} className="relative">
+              {/* Diploma Frame */}
+              <div className="relative bg-white border-8 border-yellow-600 shadow-2xl transform hover:scale-105 transition-transform duration-300" style={{aspectRatio: '8.5/11'}}>
+                {/* Decorative Border */}
+                <div className="absolute inset-4 border-4 border-double border-yellow-500 bg-gradient-to-br from-yellow-50 to-orange-50">
+                  {/* Corner Decorations */}
+                  <div className="absolute top-2 left-2 w-8 h-8 border-l-4 border-t-4 border-yellow-600"></div>
+                  <div className="absolute top-2 right-2 w-8 h-8 border-r-4 border-t-4 border-yellow-600"></div>
+                  <div className="absolute bottom-2 left-2 w-8 h-8 border-l-4 border-b-4 border-yellow-600"></div>
+                  <div className="absolute bottom-2 right-2 w-8 h-8 border-r-4 border-b-4 border-yellow-600"></div>
+                  
+                  {/* Header Section */}
+                  <div className="p-6 text-center border-b-2 border-yellow-400">
+                    {/* University Logo */}
+                    <div className="mb-4">
+                      <img 
+                        src={logo_2} 
+                        alt="شعار الجامعة" 
+                        className="h-20 w-20 object-contain mx-auto"
+                      />
+                    </div>
+                    
+                    {/* University Name */}
+                    <h2 className="font-amiri font-bold text-lg text-gray-800 mb-1">
+                      جامعة الإمام الزُّهري
+                    </h2>
+                    <p className="text-sm text-gray-600 mb-3">
+                      للعلوم الشرعية وعلوم الحديث النبوي الشريف
+                    </p>
+                    
+                    {/* Certificate Title */}
+                    <div className="relative">
+                      <h1 className="font-amiri font-bold text-2xl text-yellow-700 mb-2">
+                        شـهـادة
+                      </h1>
+                      <div className="w-32 h-1 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto rounded"></div>
+                    </div>
+                  </div>
+
+                  {/* Main Content */}
+                  <div className="p-6 flex-1">
+                    {/* Level Badge */}
+                    <div className="text-center mb-4">
+                      <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold ${diploma.color} bg-yellow-100 border-2 border-yellow-300`}>
+                        {diploma.level}
+                      </span>
+                    </div>
+
+                    {/* Certificate Text */}
+                    <div className="text-center mb-6">
+                      <p className="font-amiri text-lg text-gray-800 leading-relaxed mb-4">
+                        تشهد جامعة الإمام الزُّهري للعلوم الشرعية
+                        <br />
+                        بأن الطالب/ة
+                      </p>
+                      
+                      {/* Name Field */}
+                      <div className="border-b-2 border-dotted border-gray-500 mx-8 py-2 mb-4">
+                        <span className="text-gray-400 font-amiri">اسم الطالب</span>
+                      </div>
+                      
+                      <p className="font-amiri text-base text-gray-800 leading-relaxed mb-4">
+                        قد أتم/ت بنجاح جميع متطلبات الحصول على
+                      </p>
+                      
+                      {/* Diploma Title */}
+                      <h3 className="font-amiri font-bold text-lg text-yellow-700 mb-4 leading-relaxed">
+                        {diploma.title}
                       </h3>
-                      <p className="text-xs text-gray-500">
-                        للعلوم الشرعية وعلوم الحديث
+                      
+                      <p className="font-amiri text-sm text-gray-700 leading-relaxed mb-4">
+                        {diploma.description}
+                      </p>
+                      
+                      <p className="font-amiri text-base text-gray-800">
+                        بعدد ساعات تدريبية: <span className="font-bold text-yellow-700">{diploma.hours} ساعة</span>
                       </p>
                     </div>
                   </div>
-                  
-                  <div className="text-center">
-                    <h2 className="font-amiri font-bold text-xl mb-2 text-gray-800">
-                      شـهـادة
-                    </h2>
-                    <div className="w-24 h-0.5 bg-yellow-400 mx-auto"></div>
-                  </div>
-                </div>
 
-                {/* Diploma Content */}
-                <div className="p-6">
-                  <div className="text-center mb-6">
-                    <div className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${diploma.color} bg-white bg-opacity-70 mb-3`}>
-                      {diploma.level}
+                  {/* Footer Section */}
+                  <div className="p-4 border-t-2 border-yellow-400">
+                    {/* Signature Section */}
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="text-center">
+                        {/* Official Seal */}
+                        <div className="w-16 h-16 rounded-full border-4 border-yellow-600 bg-yellow-100 flex items-center justify-center mb-2 mx-auto">
+                          <div className="w-10 h-10 rounded-full bg-yellow-600 flex items-center justify-center">
+                            <i className="fas fa-stamp text-white text-sm"></i>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 font-amiri">الختم الرسمي</p>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="border-b-2 border-gray-500 w-24 mb-2"></div>
+                        <p className="text-xs text-gray-600 font-amiri">توقيع العميد</p>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="border-b-2 border-gray-500 w-20 mb-2"></div>
+                        <p className="text-xs text-gray-600 font-amiri">التاريخ</p>
+                      </div>
                     </div>
-                    <h3 className="font-amiri font-bold text-lg mb-2 text-gray-800 leading-relaxed">
-                      {diploma.title}
-                    </h3>
-                    <p className="text-gray-700 text-sm leading-relaxed mb-4">
-                      {diploma.description}
-                    </p>
-                  </div>
-
-                  {/* Certificate Text */}
-                  <div className="bg-white bg-opacity-60 rounded-lg p-4 mb-4 text-center">
-                    <p className="text-gray-700 text-sm leading-relaxed font-amiri">
-                      تشهد جامعة الإمام الزُّهري للعلوم الشرعية بأن الطالب/ة
-                    </p>
-                    <div className="border-b-2 border-dotted border-gray-400 my-3 mx-8"></div>
-                    <p className="text-gray-700 text-sm leading-relaxed font-amiri">
-                      قد أتم/ت بنجاح متطلبات الحصول على هذه الشهادة
-                      <br />
-                      بعدد ساعات تدريبية: <span className="font-bold">{diploma.hours} ساعة</span>
-                    </p>
-                  </div>
-
-                  {/* Signature Section */}
-                  <div className="flex justify-between items-end text-xs text-gray-600">
+                    
+                    {/* Serial Number */}
                     <div className="text-center">
-                      <div className="border-b border-gray-400 w-20 mb-1"></div>
-                      <p>التوقيع</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="border-b border-gray-400 w-20 mb-1"></div>
-                      <p>التاريخ</p>
+                      <p className="text-xs text-gray-500 font-amiri">
+                        رقم الشهادة: {diploma.id.toUpperCase()}-{new Date().getFullYear()}-001
+                      </p>
                     </div>
                   </div>
                 </div>
-
-                {/* Diploma Footer */}
-                <div className="bg-white bg-opacity-80 p-3 text-center border-t-2 border-yellow-300">
-                  <p className="text-xs text-gray-600 font-amiri">
-                    صادرة من جامعة الإمام الزُّهري للعلوم الشرعية - تخصص علوم الحديث النبوي الشريف
-                  </p>
+                
+                {/* Watermark */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
+                  <img 
+                    src={logo_2} 
+                    alt="" 
+                    className="h-64 w-64 object-contain transform rotate-12"
+                  />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
 
