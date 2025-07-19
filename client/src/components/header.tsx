@@ -3,6 +3,8 @@ import { useAuth } from "@/hooks/useAuth";
 import logoPath from "@assets/logo better_1752953272174.png";
 import { useState } from "react";
 
+import logo_better from "@assets/logo better.png";
+
 export default function Header() {
   const { user, isAuthenticated } = useAuth();
   const [location] = useLocation();
@@ -30,7 +32,7 @@ export default function Header() {
             {/* Logo centered */}
             <div className="flex-1 flex justify-center pl-[-3px] pr-[-3px] ml-[2px] mr-[2px] mt-[-47px] mb-[-47px]">
               <img 
-                src={logoPath} 
+                src={logo_better} 
                 alt="شعار الجامعة" 
                 className="h-36 w-36 object-contain" 
               />
