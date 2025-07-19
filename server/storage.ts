@@ -196,28 +196,6 @@ export class DatabaseStorage implements IStorage {
     await db.delete(lessons).where(eq(lessons.id, id));
   }
 
-  // Video management operations
-  async updateLessonVideoStatus(lessonId: number, status: string, videoUrl?: string, duration?: number): Promise<Lesson> {
-    const updateData: any = { 
-      uploadStatus: status, 
-      updatedAt: new Date() 
-    };
-    
-    if (videoUrl) updateData.videoUrl = videoUrl;
-    if (duration) updateData.duration = duration;
-    
-    const [updatedLesson] = await db
-      .update(lessons)
-      .set(updateData)
-      .where(eq(lessons.id, lessonId))
-      .returning();
-    return updatedLesson;
-  }
-
-  async getLessonsWithPendingUploads(): Promise<Lesson[]> {
-    return db.select().from(lessons).where(eq(lessons.uploadStatus, "pending"));
-  }
-
   // Enrollment operations
   async enrollUserInCourse(enrollment: InsertEnrollment): Promise<Enrollment> {
     const [newEnrollment] = await db.insert(enrollments).values(enrollment).returning();

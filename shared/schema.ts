@@ -60,18 +60,11 @@ export const lessons = pgTable("lessons", {
   courseId: integer("course_id").references(() => courses.id).notNull(),
   title: text("title").notNull(),
   description: text("description"),
-  videoUrl: text("video_url"),
-  videoFileName: varchar("video_file_name", { length: 255 }), // Original filename
-  videoFileSize: integer("video_file_size"), // File size in bytes
-  videoMimeType: varchar("video_mime_type", { length: 100 }), // MIME type
-  uploadStatus: varchar("upload_status", { length: 50 }).default("pending"), // pending, processing, completed, failed
+  videoUrl: text("video_url"), // This will be a placeholder for now
   duration: integer("duration"), // in seconds
   order: integer("order").notNull(),
   isActive: boolean("is_active").default(true),
-  uploadedBy: varchar("uploaded_by"), // User ID who uploaded
-  uploadedAt: timestamp("uploaded_at"),
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // User course enrollments
@@ -301,33 +294,23 @@ export const createExamQuestionSchema = insertExamQuestionSchema.omit({ id: true
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
-
-// Course types
+export type CreateCourse = z.infer<typeof createCourseSchema>;
+export type CreateLesson = z.infer<typeof createLessonSchema>;
+export type CreateExam = z.infer<typeof createExamSchema>;
+export type CreateExamQuestion = z.infer<typeof createExamQuestionSchema>;
 export type Course = typeof courses.$inferSelect;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
-export type CreateCourse = z.infer<typeof createCourseSchema>;
-
-// Lesson types  
 export type Lesson = typeof lessons.$inferSelect;
 export type InsertLesson = z.infer<typeof insertLessonSchema>;
-export type CreateLesson = z.infer<typeof createLessonSchema>;
-
-// Enrollment types
 export type Enrollment = typeof enrollments.$inferSelect;
 export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
 export type LessonProgress = typeof lessonProgress.$inferSelect;
 export type InsertLessonProgress = z.infer<typeof insertLessonProgressSchema>;
-
-// Exam types
 export type Exam = typeof exams.$inferSelect;
 export type InsertExam = z.infer<typeof insertExamSchema>;
-export type CreateExam = z.infer<typeof createExamSchema>;
 export type ExamQuestion = typeof examQuestions.$inferSelect;
 export type InsertExamQuestion = z.infer<typeof insertExamQuestionSchema>;
-export type CreateExamQuestion = z.infer<typeof createExamQuestionSchema>;
 export type ExamAttempt = typeof examAttempts.$inferSelect;
 export type InsertExamAttempt = z.infer<typeof insertExamAttemptSchema>;
-
-// Certificate types
 export type Certificate = typeof certificates.$inferSelect;
 export type InsertCertificate = z.infer<typeof insertCertificateSchema>;
