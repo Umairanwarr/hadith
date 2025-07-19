@@ -149,38 +149,30 @@ export default function Dashboard() {
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        {/* Dashboard Hero */}
-        <section className="mb-12">
-          <div className="bg-gradient-to-l from-green-600 to-green-700 rounded-3xl text-white p-8 mb-8 shadow-xl">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div>
-                <div className="mb-4">
-                  <h2 className="text-lg md:text-xl font-amiri font-bold">
-                    أهلاً وسهلاً بك في رحلتك العلمية
-                  </h2>
-                </div>
-                <p className="text-lg mb-6 text-green-100">
+        {/* Dashboard Hero - Compact */}
+        <section className="mb-8">
+          <div className="bg-gradient-to-l from-green-600 to-green-700 rounded-2xl text-white p-4 mb-6 shadow-lg">
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <div className="flex-1">
+                <h2 className="text-sm md:text-base font-amiri font-bold mb-2">
+                  أهلاً وسهلاً بك في رحلتك العلمية
+                </h2>
+                <p className="text-xs md:text-sm mb-3 text-green-100">
                   ادرس علوم الحديث الشريف مع نخبة من العلماء المختصين واحصل على شهادات معتمدة
                 </p>
-                <div className="flex flex-wrap gap-4">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center border border-white/30">
-                    <div className="text-2xl font-bold">{stats?.completedCourses || 0}</div>
-                    <div className="text-sm">مادة مكتملة</div>
-                  </div>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center border border-white/30">
-                    <div className="text-2xl font-bold">{stats?.certificates || 0}</div>
-                    <div className="text-sm">شهادة حاصل عليها</div>
-                  </div>
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center border border-white/30">
-                    <div className="text-2xl font-bold">{stats?.totalHours || 0}</div>
-                    <div className="text-sm">ساعة دراسية</div>
-                  </div>
-                </div>
               </div>
-              <div className="hidden md:block">
-                <div className="text-center text-6xl text-white/30">
-                  <i className="fas fa-quran mb-4"></i>
-                  <div className="text-lg font-amiri">علم الحديث النبوي الشريف</div>
+              <div className="flex gap-2">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-center border border-white/30 min-w-[60px]">
+                  <div className="text-lg font-bold">{stats?.completedCourses || 0}</div>
+                  <div className="text-xs">مادة مكتملة</div>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-center border border-white/30 min-w-[60px]">
+                  <div className="text-lg font-bold">{stats?.certificates || 0}</div>
+                  <div className="text-xs">شهادة</div>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-center border border-white/30 min-w-[60px]">
+                  <div className="text-lg font-bold">{stats?.totalHours || 0}</div>
+                  <div className="text-xs">ساعة</div>
                 </div>
               </div>
             </div>
