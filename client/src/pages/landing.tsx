@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import logoPath from "@assets/logo (1)_1752944342261.png";
+import logoPath from "@assets/logo better_1752953272174.png";
 
 export default function Landing() {
   const handleLogin = () => {

@@ -15,6 +15,10 @@ This is a full-stack Islamic educational platform built for "جامعة الإم
 - **Authentic Content Integration**: Updated landing page with 8 foundational pillars from actual university program
 - **6-Level Course System**: Added authentic course initialization reflecting the real university structure
 - **Course Content Overhaul**: Courses now match actual curriculum from preparatory to doctoral level
+- **Menu Button Repositioning**: Moved hamburger menu button from top right to top left for better UX
+- **Admin Button Cleanup**: Hidden "ترقية إلى مدير" (promote to admin) button from home page dashboard
+- **Course Card Optimization**: Further reduced course card sizes to show more courses (6 per row) with compact design
+- **Logo Update**: Replaced university logo with new official branding featuring mosque, crescent, and Arabic text
 
 ## User Preferences
 

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import logoPath from "@assets/logo (1)_1752944987599.png";
+import logoPath from "@assets/logo better_1752953272174.png";
 import { useState } from "react";
 
 export default function Header() {
