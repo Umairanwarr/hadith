@@ -59,7 +59,8 @@ Preferred communication style: Simple, everyday language.
 
 ### UI/UX Design
 - **RTL Support**: Full right-to-left Arabic interface
-- **Islamic Theme**: Green and gold color scheme
+- **Modern Green Theme**: Clean green and white color scheme
+- **Enhanced Logo**: Larger university logo for better visibility
 - **Responsive Design**: Mobile-first approach
 - **Arabic Typography**: Custom fonts optimized for Arabic text
 - **Accessibility**: ARIA compliant with keyboard navigation

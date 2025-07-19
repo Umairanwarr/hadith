@@ -11,31 +11,31 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-white shadow-lg border-b-4 border-[hsl(45,76%,58%)]">
-      <div className="container mx-auto px-4 py-3">
+    <header className="bg-white shadow-lg border-b-2 border-green-500">
+      <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-reverse space-x-4">
+          <div className="flex items-center space-x-reverse space-x-6">
             <img 
               src={logoPath} 
               alt="شعار الجامعة" 
-              className="h-16 w-16 object-contain" 
+              className="h-24 w-24 object-contain" 
             />
-            <div className="mr-3">
-              <h1 className="text-xl font-amiri font-bold text-[hsl(158,40%,34%)]">
+            <div className="mr-4">
+              <h1 className="text-2xl font-amiri font-bold text-green-700">
                 جامعة الإمام الزُّهري
               </h1>
-              <p className="text-sm text-gray-600">لإعداد علماء الحديث المحدثين</p>
+              <p className="text-base text-green-600">لإعداد علماء الحديث المحدثين</p>
             </div>
           </div>
           
           <nav className="hidden md:flex items-center space-x-reverse space-x-8">
-            <Link href="/" className={`font-semibold ${location === '/' ? 'text-[hsl(158,40%,34%)]' : 'text-gray-600 hover:text-[hsl(158,40%,34%)]'}`}>
+            <Link href="/" className={`font-semibold transition-colors ${location === '/' ? 'text-green-700' : 'text-gray-500 hover:text-green-600'}`}>
               لوحة التحكم
             </Link>
-            <Link href="/certificates" className={`font-semibold ${location === '/certificates' ? 'text-[hsl(158,40%,34%)]' : 'text-gray-600 hover:text-[hsl(158,40%,34%)]'}`}>
+            <Link href="/certificates" className={`font-semibold transition-colors ${location === '/certificates' ? 'text-green-700' : 'text-gray-500 hover:text-green-600'}`}>
               الشهادات
             </Link>
-            <Link href="/profile" className={`font-semibold ${location === '/profile' ? 'text-[hsl(158,40%,34%)]' : 'text-gray-600 hover:text-[hsl(158,40%,34%)]'}`}>
+            <Link href="/profile" className={`font-semibold transition-colors ${location === '/profile' ? 'text-green-700' : 'text-gray-500 hover:text-green-600'}`}>
               الملف الشخصي
             </Link>
           </nav>
@@ -58,7 +58,7 @@ export default function Header() {
             </div>
             
             <button 
-              className="md:hidden p-2 text-[hsl(158,40%,34%)]"
+              className="md:hidden p-2 text-green-700 hover:text-green-800 transition-colors"
               onClick={() => {
                 // Toggle mobile menu
                 const nav = document.querySelector('nav');

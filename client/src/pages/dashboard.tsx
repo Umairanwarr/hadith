@@ -129,7 +129,7 @@ export default function Dashboard() {
       <main className="container mx-auto px-4 py-8">
         {/* Dashboard Hero */}
         <section className="mb-12">
-          <div className="bg-gradient-to-l from-[hsl(158,40%,34%)] to-[hsl(158,46%,47%)] rounded-2xl text-white p-8 mb-8 islamic-pattern">
+          <div className="bg-gradient-to-l from-green-600 to-green-700 rounded-3xl text-white p-8 mb-8 shadow-xl">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
                 <h2 className="text-3xl font-amiri font-bold mb-4">
@@ -139,15 +139,15 @@ export default function Dashboard() {
                   ادرس علوم الحديث الشريف مع نخبة من العلماء المختصين واحصل على شهادات معتمدة
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <div className="bg-white/20 rounded-lg p-4 text-center">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center border border-white/30">
                     <div className="text-2xl font-bold">{stats?.completedCourses || 0}</div>
                     <div className="text-sm">مادة مكتملة</div>
                   </div>
-                  <div className="bg-white/20 rounded-lg p-4 text-center">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center border border-white/30">
                     <div className="text-2xl font-bold">{stats?.certificates || 0}</div>
                     <div className="text-sm">شهادة حاصل عليها</div>
                   </div>
-                  <div className="bg-white/20 rounded-lg p-4 text-center">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center border border-white/30">
                     <div className="text-2xl font-bold">{stats?.totalHours || 0}</div>
                     <div className="text-sm">ساعة دراسية</div>
                   </div>
@@ -155,7 +155,7 @@ export default function Dashboard() {
               </div>
               <div className="hidden md:block">
                 <div className="text-center text-6xl text-white/30">
-                  <i className="fas fa-mosque mb-4"></i>
+                  <i className="fas fa-quran mb-4"></i>
                   <div className="text-lg font-amiri">علم الحديث النبوي الشريف</div>
                 </div>
               </div>
@@ -166,17 +166,17 @@ export default function Dashboard() {
         {/* Current Learning */}
         {enrollments && enrollments.length > 0 && (
           <section className="mb-12">
-            <h3 className="text-2xl font-amiri font-bold text-[hsl(158,40%,34%)] mb-6">
+            <h3 className="text-2xl font-amiri font-bold text-green-700 mb-6">
               متابعة التعلم
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {enrollments.map((enrollment) => (
                 <Card key={enrollment.id} className="hover-scale overflow-hidden">
-                  <div className="h-48 bg-gradient-to-br from-[hsl(158,40%,34%)] to-[hsl(158,46%,47%)] flex flex-col items-center justify-center text-white relative overflow-hidden">
-                    <div className="absolute inset-0 bg-black/20"></div>
+                  <div className="h-48 bg-gradient-to-br from-green-500 to-green-600 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                    <div className="absolute inset-0 bg-black/10"></div>
                     <div className="relative z-10 text-center">
                       <i className="fas fa-quran text-5xl mb-3"></i>
-                      <h4 className="font-amiri text-lg font-bold opacity-90">
+                      <h4 className="font-amiri text-lg font-bold opacity-95">
                         {enrollment.course.title}
                       </h4>
                     </div>
@@ -193,13 +193,13 @@ export default function Dashboard() {
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
-                          className="bg-[hsl(158,40%,34%)] h-2 rounded-full transition-all duration-300" 
+                          className="bg-green-600 h-2 rounded-full transition-all duration-300" 
                           style={{ width: `${Number(enrollment.progress)}%` }}
                         ></div>
                       </div>
                     </div>
                     <Link href={`/courses/${enrollment.courseId}`}>
-                      <Button className="w-full btn-primary">
+                      <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
                         متابعة التعلم
                       </Button>
                     </Link>
@@ -213,7 +213,7 @@ export default function Dashboard() {
         {/* Available Courses */}
         <section className="mb-12">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-2xl font-amiri font-bold text-[hsl(158,40%,34%)]">
+            <h3 className="text-2xl font-amiri font-bold text-green-700">
               المواد الدراسية المتاحة
             </h3>
           </div>
@@ -237,14 +237,14 @@ export default function Dashboard() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {availableCourses.map((course) => (
                 <Card key={course.id} className="hover-scale overflow-hidden">
-                  <div className="h-48 bg-gradient-to-br from-[hsl(45,76%,58%)] to-yellow-600 flex flex-col items-center justify-center text-white relative overflow-hidden">
-                    <div className="absolute inset-0 bg-black/20"></div>
+                  <div className="h-48 bg-gradient-to-br from-green-400 to-green-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                    <div className="absolute inset-0 bg-black/10"></div>
                     <div className="relative z-10 text-center">
                       <i className="fas fa-book-quran text-5xl mb-3"></i>
-                      <h4 className="font-amiri text-lg font-bold opacity-90 px-4">
+                      <h4 className="font-amiri text-lg font-bold opacity-95 px-4">
                         {course.title}
                       </h4>
-                      <p className="text-sm opacity-75 mt-1">{course.instructor}</p>
+                      <p className="text-sm opacity-80 mt-1">{course.instructor}</p>
                     </div>
                   </div>
                   <CardContent className="p-6">
@@ -269,7 +269,7 @@ export default function Dashboard() {
                     <Button 
                       onClick={() => handleEnroll(course.id)}
                       disabled={enrollMutation.isPending}
-                      className="w-full btn-secondary"
+                      className="w-full bg-white text-green-700 hover:bg-gray-50 border border-green-700"
                     >
                       {enrollMutation.isPending ? "جاري التسجيل..." : "التسجيل في المادة"}
                     </Button>

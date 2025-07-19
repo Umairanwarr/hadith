@@ -137,7 +137,7 @@ export default function CourseDetails() {
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <h1 className="text-3xl font-amiri font-bold text-[hsl(158,40%,34%)]">
+                  <h1 className="text-3xl font-amiri font-bold text-green-700">
                     {course.title}
                   </h1>
                   <Badge className={getLevelColor(course.level)}>
@@ -168,8 +168,8 @@ export default function CourseDetails() {
                 )}
               </div>
               
-              <div className="bg-gradient-to-br from-[hsl(158,40%,34%)] to-[hsl(158,46%,47%)] rounded-xl p-8 text-white text-center">
-                <i className="fas fa-mosque text-6xl mb-4 opacity-50"></i>
+              <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-8 text-white text-center">
+                <i className="fas fa-quran text-6xl mb-4 opacity-50"></i>
                 <h3 className="font-amiri text-xl font-bold">علم الحديث النبوي الشريف</h3>
               </div>
             </div>
@@ -180,7 +180,7 @@ export default function CourseDetails() {
         <div className="grid md:grid-cols-4 gap-8">
           {/* Lessons List */}
           <div className="md:col-span-3">
-            <h2 className="text-2xl font-amiri font-bold text-[hsl(158,40%,34%)] mb-6">
+            <h2 className="text-2xl font-amiri font-bold text-green-700 mb-6">
               محتويات المادة
             </h2>
             
@@ -207,7 +207,7 @@ export default function CourseDetails() {
                       <CardContent className="p-6">
                         <div className="flex items-center gap-4">
                           <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white ${
-                            completed ? 'bg-[hsl(158,40%,34%)]' : 'bg-gray-400'
+                            completed ? 'bg-green-600' : 'bg-gray-400'
                           }`}>
                             <span className="font-bold">{index + 1}</span>
                           </div>
@@ -234,7 +234,7 @@ export default function CourseDetails() {
                             {progressPercent > 0 && progressPercent < 100 && (
                               <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
                                 <div 
-                                  className="bg-[hsl(158,40%,34%)] h-1 rounded-full transition-all duration-300" 
+                                  className="bg-green-600 h-1 rounded-full transition-all duration-300" 
                                   style={{ width: `${progressPercent}%` }}
                                 ></div>
                               </div>
@@ -243,12 +243,12 @@ export default function CourseDetails() {
                           
                           <div className="flex items-center gap-2">
                             {completed && (
-                              <i className="fas fa-check-circle text-[hsl(158,40%,34%)] text-xl"></i>
+                              <i className="fas fa-check-circle text-green-600 text-xl"></i>
                             )}
                             <Link href={`/courses/${courseId}/lessons/${lesson.id}`}>
                               <Button 
                                 variant={completed ? "outline" : "default"}
-                                className={completed ? "" : "btn-primary"}
+                                className={completed ? "border-green-600 text-green-600 hover:bg-green-50" : "bg-green-600 hover:bg-green-700 text-white"}
                               >
                                 {completed ? "مراجعة" : "مشاهدة"}
                               </Button>
