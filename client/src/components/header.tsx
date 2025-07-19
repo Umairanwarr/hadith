@@ -99,9 +99,14 @@ export default function Header() {
                     الإجازات
                   </button>
                 </Link>
-                <button className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold">
-                  نماذج الديبلومات
-                </button>
+                <Link href="/diploma-samples">
+                  <button 
+                    className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    نماذج الديبلومات
+                  </button>
+                </Link>
                 <button className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold">
                   المدرسون
                 </button>
