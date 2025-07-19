@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import logoPath from "@assets/logo (1)_1752944342261.png";
+import logoPath from "@assets/logo (1)_1752944987599.png";
 
 export default function Header() {
   const { user, isAuthenticated } = useAuth();
@@ -29,20 +29,14 @@ export default function Header() {
           </div>
           
           <nav className="hidden md:flex items-center space-x-reverse space-x-8">
-            <Link href="/">
-              <a className={`font-semibold ${location === '/' ? 'text-[hsl(158,40%,34%)]' : 'text-gray-600 hover:text-[hsl(158,40%,34%)]'}`}>
-                لوحة التحكم
-              </a>
+            <Link href="/" className={`font-semibold ${location === '/' ? 'text-[hsl(158,40%,34%)]' : 'text-gray-600 hover:text-[hsl(158,40%,34%)]'}`}>
+              لوحة التحكم
             </Link>
-            <Link href="/certificates">
-              <a className={`font-semibold ${location === '/certificates' ? 'text-[hsl(158,40%,34%)]' : 'text-gray-600 hover:text-[hsl(158,40%,34%)]'}`}>
-                الشهادات
-              </a>
+            <Link href="/certificates" className={`font-semibold ${location === '/certificates' ? 'text-[hsl(158,40%,34%)]' : 'text-gray-600 hover:text-[hsl(158,40%,34%)]'}`}>
+              الشهادات
             </Link>
-            <Link href="/profile">
-              <a className={`font-semibold ${location === '/profile' ? 'text-[hsl(158,40%,34%)]' : 'text-gray-600 hover:text-[hsl(158,40%,34%)]'}`}>
-                الملف الشخصي
-              </a>
+            <Link href="/profile" className={`font-semibold ${location === '/profile' ? 'text-[hsl(158,40%,34%)]' : 'text-gray-600 hover:text-[hsl(158,40%,34%)]'}`}>
+              الملف الشخصي
             </Link>
           </nav>
           

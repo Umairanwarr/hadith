@@ -172,8 +172,14 @@ export default function Dashboard() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {enrollments.map((enrollment) => (
                 <Card key={enrollment.id} className="hover-scale overflow-hidden">
-                  <div className="h-48 bg-gradient-to-br from-[hsl(158,40%,34%)] to-[hsl(158,46%,47%)] flex items-center justify-center">
-                    <i className="fas fa-book-open text-4xl text-white"></i>
+                  <div className="h-48 bg-gradient-to-br from-[hsl(158,40%,34%)] to-[hsl(158,46%,47%)] flex flex-col items-center justify-center text-white relative overflow-hidden">
+                    <div className="absolute inset-0 bg-black/20"></div>
+                    <div className="relative z-10 text-center">
+                      <i className="fas fa-quran text-5xl mb-3"></i>
+                      <h4 className="font-amiri text-lg font-bold opacity-90">
+                        {enrollment.course.title}
+                      </h4>
+                    </div>
                   </div>
                   <CardContent className="p-6">
                     <h4 className="font-amiri font-bold text-lg mb-2">
@@ -231,8 +237,15 @@ export default function Dashboard() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {availableCourses.map((course) => (
                 <Card key={course.id} className="hover-scale overflow-hidden">
-                  <div className="h-48 bg-gradient-to-br from-[hsl(45,76%,58%)] to-yellow-600 flex items-center justify-center">
-                    <i className="fas fa-mosque text-4xl text-white"></i>
+                  <div className="h-48 bg-gradient-to-br from-[hsl(45,76%,58%)] to-yellow-600 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                    <div className="absolute inset-0 bg-black/20"></div>
+                    <div className="relative z-10 text-center">
+                      <i className="fas fa-book-quran text-5xl mb-3"></i>
+                      <h4 className="font-amiri text-lg font-bold opacity-90 px-4">
+                        {course.title}
+                      </h4>
+                      <p className="text-sm opacity-75 mt-1">{course.instructor}</p>
+                    </div>
                   </div>
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-3">
