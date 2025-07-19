@@ -45,7 +45,7 @@ export default function Header() {
             {/* Menu Header with Logo */}
             <div className="p-4 bg-green-50 border-b border-green-200">
               <div className="flex items-center justify-between">
-                <img src={logoPath} alt="شعار الجامعة" className="h-24 w-24 object-contain" />
+                <img src={logoPath} alt="شعار الجامعة" className="h-24 w-24 object-contain ml-[9px] mr-[9px] pl-[-14px] pr-[-14px] pt-[5px] pb-[5px] mt-[-16px] mb-[-16px]" />
                 <button onClick={() => setIsMenuOpen(false)} className="text-green-700 hover:text-green-800">
                   <i className="fas fa-times text-xl"></i>
                 </button>
