@@ -40,6 +40,23 @@ export default function Header() {
               />
             </div>
             
+            {/* Live button and Levels button on right */}
+            <div className="flex items-center gap-2">
+              {/* Live Button */}
+              <button className="relative px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors animate-pulse">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+                  LIVE
+                </div>
+              </button>
+              
+              {/* Levels button */}
+              <Link href="/levels">
+                <button className="p-2 text-green-700 hover:bg-green-50 rounded-lg transition-colors">
+                  <i className="fas fa-layer-group text-xl"></i>
+                </button>
+              </Link>
+            </div>
             
           </div>
         </div>
