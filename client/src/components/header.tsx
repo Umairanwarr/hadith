@@ -52,7 +52,7 @@ export default function Header() {
             </div>
             
             <button 
-              className="md:hidden p-2 text-green-700 hover:text-green-800 transition-colors"
+              className="md:hidden p-2 text-green-700 hover:text-green-800 transition-colors ml-[-21px] mr-[-21px]"
               onClick={() => {
                 // Toggle mobile menu
                 const nav = document.querySelector('nav');
