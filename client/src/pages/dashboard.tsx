@@ -145,7 +145,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20" dir="rtl">
+    <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
       <Header />
       
       <main className="container mx-auto px-4 py-8">

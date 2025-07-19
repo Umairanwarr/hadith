@@ -15,16 +15,16 @@ export default function Header() {
 
   return (
     <>
-      {/* Top Header */}
-      <header className="bg-white shadow-lg border-b-2 border-green-500">
+      {/* Top Header - Fixed */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white shadow-lg border-b-2 border-green-500">
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             {/* Logo centered */}
-            <div className="flex-1 flex justify-center">
+            <div className="flex-1 flex justify-center pl-[-3px] pr-[-3px] ml-[2px] mr-[2px] mt-[-47px] mb-[-47px]">
               <img 
                 src={logoPath} 
                 alt="شعار الجامعة" 
-                className="h-32 w-32 object-contain" 
+                className="h-36 w-36 object-contain" 
               />
             </div>
             
@@ -38,7 +38,6 @@ export default function Header() {
           </div>
         </div>
       </header>
-
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setIsMenuOpen(false)}>
@@ -46,7 +45,7 @@ export default function Header() {
             {/* Menu Header with Logo */}
             <div className="p-4 bg-green-50 border-b border-green-200">
               <div className="flex items-center justify-between">
-                <img src={logoPath} alt="شعار الجامعة" className="h-20 w-20 object-contain" />
+                <img src={logoPath} alt="شعار الجامعة" className="h-24 w-24 object-contain" />
                 <button onClick={() => setIsMenuOpen(false)} className="text-green-700 hover:text-green-800">
                   <i className="fas fa-times text-xl"></i>
                 </button>
@@ -108,7 +107,6 @@ export default function Header() {
           </div>
         </div>
       )}
-
       {/* Bottom Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
         <div className="flex justify-around items-center py-2">

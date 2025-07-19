@@ -103,7 +103,7 @@ export default function AdminCreateExam() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-white" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-white pt-24 pb-20" dir="rtl">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <Link href="/admin" className="inline-flex items-center text-green-600 hover:text-green-700 mb-4">

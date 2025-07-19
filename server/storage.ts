@@ -64,6 +64,7 @@ export interface IStorage {
   
   // Exam operations
   getExamByCourse(courseId: number): Promise<Exam | undefined>;
+  getExams(): Promise<Exam[]>;
   getExamQuestions(examId: number): Promise<ExamQuestion[]>;
   createExam(exam: InsertExam): Promise<Exam>;
   updateExam(id: number, updates: Partial<Exam>): Promise<Exam | undefined>;
@@ -273,6 +274,11 @@ export class DatabaseStorage implements IStorage {
     const [exam] = await db.select().from(exams)
       .where(and(eq(exams.courseId, courseId), eq(exams.isActive, true)));
     return exam;
+  }
+
+  async getExams(): Promise<Exam[]> {
+    return db.select().from(exams)
+      .orderBy(desc(exams.createdAt));
   }
 
   async getExamQuestions(examId: number): Promise<ExamQuestion[]> {

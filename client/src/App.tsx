@@ -15,6 +15,7 @@ import Profile from "@/pages/profile";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminCreateCourse from "@/pages/admin-create-course";
 import AdminCreateExam from "@/pages/admin-create-exam";
+import AdminCourseDetails from "@/pages/admin-course-details";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/create-course" component={AdminCreateCourse} />
           <Route path="/admin/create-exam" component={AdminCreateExam} />
+          <Route path="/admin/courses/:id" component={AdminCourseDetails} />
         </>
       )}
       <Route component={NotFound} />

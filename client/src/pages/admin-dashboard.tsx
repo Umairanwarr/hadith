@@ -133,7 +133,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-white" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-white pt-24 pb-20" dir="rtl">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">لوحة الإدارة</h1>
@@ -241,9 +241,9 @@ export default function AdminDashboard() {
                           الدروس: {course.totalLessons || 0}
                         </p>
                         <div className="flex gap-2 pt-4">
-                          <Link href={`/admin/edit-course/${course.id}`}>
+                          <Link href={`/admin/courses/${course.id}`}>
                             <Button size="sm" variant="outline">
-                              <Edit className="h-4 w-4" />
+                              إدارة
                             </Button>
                           </Link>
                           <Button
