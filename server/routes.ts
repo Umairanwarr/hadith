@@ -2,6 +2,26 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+
+// Admin middleware
+const isAdmin = async (req: any, res: any, next: any) => {
+  try {
+    const userId = req.user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = await storage.getUser(userId);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    res.status(500).json({ message: "Failed to verify admin status" });
+  }
+};
 import { 
   insertCourseSchema,
   insertLessonSchema,
@@ -9,7 +29,11 @@ import {
   insertLessonProgressSchema,
   insertExamAttemptSchema,
   insertCertificateSchema,
-  updateProfileSchema
+  updateProfileSchema,
+  createCourseSchema,
+  createLessonSchema,
+  createExamSchema,
+  createExamQuestionSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -254,7 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         correctAnswers,
         passed,
         completedAt: new Date(),
-        duration: Math.floor((Date.now() - attempt.startedAt.getTime()) / 1000),
+        duration: attempt.startedAt ? Math.floor((Date.now() - attempt.startedAt.getTime()) / 1000) : 0,
       });
 
       // Create certificate if passed
@@ -344,6 +368,315 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Admin routes
+  // Create course
+  app.post('/api/admin/courses', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const validationResult = createCourseSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: validationResult.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        });
+      }
+
+      const course = await storage.createCourse(validationResult.data);
+      res.status(201).json(course);
+    } catch (error) {
+      console.error("Error creating course:", error);
+      res.status(500).json({ message: "Failed to create course" });
+    }
+  });
+
+  // Update course
+  app.patch('/api/admin/courses/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const validationResult = createCourseSchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: validationResult.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        });
+      }
+
+      const updatedCourse = await storage.updateCourse(courseId, validationResult.data);
+      if (!updatedCourse) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      res.json(updatedCourse);
+    } catch (error) {
+      console.error("Error updating course:", error);
+      res.status(500).json({ message: "Failed to update course" });
+    }
+  });
+
+  // Delete course
+  app.delete('/api/admin/courses/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      await storage.deleteCourse(courseId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      res.status(500).json({ message: "Failed to delete course" });
+    }
+  });
+
+  // Create lesson
+  app.post('/api/admin/courses/:id/lessons', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const validationResult = createLessonSchema.safeParse({
+        ...req.body,
+        courseId
+      });
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: validationResult.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        });
+      }
+
+      const lesson = await storage.createLesson(validationResult.data);
+      
+      // Update course lesson count
+      await storage.updateCourseLessonCount(courseId);
+      
+      res.status(201).json(lesson);
+    } catch (error) {
+      console.error("Error creating lesson:", error);
+      res.status(500).json({ message: "Failed to create lesson" });
+    }
+  });
+
+  // Update lesson
+  app.patch('/api/admin/lessons/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.id);
+      const validationResult = createLessonSchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: validationResult.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        });
+      }
+
+      const updatedLesson = await storage.updateLesson(lessonId, validationResult.data);
+      if (!updatedLesson) {
+        return res.status(404).json({ message: "Lesson not found" });
+      }
+      res.json(updatedLesson);
+    } catch (error) {
+      console.error("Error updating lesson:", error);
+      res.status(500).json({ message: "Failed to update lesson" });
+    }
+  });
+
+  // Delete lesson
+  app.delete('/api/admin/lessons/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.id);
+      const lesson = await storage.getLesson(lessonId);
+      if (!lesson) {
+        return res.status(404).json({ message: "Lesson not found" });
+      }
+      
+      await storage.deleteLesson(lessonId);
+      
+      // Update course lesson count
+      await storage.updateCourseLessonCount(lesson.courseId);
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting lesson:", error);
+      res.status(500).json({ message: "Failed to delete lesson" });
+    }
+  });
+
+  // Create exam
+  app.post('/api/admin/courses/:id/exams', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const validationResult = createExamSchema.safeParse({
+        ...req.body,
+        courseId
+      });
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: validationResult.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        });
+      }
+
+      const exam = await storage.createExam(validationResult.data);
+      res.status(201).json(exam);
+    } catch (error) {
+      console.error("Error creating exam:", error);
+      res.status(500).json({ message: "Failed to create exam" });
+    }
+  });
+
+  // Update exam
+  app.patch('/api/admin/exams/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const examId = parseInt(req.params.id);
+      const validationResult = createExamSchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: validationResult.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        });
+      }
+
+      const updatedExam = await storage.updateExam(examId, validationResult.data);
+      if (!updatedExam) {
+        return res.status(404).json({ message: "Exam not found" });
+      }
+      res.json(updatedExam);
+    } catch (error) {
+      console.error("Error updating exam:", error);
+      res.status(500).json({ message: "Failed to update exam" });
+    }
+  });
+
+  // Delete exam
+  app.delete('/api/admin/exams/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const examId = parseInt(req.params.id);
+      await storage.deleteExam(examId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting exam:", error);
+      res.status(500).json({ message: "Failed to delete exam" });
+    }
+  });
+
+  // Create exam question
+  app.post('/api/admin/exams/:id/questions', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const examId = parseInt(req.params.id);
+      const validationResult = createExamQuestionSchema.safeParse({
+        ...req.body,
+        examId
+      });
+      
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: validationResult.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        });
+      }
+
+      const question = await storage.createExamQuestion(validationResult.data);
+      
+      // Update exam question count
+      await storage.updateExamQuestionCount(examId);
+      
+      res.status(201).json(question);
+    } catch (error) {
+      console.error("Error creating exam question:", error);
+      res.status(500).json({ message: "Failed to create exam question" });
+    }
+  });
+
+  // Update exam question
+  app.patch('/api/admin/questions/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const questionId = parseInt(req.params.id);
+      const validationResult = createExamQuestionSchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: validationResult.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        });
+      }
+
+      const updatedQuestion = await storage.updateExamQuestion(questionId, validationResult.data);
+      if (!updatedQuestion) {
+        return res.status(404).json({ message: "Question not found" });
+      }
+      res.json(updatedQuestion);
+    } catch (error) {
+      console.error("Error updating exam question:", error);
+      res.status(500).json({ message: "Failed to update exam question" });
+    }
+  });
+
+  // Delete exam question
+  app.delete('/api/admin/questions/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const questionId = parseInt(req.params.id);
+      const question = await storage.getExamQuestion(questionId);
+      if (!question) {
+        return res.status(404).json({ message: "Question not found" });
+      }
+      
+      await storage.deleteExamQuestion(questionId);
+      
+      // Update exam question count
+      await storage.updateExamQuestionCount(question.examId);
+      
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting exam question:", error);
+      res.status(500).json({ message: "Failed to delete exam question" });
+    }
+  });
+
+  // Get admin dashboard data
+  app.get('/api/admin/dashboard', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const stats = await storage.getAdminStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching admin dashboard stats:", error);
+      res.status(500).json({ message: "Failed to fetch admin dashboard stats" });
+    }
+  });
+
+  // Temporary route to promote user to admin (for development only)
+  app.post('/api/promote-to-admin', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      await storage.updateUserRole(userId, 'admin');
+      res.json({ message: "User promoted to admin successfully" });
+    } catch (error) {
+      console.error("Error promoting user to admin:", error);
+      res.status(500).json({ message: "Failed to promote user to admin" });
     }
   });
 

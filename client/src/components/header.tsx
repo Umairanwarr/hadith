@@ -22,7 +22,7 @@ export default function Header() {
             />
           </div>
           
-          <nav className="hidden md:flex items-center space-x-reverse space-x-8">
+          <nav className="hidden md:flex items-center space-x-reverse space-x-8 text-[12px]">
             <Link href="/" className={`font-semibold transition-colors ${location === '/' ? 'text-green-700' : 'text-gray-500 hover:text-green-600'}`}>
               لوحة التحكم
             </Link>
@@ -32,6 +32,11 @@ export default function Header() {
             <Link href="/profile" className={`font-semibold transition-colors ${location === '/profile' ? 'text-green-700' : 'text-gray-500 hover:text-green-600'}`}>
               الملف الشخصي
             </Link>
+            {user.role === 'admin' && (
+              <Link href="/admin" className={`font-semibold transition-colors ${location.startsWith('/admin') ? 'text-green-700' : 'text-gray-500 hover:text-green-600'}`}>
+                الإدارة
+              </Link>
+            )}
           </nav>
           
           <div className="flex items-center space-x-reverse space-x-4">
@@ -43,12 +48,7 @@ export default function Header() {
                   className="h-8 w-8 rounded-full object-cover" 
                 />
               )}
-              <span className="font-semibold text-[12px] ml-[-17px] mr-[-17px] pl-[-7px] pr-[-7px] pt-[-3px] pb-[-3px] mt-[-3px] mb-[-3px]">
-                {user.firstName && user.lastName 
-                  ? `${user.firstName} ${user.lastName}` 
-                  : user.email?.split('@')[0] || 'الطالب'
-                }
-              </span>
+              
             </div>
             
             <button 

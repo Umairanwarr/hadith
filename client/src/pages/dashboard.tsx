@@ -198,14 +198,76 @@ export default function Dashboard() {
                         ></div>
                       </div>
                     </div>
-                    <Link href={`/courses/${enrollment.courseId}`}>
-                      <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-                        متابعة التعلم
+                    <div className="flex gap-2">
+                      <Link href={`/courses/${enrollment.courseId}`} className="flex-1">
+                        <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+                          متابعة التعلم
+                        </Button>
+                      </Link>
+                      {Number(enrollment.progress) >= 100 && (
+                        <Link href={`/courses/${enrollment.courseId}/exam`}>
+                          <Button variant="outline" className="bg-white text-green-700 hover:bg-gray-50 border border-green-700">
+                            <i className="fas fa-clipboard-list"></i>
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Available Exams */}
+        {enrollments && enrollments.length > 0 && (
+          <section className="mb-12">
+            <h3 className="text-2xl font-amiri font-bold text-green-700 mb-6">
+              الاختبارات المتاحة
+            </h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {enrollments
+                .filter(enrollment => Number(enrollment.progress) >= 100)
+                .map((enrollment) => (
+                <Card key={`exam-${enrollment.id}`} className="hover-scale overflow-hidden">
+                  <div className="h-32 bg-gradient-to-br from-orange-500 to-orange-600 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                    <div className="absolute inset-0 bg-black/10"></div>
+                    <div className="relative z-10 text-center">
+                      <i className="fas fa-clipboard-list text-4xl mb-2"></i>
+                      <h4 className="font-amiri text-sm font-bold opacity-95">
+                        اختبار {enrollment.course.title}
+                      </h4>
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <h4 className="font-amiri font-bold text-lg mb-2">
+                      اختبار {enrollment.course.title}
+                    </h4>
+                    <p className="text-gray-600 text-sm mb-4">
+                      الاختبار النهائي للمادة - تم إتمام جميع المحاضرات
+                    </p>
+                    <Link href={`/courses/${enrollment.courseId}/exam`}>
+                      <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                        <i className="fas fa-play ml-2"></i>
+                        بدء الاختبار
                       </Button>
                     </Link>
                   </CardContent>
                 </Card>
               ))}
+              {enrollments.filter(enrollment => Number(enrollment.progress) >= 100).length === 0 && (
+                <Card className="col-span-full">
+                  <CardContent className="p-6 text-center">
+                    <i className="fas fa-lock text-3xl text-gray-400 mb-3"></i>
+                    <h4 className="text-lg font-semibold text-gray-600 mb-2">
+                      لا توجد اختبارات متاحة
+                    </h4>
+                    <p className="text-gray-500 text-sm">
+                      أكمل جميع محاضرات المادة للوصول إلى الاختبار النهائي
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </section>
         )}

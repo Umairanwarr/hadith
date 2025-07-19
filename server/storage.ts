@@ -34,16 +34,22 @@ export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserRole(userId: string, role: string): Promise<void>;
   
   // Course operations
   getAllCourses(): Promise<Course[]>;
   getCourse(id: number): Promise<Course | undefined>;
   createCourse(course: InsertCourse): Promise<Course>;
+  updateCourse(id: number, updates: Partial<Course>): Promise<Course | undefined>;
+  deleteCourse(id: number): Promise<void>;
+  updateCourseLessonCount(courseId: number): Promise<void>;
   
   // Lesson operations
   getLessonsByCourse(courseId: number): Promise<Lesson[]>;
   getLesson(id: number): Promise<Lesson | undefined>;
   createLesson(lesson: InsertLesson): Promise<Lesson>;
+  updateLesson(id: number, updates: Partial<Lesson>): Promise<Lesson | undefined>;
+  deleteLesson(id: number): Promise<void>;
   
   // Enrollment operations
   enrollUserInCourse(enrollment: InsertEnrollment): Promise<Enrollment>;
@@ -59,6 +65,14 @@ export interface IStorage {
   // Exam operations
   getExamByCourse(courseId: number): Promise<Exam | undefined>;
   getExamQuestions(examId: number): Promise<ExamQuestion[]>;
+  createExam(exam: InsertExam): Promise<Exam>;
+  updateExam(id: number, updates: Partial<Exam>): Promise<Exam | undefined>;
+  deleteExam(id: number): Promise<void>;
+  updateExamQuestionCount(examId: number): Promise<void>;
+  createExamQuestion(question: InsertExamQuestion): Promise<ExamQuestion>;
+  updateExamQuestion(id: number, updates: Partial<ExamQuestion>): Promise<ExamQuestion | undefined>;
+  deleteExamQuestion(id: number): Promise<void>;
+  getExamQuestion(id: number): Promise<ExamQuestion | undefined>;
   createExamAttempt(attempt: InsertExamAttempt): Promise<ExamAttempt>;
   getUserExamAttempts(userId: string, examId: number): Promise<ExamAttempt[]>;
   getExamAttempt(id: number): Promise<ExamAttempt | undefined>;
@@ -76,6 +90,17 @@ export interface IStorage {
     totalHours: number;
     averageGrade: number;
   }>;
+  
+  // Admin statistics
+  getAdminStats(): Promise<{
+    totalUsers: number;
+    totalCourses: number;
+    totalExams: number;
+    totalEnrollments: number;
+  }>;
+  
+  // User role management
+  updateUserRole(userId: string, role: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -115,6 +140,31 @@ export class DatabaseStorage implements IStorage {
     return newCourse;
   }
 
+  async updateCourse(id: number, updates: Partial<Course>): Promise<Course | undefined> {
+    const [updatedCourse] = await db
+      .update(courses)
+      .set(updates)
+      .where(eq(courses.id, id))
+      .returning();
+    return updatedCourse;
+  }
+
+  async deleteCourse(id: number): Promise<void> {
+    await db.delete(courses).where(eq(courses.id, id));
+  }
+
+  async updateCourseLessonCount(courseId: number): Promise<void> {
+    const lessonsCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(lessons)
+      .where(eq(lessons.courseId, courseId));
+      
+    await db
+      .update(courses)
+      .set({ totalLessons: lessonsCount[0].count })
+      .where(eq(courses.id, courseId));
+  }
+
   // Lesson operations
   async getLessonsByCourse(courseId: number): Promise<Lesson[]> {
     return db.select().from(lessons)
@@ -130,6 +180,19 @@ export class DatabaseStorage implements IStorage {
   async createLesson(lesson: InsertLesson): Promise<Lesson> {
     const [newLesson] = await db.insert(lessons).values(lesson).returning();
     return newLesson;
+  }
+
+  async updateLesson(id: number, updates: Partial<Lesson>): Promise<Lesson | undefined> {
+    const [updatedLesson] = await db
+      .update(lessons)
+      .set(updates)
+      .where(eq(lessons.id, id))
+      .returning();
+    return updatedLesson;
+  }
+
+  async deleteLesson(id: number): Promise<void> {
+    await db.delete(lessons).where(eq(lessons.id, id));
   }
 
   // Enrollment operations
@@ -218,6 +281,59 @@ export class DatabaseStorage implements IStorage {
       .orderBy(examQuestions.order);
   }
 
+  async createExam(exam: InsertExam): Promise<Exam> {
+    const [newExam] = await db.insert(exams).values(exam).returning();
+    return newExam;
+  }
+
+  async updateExam(id: number, updates: Partial<Exam>): Promise<Exam | undefined> {
+    const [updatedExam] = await db
+      .update(exams)
+      .set(updates)
+      .where(eq(exams.id, id))
+      .returning();
+    return updatedExam;
+  }
+
+  async deleteExam(id: number): Promise<void> {
+    await db.delete(exams).where(eq(exams.id, id));
+  }
+
+  async updateExamQuestionCount(examId: number): Promise<void> {
+    const questionsCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(examQuestions)
+      .where(eq(examQuestions.examId, examId));
+      
+    await db
+      .update(exams)
+      .set({ totalQuestions: questionsCount[0].count })
+      .where(eq(exams.id, examId));
+  }
+
+  async createExamQuestion(question: InsertExamQuestion): Promise<ExamQuestion> {
+    const [newQuestion] = await db.insert(examQuestions).values(question).returning();
+    return newQuestion;
+  }
+
+  async updateExamQuestion(id: number, updates: Partial<ExamQuestion>): Promise<ExamQuestion | undefined> {
+    const [updatedQuestion] = await db
+      .update(examQuestions)
+      .set(updates)
+      .where(eq(examQuestions.id, id))
+      .returning();
+    return updatedQuestion;
+  }
+
+  async deleteExamQuestion(id: number): Promise<void> {
+    await db.delete(examQuestions).where(eq(examQuestions.id, id));
+  }
+
+  async getExamQuestion(id: number): Promise<ExamQuestion | undefined> {
+    const [question] = await db.select().from(examQuestions).where(eq(examQuestions.id, id));
+    return question;
+  }
+
   async createExamAttempt(attempt: InsertExamAttempt): Promise<ExamAttempt> {
     const [newAttempt] = await db.insert(examAttempts).values(attempt).returning();
     return newAttempt;
@@ -271,6 +387,37 @@ export class DatabaseStorage implements IStorage {
     return certificate;
   }
 
+  // Admin statistics
+  async getAdminStats(): Promise<{
+    totalUsers: number;
+    totalCourses: number;
+    totalExams: number;
+    totalEnrollments: number;
+  }> {
+    const [usersCount] = await db.select({
+      count: sql<number>`count(*)::int`
+    }).from(users);
+
+    const [coursesCount] = await db.select({
+      count: sql<number>`count(*)::int`
+    }).from(courses).where(eq(courses.isActive, true));
+
+    const [examsCount] = await db.select({
+      count: sql<number>`count(*)::int`
+    }).from(exams).where(eq(exams.isActive, true));
+
+    const [enrollmentsCount] = await db.select({
+      count: sql<number>`count(*)::int`
+    }).from(enrollments);
+
+    return {
+      totalUsers: usersCount?.count || 0,
+      totalCourses: coursesCount?.count || 0,
+      totalExams: examsCount?.count || 0,
+      totalEnrollments: enrollmentsCount?.count || 0,
+    };
+  }
+
   // Dashboard statistics
   async getUserStats(userId: string): Promise<{
     completedCourses: number;
@@ -309,6 +456,14 @@ export class DatabaseStorage implements IStorage {
       totalHours: Math.round((hoursResult?.totalSeconds || 0) / 3600), // Convert seconds to hours
       averageGrade: Math.round(Number(gradeResult?.avgGrade) || 0),
     };
+  }
+
+  // User role management
+  async updateUserRole(userId: string, role: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, userId));
   }
 }
 

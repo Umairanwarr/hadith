@@ -69,6 +69,26 @@ export default function Profile() {
     }
   }, [user]);
 
+  const promoteToAdminMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest('POST', '/api/promote-to-admin');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "تم الترقية بنجاح",
+        description: "تم ترقيتك إلى مدير",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ في الترقية",
+        description: error.message || "حدث خطأ أثناء الترقية",
+        variant: "destructive",
+      });
+    },
+  });
+
   const updateProfileMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       await apiRequest('PATCH', '/api/profile', data);
@@ -480,6 +500,19 @@ export default function Profile() {
               <CardContent className="p-6">
                 <h3 className="font-amiri font-bold text-lg mb-4">إجراءات سريعة</h3>
                 <div className="grid md:grid-cols-3 gap-4">
+                  {user.role !== 'admin' && (
+                    <Button
+                      onClick={() => promoteToAdminMutation.mutate()}
+                      disabled={promoteToAdminMutation.isPending}
+                      className="flex items-center gap-3 p-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors h-auto"
+                    >
+                      <i className="fas fa-user-shield text-xl"></i>
+                      <div className="text-right">
+                        <div className="font-semibold">ترقية إلى مدير</div>
+                        <div className="text-sm opacity-90">مؤقت - للتطوير</div>
+                      </div>
+                    </Button>
+                  )}
                   <a 
                     href="/" 
                     className="flex items-center gap-3 p-4 bg-[hsl(158,40%,34%)] text-white rounded-lg hover:bg-[hsl(158,46%,47%)] transition-colors"

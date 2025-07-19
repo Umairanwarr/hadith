@@ -35,6 +35,7 @@ export const users = pgTable("users", {
   city: varchar("city"),
   specialization: varchar("specialization"),
   level: varchar("level").default("مبتدئ"),
+  role: varchar("role").default("student"), // student, admin
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -252,10 +253,51 @@ export const updateProfileSchema = insertUserSchema.pick({
   }),
 });
 
+// Admin course creation schema
+export const createCourseSchema = insertCourseSchema.omit({ id: true, createdAt: true }).extend({
+  title: z.string().min(1, "عنوان المادة مطلوب").max(200, "العنوان يجب أن يكون أقل من 200 حرف"),
+  description: z.string().min(1, "وصف المادة مطلوب").max(1000, "الوصف يجب أن يكون أقل من 1000 حرف"),
+  instructor: z.string().min(1, "اسم المدرس مطلوب").max(100, "اسم المدرس يجب أن يكون أقل من 100 حرف"),
+  level: z.enum(["مبتدئ", "متوسط", "متقدم"], { 
+    errorMap: () => ({ message: "يجب اختيار مستوى صحيح" })
+  }),
+  duration: z.number().min(1, "مدة المادة مطلوبة").max(10000, "المدة يجب أن تكون أقل من 10000 دقيقة"),
+});
+
+// Admin lesson creation schema
+export const createLessonSchema = insertLessonSchema.omit({ id: true, createdAt: true }).extend({
+  title: z.string().min(1, "عنوان الدرس مطلوب").max(200, "العنوان يجب أن يكون أقل من 200 حرف"),
+  description: z.string().min(1, "وصف الدرس مطلوب").max(1000, "الوصف يجب أن يكون أقل من 1000 حرف"),
+  videoUrl: z.string().url("رابط الفيديو يجب أن يكون صحيح").optional(),
+  duration: z.number().min(1, "مدة الدرس مطلوبة").max(7200, "المدة يجب أن تكون أقل من 7200 ثانية"),
+  order: z.number().min(1, "ترتيب الدرس مطلوب"),
+});
+
+// Admin exam creation schema
+export const createExamSchema = insertExamSchema.omit({ id: true, createdAt: true }).extend({
+  title: z.string().min(1, "عنوان الاختبار مطلوب").max(200, "العنوان يجب أن يكون أقل من 200 حرف"),
+  description: z.string().min(1, "وصف الاختبار مطلوب").max(1000, "الوصف يجب أن يكون أقل من 1000 حرف"),
+  duration: z.number().min(1, "مدة الاختبار مطلوبة").max(300, "المدة يجب أن تكون أقل من 300 دقيقة"),
+  passingGrade: z.number().min(1, "الدرجة المطلوبة للنجاح مطلوبة").max(100, "الدرجة يجب أن تكون بين 1 و 100").transform(String),
+});
+
+// Admin exam question creation schema
+export const createExamQuestionSchema = insertExamQuestionSchema.omit({ id: true }).extend({
+  question: z.string().min(1, "نص السؤال مطلوب").max(500, "السؤال يجب أن يكون أقل من 500 حرف"),
+  options: z.array(z.string().min(1, "الخيار لا يمكن أن يكون فارغ")).min(2, "يجب أن يكون هناك خياران على الأقل").max(6, "لا يمكن أن يكون هناك أكثر من 6 خيارات"),
+  correctAnswer: z.string().min(1, "الإجابة الصحيحة مطلوبة"),
+  order: z.number().min(1, "ترتيب السؤال مطلوب"),
+  points: z.number().min(0.1, "النقاط يجب أن تكون أكبر من 0").max(10, "النقاط يجب أن تكون أقل من أو تساوي 10").default(1).transform(String),
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
+export type CreateCourse = z.infer<typeof createCourseSchema>;
+export type CreateLesson = z.infer<typeof createLessonSchema>;
+export type CreateExam = z.infer<typeof createExamSchema>;
+export type CreateExamQuestion = z.infer<typeof createExamQuestionSchema>;
 export type Course = typeof courses.$inferSelect;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
 export type Lesson = typeof lessons.$inferSelect;
