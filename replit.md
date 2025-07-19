@@ -29,6 +29,7 @@ This is a full-stack Islamic educational platform built for "جامعة الإم
 - **Ijazas Page**: Added comprehensive scholarly certifications page with proper implementation - listening ijazas as recorded sessions, reading/memorization ijazas via Telegram and schedule tracking
 - **Live Button**: Added animated red LIVE button in header (removed levels button) - ready for Zoom/Google Meet integration when live sessions are available
 - **Diploma Samples Page**: Created prestigious diploma samples page with university logo and authentic diploma designs for all 6 levels
+- **Teachers Page**: Comprehensive faculty page with professors, scholars, and hadith narrators - showing subjects taught and ijaza specializations
 
 ## User Preferences
 

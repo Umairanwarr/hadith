@@ -15,6 +15,7 @@ import LevelsPage from "@/pages/levels";
 import DiplomasPage from "@/pages/diplomas";
 import IjazasPage from "@/pages/ijazas";
 import DiplomaSamples from "@/pages/diploma-samples";
+import Teachers from "@/pages/teachers";
 import Profile from "@/pages/profile";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminCreateCourse from "@/pages/admin-create-course";
@@ -39,6 +40,7 @@ function Router() {
           <Route path="/diplomas" component={DiplomasPage} />
           <Route path="/ijazas" component={IjazasPage} />
           <Route path="/diploma-samples" component={DiplomaSamples} />
+          <Route path="/teachers" component={Teachers} />
           <Route path="/profile" component={Profile} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/create-course" component={AdminCreateCourse} />

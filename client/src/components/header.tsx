@@ -107,9 +107,14 @@ export default function Header() {
                     نماذج الديبلومات
                   </button>
                 </Link>
-                <button className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold">
-                  المدرسون
-                </button>
+                <Link href="/teachers">
+                  <button 
+                    className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    المدرسون
+                  </button>
+                </Link>
               </div>
 
               {/* User Info */}
