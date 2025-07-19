@@ -18,7 +18,7 @@ export default function Header() {
             <img 
               src={logoPath} 
               alt="شعار الجامعة" 
-              className="h-32 w-32 object-contain" 
+              className="h-48 w-48 object-contain" 
             />
           </div>
           
