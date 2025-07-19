@@ -225,6 +225,7 @@ export const certificateRelations = relations(certificates, ({ one }) => ({
 }));
 
 // Insert schemas
+export const insertUserSchema = createInsertSchema(users);
 export const insertCourseSchema = createInsertSchema(courses);
 export const insertLessonSchema = createInsertSchema(lessons);
 export const insertEnrollmentSchema = createInsertSchema(enrollments);
@@ -234,9 +235,27 @@ export const insertExamQuestionSchema = createInsertSchema(examQuestions);
 export const insertExamAttemptSchema = createInsertSchema(examAttempts);
 export const insertCertificateSchema = createInsertSchema(certificates);
 
+// Profile update schema (subset of user fields that can be updated)
+export const updateProfileSchema = insertUserSchema.pick({
+  firstName: true,
+  lastName: true,
+  city: true,
+  specialization: true,
+  level: true,
+}).extend({
+  firstName: z.string().min(1, "الاسم الأول مطلوب").max(50, "الاسم الأول يجب أن يكون أقل من 50 حرف"),
+  lastName: z.string().min(1, "اسم العائلة مطلوب").max(50, "اسم العائلة يجب أن يكون أقل من 50 حرف"),
+  city: z.string().min(1, "المدينة مطلوبة").max(100, "اسم المدينة يجب أن يكون أقل من 100 حرف"),
+  specialization: z.string().min(1, "التخصص مطلوب").max(100, "التخصص يجب أن يكون أقل من 100 حرف"),
+  level: z.enum(["مبتدئ", "متوسط", "متقدم"], { 
+    errorMap: () => ({ message: "يجب اختيار مستوى صحيح" })
+  }),
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type UpdateProfile = z.infer<typeof updateProfileSchema>;
 export type Course = typeof courses.$inferSelect;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
 export type Lesson = typeof lessons.$inferSelect;

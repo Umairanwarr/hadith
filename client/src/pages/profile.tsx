@@ -44,6 +44,8 @@ export default function Profile() {
   
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
     city: '',
     specialization: '',
     level: '',
@@ -58,6 +60,8 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
         city: user.city || '',
         specialization: user.specialization || '',
         level: user.level || 'مبتدئ',
@@ -77,7 +81,7 @@ export default function Profile() {
         description: "تم حفظ التغييرات بنجاح",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "غير مخول",
@@ -89,9 +93,21 @@ export default function Profile() {
         }, 500);
         return;
       }
+
+      // Handle validation errors
+      if (error.message.includes('400:') && error.errors) {
+        const errorMessages = error.errors.map((err: any) => err.message).join(', ');
+        toast({
+          title: "خطأ في البيانات",
+          description: errorMessages,
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "خطأ في التحديث",
-        description: error.message,
+        description: error.message || "حدث خطأ أثناء تحديث الملف الشخصي",
         variant: "destructive",
       });
     },
@@ -112,6 +128,8 @@ export default function Profile() {
   const handleCancel = () => {
     if (user) {
       setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
         city: user.city || '',
         specialization: user.specialization || '',
         level: user.level || 'مبتدئ',
@@ -283,6 +301,36 @@ export default function Profile() {
               </div>
               
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="firstName">الاسم الأول:</Label>
+                  {isEditing ? (
+                    <Input
+                      id="firstName"
+                      value={formData.firstName}
+                      onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      placeholder="أدخل اسمك الأول"
+                      required
+                    />
+                  ) : (
+                    <p className="mt-1 text-sm">{user.firstName || 'غير محدد'}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="lastName">اسم العائلة:</Label>
+                  {isEditing ? (
+                    <Input
+                      id="lastName"
+                      value={formData.lastName}
+                      onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      placeholder="أدخل اسم عائلتك"
+                      required
+                    />
+                  ) : (
+                    <p className="mt-1 text-sm">{user.lastName || 'غير محدد'}</p>
+                  )}
+                </div>
+
                 <div>
                   <Label htmlFor="level">المستوى:</Label>
                   {isEditing ? (

@@ -8,7 +8,8 @@ import {
   insertEnrollmentSchema,
   insertLessonProgressSchema,
   insertExamAttemptSchema,
-  insertCertificateSchema
+  insertCertificateSchema,
+  updateProfileSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -309,7 +310,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/profile', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { city, specialization, level } = req.body;
+      
+      // Validate request body
+      const validationResult = updateProfileSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: validationResult.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message
+          }))
+        });
+      }
+
+      const { firstName, lastName, city, specialization, level } = validationResult.data;
       
       const currentUser = await storage.getUser(userId);
       if (!currentUser) {
@@ -318,9 +332,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const updatedUser = await storage.upsertUser({
         ...currentUser,
+        firstName,
+        lastName,
         city,
         specialization,
         level,
+        updatedAt: new Date(),
       });
 
       res.json(updatedUser);
