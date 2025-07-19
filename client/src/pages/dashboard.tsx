@@ -288,11 +288,11 @@ export default function Dashboard() {
           </section>
         )}
 
-        {/* Available Courses - Small Cards */}
+        {/* Available Courses - Organized by Levels */}
         <section className="mb-12">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-2xl font-amiri font-bold text-green-700">
-              المواد الدراسية المتاحة
+              المواد الدراسية حسب المستوى
             </h3>
           </div>
           
@@ -312,42 +312,321 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {availableCourses.map((course) => (
-                <Card key={course.id} className="hover-scale overflow-hidden">
-                  <div className="h-20 bg-gradient-to-br from-green-400 to-green-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
-                    <div className="absolute inset-0 bg-black/10"></div>
-                    <div className="relative z-10 text-center">
-                      <i className="fas fa-book-quran text-lg mb-1"></i>
-                      <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
-                        {course.title.length > 20 ? course.title.substring(0, 20) + '...' : course.title}
-                      </h4>
+            <div className="space-y-6">
+              {/* Level 1: Preparatory */}
+              {availableCourses.filter(course => course.level === 'تمهيدي').length > 0 && (
+                <div className="border border-gray-200 rounded-xl p-4 bg-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-green-700">1</span>
+                    </div>
+                    <div>
+                      <h4 className="font-amiri font-bold text-lg text-gray-800">المستوى التمهيدي</h4>
+                      <p className="text-sm text-gray-600">الديبلوم التمهيدي في علوم الحديث</p>
                     </div>
                   </div>
-                  <CardContent className="p-2">
-                    <h4 className="font-amiri font-bold text-xs mb-1 leading-tight">
-                      {course.title.length > 25 ? course.title.substring(0, 25) + '...' : course.title}
-                    </h4>
-                    <p className="text-gray-600 mb-1 text-xs truncate">{course.instructor}</p>
-                    <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
-                      <Badge className={`${getLevelColor(course.level)} text-xs px-1 py-0`}>
-                        {course.level}
-                      </Badge>
-                      <span className="text-xs">
-                        {Math.round(course.duration / 60)}س
-                      </span>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {availableCourses.filter(course => course.level === 'تمهيدي').map((course) => (
+                      <Card key={course.id} className="hover-scale overflow-hidden">
+                        <div className="h-16 bg-gradient-to-br from-green-400 to-green-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                          <div className="absolute inset-0 bg-black/10"></div>
+                          <div className="relative z-10 text-center">
+                            <i className="fas fa-seedling text-sm mb-1"></i>
+                            <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                              {course.title.includes(':') ? course.title.split(':')[1].trim() : course.title}
+                            </h4>
+                          </div>
+                        </div>
+                        <CardContent className="p-2">
+                          <p className="text-gray-600 mb-1 text-xs truncate">{course.instructor}</p>
+                          <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
+                            <span>{Math.round(course.duration / 3600)}س</span>
+                            <span>{course.totalLessons} محاضرة</span>
+                          </div>
+                          <Button 
+                            onClick={() => handleEnroll(course.id)}
+                            disabled={enrollMutation.isPending}
+                            size="sm"
+                            className="w-full bg-green-600 text-white hover:bg-green-700 text-xs py-1 h-6"
+                          >
+                            {enrollMutation.isPending ? "..." : "تسجيل"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Level 2: Intermediate */}
+              {availableCourses.filter(course => course.level === 'متوسط').length > 0 && (
+                <div className="border border-gray-200 rounded-xl p-4 bg-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-orange-700">2</span>
                     </div>
-                    <Button 
-                      onClick={() => handleEnroll(course.id)}
-                      disabled={enrollMutation.isPending}
-                      size="sm"
-                      className="w-full bg-white text-green-700 hover:bg-gray-50 border border-green-700 text-xs py-1 h-6"
-                    >
-                      {enrollMutation.isPending ? "..." : "تسجيل"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                    <div>
+                      <h4 className="font-amiri font-bold text-lg text-gray-800">المستوى المتوسط</h4>
+                      <p className="text-sm text-gray-600">الدبلوم المتوسط في علوم الحديث</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {availableCourses.filter(course => course.level === 'متوسط').map((course) => (
+                      <Card key={course.id} className="hover-scale overflow-hidden">
+                        <div className="h-16 bg-gradient-to-br from-orange-400 to-orange-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                          <div className="absolute inset-0 bg-black/10"></div>
+                          <div className="relative z-10 text-center">
+                            <i className="fas fa-book text-sm mb-1"></i>
+                            <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                              {course.title.includes(':') ? course.title.split(':')[1].trim() : course.title}
+                            </h4>
+                          </div>
+                        </div>
+                        <CardContent className="p-2">
+                          <p className="text-gray-600 mb-1 text-xs truncate">{course.instructor}</p>
+                          <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
+                            <span>{Math.round(course.duration / 3600)}س</span>
+                            <span>{course.totalLessons} محاضرة</span>
+                          </div>
+                          <Button 
+                            onClick={() => handleEnroll(course.id)}
+                            disabled={enrollMutation.isPending}
+                            size="sm"
+                            className="w-full bg-orange-500 text-white hover:bg-orange-600 text-xs py-1 h-6"
+                          >
+                            {enrollMutation.isPending ? "..." : "تسجيل"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Level 3: Advanced */}
+              {availableCourses.filter(course => course.level === 'متقدم').length > 0 && (
+                <div className="border border-gray-200 rounded-xl p-4 bg-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-blue-700">3</span>
+                    </div>
+                    <div>
+                      <h4 className="font-amiri font-bold text-lg text-gray-800">مستوى الإجازة</h4>
+                      <p className="text-sm text-gray-600">الإجازة في علوم الحديث</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {availableCourses.filter(course => course.level === 'متقدم').map((course) => (
+                      <Card key={course.id} className="hover-scale overflow-hidden">
+                        <div className="h-16 bg-gradient-to-br from-blue-400 to-blue-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                          <div className="absolute inset-0 bg-black/10"></div>
+                          <div className="relative z-10 text-center">
+                            <i className="fas fa-graduation-cap text-sm mb-1"></i>
+                            <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                              {course.title.includes(':') ? course.title.split(':')[1].trim() : course.title}
+                            </h4>
+                          </div>
+                        </div>
+                        <CardContent className="p-2">
+                          <p className="text-gray-600 mb-1 text-xs truncate">{course.instructor}</p>
+                          <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
+                            <span>{Math.round(course.duration / 3600)}س</span>
+                            <span>{course.totalLessons} محاضرة</span>
+                          </div>
+                          <Button 
+                            onClick={() => handleEnroll(course.id)}
+                            disabled={enrollMutation.isPending}
+                            size="sm"
+                            className="w-full bg-blue-500 text-white hover:bg-blue-600 text-xs py-1 h-6"
+                          >
+                            {enrollMutation.isPending ? "..." : "تسجيل"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Level 4: Bachelor */}
+              {availableCourses.filter(course => course.level === 'بكالوريوس').length > 0 && (
+                <div className="border border-gray-200 rounded-xl p-4 bg-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-purple-700">4</span>
+                    </div>
+                    <div>
+                      <h4 className="font-amiri font-bold text-lg text-gray-800">مستوى البكالوريوس</h4>
+                      <p className="text-sm text-gray-600">بكالوريوس في علم الحديث</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {availableCourses.filter(course => course.level === 'بكالوريوس').map((course) => (
+                      <Card key={course.id} className="hover-scale overflow-hidden">
+                        <div className="h-16 bg-gradient-to-br from-purple-400 to-purple-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                          <div className="absolute inset-0 bg-black/10"></div>
+                          <div className="relative z-10 text-center">
+                            <i className="fas fa-university text-sm mb-1"></i>
+                            <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                              {course.title.includes(':') ? course.title.split(':')[1].trim() : course.title}
+                            </h4>
+                          </div>
+                        </div>
+                        <CardContent className="p-2">
+                          <p className="text-gray-600 mb-1 text-xs truncate">{course.instructor}</p>
+                          <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
+                            <span>{Math.round(course.duration / 3600)}س</span>
+                            <span>{course.totalLessons} محاضرة</span>
+                          </div>
+                          <Button 
+                            onClick={() => handleEnroll(course.id)}
+                            disabled={enrollMutation.isPending}
+                            size="sm"
+                            className="w-full bg-purple-500 text-white hover:bg-purple-600 text-xs py-1 h-6"
+                          >
+                            {enrollMutation.isPending ? "..." : "تسجيل"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Level 5: Master */}
+              {availableCourses.filter(course => course.level === 'ماجستير').length > 0 && (
+                <div className="border border-gray-200 rounded-xl p-4 bg-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-yellow-700">5</span>
+                    </div>
+                    <div>
+                      <h4 className="font-amiri font-bold text-lg text-gray-800">مستوى الماجستير</h4>
+                      <p className="text-sm text-gray-600">ماجستير عالم بالحديث</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {availableCourses.filter(course => course.level === 'ماجستير').map((course) => (
+                      <Card key={course.id} className="hover-scale overflow-hidden">
+                        <div className="h-16 bg-gradient-to-br from-yellow-400 to-yellow-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                          <div className="absolute inset-0 bg-black/10"></div>
+                          <div className="relative z-10 text-center">
+                            <i className="fas fa-scroll text-sm mb-1"></i>
+                            <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                              {course.title.includes(':') ? course.title.split(':')[1].trim() : course.title}
+                            </h4>
+                          </div>
+                        </div>
+                        <CardContent className="p-2">
+                          <p className="text-gray-600 mb-1 text-xs truncate">{course.instructor}</p>
+                          <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
+                            <span>{Math.round(course.duration / 3600)}س</span>
+                            <span>{course.totalLessons} محاضرة</span>
+                          </div>
+                          <Button 
+                            onClick={() => handleEnroll(course.id)}
+                            disabled={enrollMutation.isPending}
+                            size="sm"
+                            className="w-full bg-yellow-500 text-white hover:bg-yellow-600 text-xs py-1 h-6"
+                          >
+                            {enrollMutation.isPending ? "..." : "تسجيل"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Level 6: Doctorate */}
+              {availableCourses.filter(course => course.level === 'دكتوراه').length > 0 && (
+                <div className="border border-gray-200 rounded-xl p-4 bg-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-red-700">6</span>
+                    </div>
+                    <div>
+                      <h4 className="font-amiri font-bold text-lg text-gray-800">مستوى الدكتوراه</h4>
+                      <p className="text-sm text-gray-600">دكتور في الدراسات الحديثية</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {availableCourses.filter(course => course.level === 'دكتوراه').map((course) => (
+                      <Card key={course.id} className="hover-scale overflow-hidden">
+                        <div className="h-16 bg-gradient-to-br from-red-400 to-red-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                          <div className="absolute inset-0 bg-black/10"></div>
+                          <div className="relative z-10 text-center">
+                            <i className="fas fa-crown text-sm mb-1"></i>
+                            <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                              {course.title.includes(':') ? course.title.split(':')[1].trim() : course.title}
+                            </h4>
+                          </div>
+                        </div>
+                        <CardContent className="p-2">
+                          <p className="text-gray-600 mb-1 text-xs truncate">{course.instructor}</p>
+                          <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
+                            <span>{Math.round(course.duration / 3600)}س</span>
+                            <span>{course.totalLessons} محاضرة</span>
+                          </div>
+                          <Button 
+                            onClick={() => handleEnroll(course.id)}
+                            disabled={enrollMutation.isPending}
+                            size="sm"
+                            className="w-full bg-red-500 text-white hover:bg-red-600 text-xs py-1 h-6"
+                          >
+                            {enrollMutation.isPending ? "..." : "تسجيل"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Basic Courses (مبتدئ) */}
+              {availableCourses.filter(course => course.level === 'مبتدئ').length > 0 && (
+                <div className="border border-gray-200 rounded-xl p-4 bg-white">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                      <i className="fas fa-book-open text-sm text-gray-600"></i>
+                    </div>
+                    <div>
+                      <h4 className="font-amiri font-bold text-lg text-gray-800">مواد إضافية</h4>
+                      <p className="text-sm text-gray-600">مواد تكميلية في علوم الحديث</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {availableCourses.filter(course => course.level === 'مبتدئ').map((course) => (
+                      <Card key={course.id} className="hover-scale overflow-hidden">
+                        <div className="h-16 bg-gradient-to-br from-gray-400 to-gray-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                          <div className="absolute inset-0 bg-black/10"></div>
+                          <div className="relative z-10 text-center">
+                            <i className="fas fa-book-open text-sm mb-1"></i>
+                            <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                              {course.title.length > 20 ? course.title.substring(0, 20) + '...' : course.title}
+                            </h4>
+                          </div>
+                        </div>
+                        <CardContent className="p-2">
+                          <p className="text-gray-600 mb-1 text-xs truncate">{course.instructor}</p>
+                          <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
+                            <span>{Math.round(course.duration / 3600)}س</span>
+                            <span>{course.totalLessons} محاضرة</span>
+                          </div>
+                          <Button 
+                            onClick={() => handleEnroll(course.id)}
+                            disabled={enrollMutation.isPending}
+                            size="sm"
+                            className="w-full bg-gray-500 text-white hover:bg-gray-600 text-xs py-1 h-6"
+                          >
+                            {enrollMutation.isPending ? "..." : "تسجيل"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>

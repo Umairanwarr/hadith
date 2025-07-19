@@ -11,7 +11,7 @@ export default function Header() {
   const { user, isAuthenticated } = useAuth();
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSubMenuOpen, setIsSubMenuOpen] = useState(false);
+  const [isSubMenuOpen, setIsSubMenuOpen] = useState<string | null>(null);
 
   if (!isAuthenticated || !user) {
     return null;
@@ -59,9 +59,143 @@ export default function Header() {
               </div>
             </div>
 
-            {/* Menu Content - University Info Only */}
+            {/* Menu Content - Levels and University Info */}
             <div className="p-4">
+              {/* Academic Levels Section */}
+              <div className="mb-6">
+                <h3 className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-200 pb-2">المستويات الأكاديمية</h3>
+                <div className="space-y-2">
+                  <button 
+                    className="w-full text-right p-2 hover:bg-green-50 rounded-lg text-gray-700 text-sm border border-gray-200"
+                    onClick={() => setIsSubMenuOpen(isSubMenuOpen === 'preparatory' ? null : 'preparatory')}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-green-700">1</span>
+                        </div>
+                        <span>المستوى التمهيدي</span>
+                      </div>
+                      <i className={`fas fa-chevron-${isSubMenuOpen === 'preparatory' ? 'up' : 'down'} text-xs`}></i>
+                    </div>
+                  </button>
+                  {isSubMenuOpen === 'preparatory' && (
+                    <div className="bg-gray-50 rounded-lg p-2 mr-8">
+                      <p className="text-xs text-gray-600 mb-2">الديبلوم التمهيدي في علوم الحديث</p>
+                      <p className="text-xs text-gray-500">120 ساعة دراسية • 24 محاضرة</p>
+                    </div>
+                  )}
+
+                  <button 
+                    className="w-full text-right p-2 hover:bg-green-50 rounded-lg text-gray-700 text-sm border border-gray-200"
+                    onClick={() => setIsSubMenuOpen(isSubMenuOpen === 'intermediate' ? null : 'intermediate')}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-orange-700">2</span>
+                        </div>
+                        <span>المستوى المتوسط</span>
+                      </div>
+                      <i className={`fas fa-chevron-${isSubMenuOpen === 'intermediate' ? 'up' : 'down'} text-xs`}></i>
+                    </div>
+                  </button>
+                  {isSubMenuOpen === 'intermediate' && (
+                    <div className="bg-gray-50 rounded-lg p-2 mr-8">
+                      <p className="text-xs text-gray-600 mb-2">الدبلوم المتوسط في علوم الحديث</p>
+                      <p className="text-xs text-gray-500">180 ساعة دراسية • 36 محاضرة</p>
+                    </div>
+                  )}
+
+                  <button 
+                    className="w-full text-right p-2 hover:bg-green-50 rounded-lg text-gray-700 text-sm border border-gray-200"
+                    onClick={() => setIsSubMenuOpen(isSubMenuOpen === 'certificate' ? null : 'certificate')}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-blue-700">3</span>
+                        </div>
+                        <span>مستوى الإجازة</span>
+                      </div>
+                      <i className={`fas fa-chevron-${isSubMenuOpen === 'certificate' ? 'up' : 'down'} text-xs`}></i>
+                    </div>
+                  </button>
+                  {isSubMenuOpen === 'certificate' && (
+                    <div className="bg-gray-50 rounded-lg p-2 mr-8">
+                      <p className="text-xs text-gray-600 mb-2">الإجازة في علوم الحديث</p>
+                      <p className="text-xs text-gray-500">240 ساعة دراسية • 48 محاضرة</p>
+                    </div>
+                  )}
+
+                  <button 
+                    className="w-full text-right p-2 hover:bg-green-50 rounded-lg text-gray-700 text-sm border border-gray-200"
+                    onClick={() => setIsSubMenuOpen(isSubMenuOpen === 'bachelor' ? null : 'bachelor')}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-purple-700">4</span>
+                        </div>
+                        <span>مستوى البكالوريوس</span>
+                      </div>
+                      <i className={`fas fa-chevron-${isSubMenuOpen === 'bachelor' ? 'up' : 'down'} text-xs`}></i>
+                    </div>
+                  </button>
+                  {isSubMenuOpen === 'bachelor' && (
+                    <div className="bg-gray-50 rounded-lg p-2 mr-8">
+                      <p className="text-xs text-gray-600 mb-2">بكالوريوس في علم الحديث</p>
+                      <p className="text-xs text-gray-500">300 ساعة دراسية • 60 محاضرة</p>
+                    </div>
+                  )}
+
+                  <button 
+                    className="w-full text-right p-2 hover:bg-green-50 rounded-lg text-gray-700 text-sm border border-gray-200"
+                    onClick={() => setIsSubMenuOpen(isSubMenuOpen === 'master' ? null : 'master')}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-yellow-700">5</span>
+                        </div>
+                        <span>مستوى الماجستير</span>
+                      </div>
+                      <i className={`fas fa-chevron-${isSubMenuOpen === 'master' ? 'up' : 'down'} text-xs`}></i>
+                    </div>
+                  </button>
+                  {isSubMenuOpen === 'master' && (
+                    <div className="bg-gray-50 rounded-lg p-2 mr-8">
+                      <p className="text-xs text-gray-600 mb-2">ماجستير عالم بالحديث</p>
+                      <p className="text-xs text-gray-500">360 ساعة دراسية • 72 محاضرة</p>
+                    </div>
+                  )}
+
+                  <button 
+                    className="w-full text-right p-2 hover:bg-green-50 rounded-lg text-gray-700 text-sm border border-gray-200"
+                    onClick={() => setIsSubMenuOpen(isSubMenuOpen === 'doctorate' ? null : 'doctorate')}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-red-700">6</span>
+                        </div>
+                        <span>مستوى الدكتوراه</span>
+                      </div>
+                      <i className={`fas fa-chevron-${isSubMenuOpen === 'doctorate' ? 'up' : 'down'} text-xs`}></i>
+                    </div>
+                  </button>
+                  {isSubMenuOpen === 'doctorate' && (
+                    <div className="bg-gray-50 rounded-lg p-2 mr-8">
+                      <p className="text-xs text-gray-600 mb-2">دكتور في الدراسات الحديثية</p>
+                      <p className="text-xs text-gray-500">480 ساعة دراسية • 96 محاضرة</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* University Info Section */}
               <div className="space-y-2">
+                <h3 className="text-sm font-bold text-gray-800 mb-3 border-b border-gray-200 pb-2">معلومات الجامعة</h3>
                 <button className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold">
                   عن الجامعة
                 </button>
