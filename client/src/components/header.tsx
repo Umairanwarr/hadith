@@ -21,7 +21,7 @@ export default function Header() {
               className="h-32 w-32 object-contain" 
             />
             <div className="mr-4">
-              <h1 className="text-2xl font-amiri font-bold text-green-700">
+              <h1 className="font-amiri font-bold text-green-700 text-[16px]">
                 جامعة الإمام الزُّهري
               </h1>
               <p className="text-base text-green-600">لإعداد علماء الحديث المحدثين</p>
