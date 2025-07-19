@@ -4,6 +4,15 @@
 
 This is a full-stack Islamic educational platform built for "جامعة الإمام الزُّهري" (Imam Al-Zuhri University), specializing in Hadith (Islamic tradition) education. The application provides a comprehensive learning management system with course enrollment, video lessons, exams, progress tracking, and certificate generation.
 
+### Recent Changes (January 19, 2025)
+- **Mobile Navigation Redesign**: Implemented new header with centered logo and slide-out menu
+- **University Information Menu**: Added dedicated menu with university info and PDF viewer for program details
+- **Compact Card Layout**: Reduced course card sizes to display 4 per row instead of 3
+- **Enhanced Exam Section**: Added dedicated exam cards section for better visibility
+- **Bottom Navigation**: Added fixed bottom navigation bar for main app functions
+- **Admin Access**: Added temporary admin promotion button for testing admin functionality
+- **PDF Integration**: University program document accessible via slide-out menu
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -60,8 +69,11 @@ Preferred communication style: Simple, everyday language.
 ### UI/UX Design
 - **RTL Support**: Full right-to-left Arabic interface
 - **Modern Green Theme**: Clean green and white color scheme
-- **Enhanced Logo**: Larger university logo for better visibility
-- **Responsive Design**: Mobile-first approach
+- **Mobile-First Navigation**: Centered logo with slide-out menu system
+- **Bottom Navigation Bar**: Fixed bottom navigation for main actions
+- **Compact Card Design**: Smaller course cards (4 per row) for better space usage
+- **University Menu**: Dedicated slide-out menu with university information and PDF viewer
+- **Responsive Design**: Mobile-first approach with larger logos throughout
 - **Arabic Typography**: Custom fonts optimized for Arabic text
 - **Accessibility**: ARIA compliant with keyboard navigation
 

@@ -154,8 +154,8 @@ export default function Dashboard() {
           <div className="bg-gradient-to-l from-green-600 to-green-700 rounded-3xl text-white p-8 mb-8 shadow-xl">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-3xl font-amiri font-bold">
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-2xl md:text-3xl font-amiri font-bold flex-1">
                     أهلاً وسهلاً بك في رحلتك العلمية
                   </h2>
                   <Button 
@@ -163,7 +163,7 @@ export default function Dashboard() {
                     disabled={promoteToAdminMutation.isPending}
                     variant="outline"
                     size="sm"
-                    className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                    className="bg-white/20 border-white/30 text-white hover:bg-white/30 ml-4"
                   >
                     ترقية إلى مدير
                   </Button>

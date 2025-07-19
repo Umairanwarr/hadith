@@ -24,7 +24,7 @@ export default function Header() {
               <img 
                 src={logoPath} 
                 alt="شعار الجامعة" 
-                className="h-24 w-24 object-contain" 
+                className="h-32 w-32 object-contain" 
               />
             </div>
             
@@ -46,70 +46,37 @@ export default function Header() {
             {/* Menu Header with Logo */}
             <div className="p-4 bg-green-50 border-b border-green-200">
               <div className="flex items-center justify-between">
-                <img src={logoPath} alt="شعار الجامعة" className="h-16 w-16 object-contain" />
+                <img src={logoPath} alt="شعار الجامعة" className="h-20 w-20 object-contain" />
                 <button onClick={() => setIsMenuOpen(false)} className="text-green-700 hover:text-green-800">
                   <i className="fas fa-times text-xl"></i>
                 </button>
               </div>
             </div>
 
-            {/* Menu Content */}
+            {/* Menu Content - University Info Only */}
             <div className="p-4">
-              {/* University Info Section */}
-              <div className="mb-6">
-                <button 
-                  className="w-full flex items-center justify-between p-3 text-right bg-gray-50 hover:bg-gray-100 rounded-lg mb-2"
-                  onClick={() => setIsSubMenuOpen(!isSubMenuOpen)}
-                >
-                  <i className={`fas fa-chevron-${isSubMenuOpen ? 'up' : 'down'} text-gray-500`}></i>
-                  <span className="font-semibold text-gray-700">معلومات الجامعة</span>
-                </button>
-                
-                {isSubMenuOpen && (
-                  <div className="bg-white border border-gray-200 rounded-lg p-2 space-y-2">
-                    <button className="w-full text-right p-2 hover:bg-gray-50 rounded text-gray-600">
-                      عن الجامعة
-                    </button>
-                    <button className="w-full text-right p-2 hover:bg-gray-50 rounded text-gray-600">
-                      برنامج الجامعة
-                    </button>
-                    <button className="w-full text-right p-2 hover:bg-gray-50 rounded text-gray-600">
-                      الديبلومات والإجازات
-                    </button>
-                    <button className="w-full text-right p-2 hover:bg-gray-50 rounded text-gray-600">
-                      المدرسون
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Navigation Links */}
               <div className="space-y-2">
-                <Link 
-                  href="/" 
-                  className="w-full flex items-center justify-end p-3 text-right hover:bg-green-50 rounded-lg"
-                  onClick={() => setIsMenuOpen(false)}
+                <button className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold">
+                  عن الجامعة
+                </button>
+                <button 
+                  className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    window.open('/assets/university-program.pdf', '_blank');
+                  }}
                 >
-                  <span className="font-semibold text-gray-700">الصفحة الرئيسية</span>
-                </Link>
-                
-                <Link 
-                  href="/certificates" 
-                  className="w-full flex items-center justify-end p-3 text-right hover:bg-green-50 rounded-lg"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <span className="font-semibold text-gray-700">شهاداتي</span>
-                </Link>
-
-                {user.role === 'admin' && (
-                  <Link 
-                    href="/admin" 
-                    className="w-full flex items-center justify-end p-3 text-right hover:bg-green-50 rounded-lg"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <span className="font-semibold text-gray-700">الإدارة</span>
-                  </Link>
-                )}
+                  برنامج الجامعة
+                </button>
+                <button className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold">
+                  الديبلومات والإجازات
+                </button>
+                <button className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold">
+                  نماذج الديبلومات
+                </button>
+                <button className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold">
+                  المدرسون
+                </button>
               </div>
 
               {/* User Info */}
