@@ -3,6 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import { useState } from 'react';
+import Header from '@/components/header';
+import Footer from '@/components/footer';
 
 interface IjazaBook {
   id: string;
@@ -282,8 +284,10 @@ export default function IjazasPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 rtl">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <Header />
+      
+      {/* Page Header */}
+      <div className="bg-white border-b border-gray-200 mt-20">
         <div className="w-full max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -467,6 +471,8 @@ export default function IjazasPage() {
           </CardContent>
         </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 }
