@@ -8,6 +8,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import { MobileLayoutWrapper } from "@/components/mobile-layout-wrapper";
+import { MobileVideoPlayer } from "@/components/mobile-video-player";
 
 interface Course {
   id: number;

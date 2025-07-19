@@ -35,6 +35,7 @@ function Router() {
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/create-course" component={AdminCreateCourse} />
           <Route path="/admin/create-exam" component={AdminCreateExam} />
+
           <Route path="/admin/courses/:id" component={AdminCourseDetails} />
         </>
       )}

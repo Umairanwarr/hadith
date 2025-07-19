@@ -8,6 +8,9 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import { MobileHeader } from "@/components/mobile-header";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { MobileCourseCard } from "@/components/mobile-course-card";
 
 interface Course {
   id: number;
@@ -146,7 +149,13 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
-      <Header />
+      {/* Mobile Header */}
+      <MobileHeader />
+      
+      {/* Desktop Header */}
+      <div className="hidden md:block">
+        <Header />
+      </div>
       
       <main className="container mx-auto px-4 py-8">
         {/* Dashboard Hero */}
@@ -202,7 +211,8 @@ export default function Dashboard() {
             <h3 className="text-2xl font-amiri font-bold text-green-700 mb-6">
               متابعة التعلم
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {/* Desktop Layout */}
+            <div className="hidden md:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {enrollments.map((enrollment) => (
                 <Card key={enrollment.id} className="hover-scale overflow-hidden">
                   <div className="h-32 bg-gradient-to-br from-green-500 to-green-600 flex flex-col items-center justify-center text-white relative overflow-hidden">
@@ -247,6 +257,18 @@ export default function Dashboard() {
                     </div>
                   </CardContent>
                 </Card>
+              ))}
+            </div>
+            
+            {/* Mobile Layout */}
+            <div className="md:hidden flex flex-col gap-4">
+              {enrollments.map((enrollment) => (
+                <MobileCourseCard 
+                  key={enrollment.id} 
+                  course={enrollment.course} 
+                  isEnrolled={true}
+                  progress={Number(enrollment.progress)}
+                />
               ))}
             </div>
           </section>
@@ -377,7 +399,13 @@ export default function Dashboard() {
         </section>
       </main>
 
-      <Footer />
+      {/* Desktop Footer */}
+      <div className="hidden md:block">
+        <Footer />
+      </div>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }
