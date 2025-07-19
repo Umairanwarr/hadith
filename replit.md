@@ -21,7 +21,7 @@ This is a full-stack Islamic educational platform built for "جامعة الإم
 - **Logo Update**: Replaced university logo with new official branding featuring mosque, crescent, and Arabic text
 - **Complete Course Addition**: Added all 6 comprehensive university program courses from PDF (Diploma through Doctorate levels)
 - **Hero Section Redesign**: Made dashboard hero section more compact and space-efficient while maintaining visual appeal
-- **Dedicated Levels Page**: Created separate page for academic level navigation with collapsible sections
+- **University Diplomas Page**: Created comprehensive levels page titled "الديبلومات الجامعية" with full-width level cards
 - **Level-Based Course Display**: Dashboard now groups courses by academic progression (preparatory to doctorate)
 - **Color-Coded Level System**: Each academic level has unique color scheme and icons for visual distinction
 - **Levels Button**: Added dedicated levels button in header for easy access to academic progression overview

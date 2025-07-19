@@ -113,14 +113,14 @@ export default function LevelsPage() {
     <div className="min-h-screen bg-gray-50 rtl">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-6">
+        <div className="w-full max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-amiri font-bold text-green-700">
-                المستويات الأكاديمية
+                الديبلومات الجامعية
               </h1>
               <p className="text-gray-600 mt-2">
-                نظام التعليم المتدرج في علوم الحديث من المستوى التمهيدي إلى الدكتوراه
+                نظام الشهادات والديبلومات المعتمدة في علوم الحديث من المستوى التمهيدي إلى الدكتوراه
               </p>
             </div>
             <Link href="/dashboard">
@@ -134,7 +134,7 @@ export default function LevelsPage() {
       </div>
 
       {/* Levels Content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="w-full px-4 py-8">
         <div className="space-y-6">
           {levels.map((level, index) => {
             const levelCourses = getCoursesForLevel(level.level);
