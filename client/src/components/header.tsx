@@ -24,7 +24,7 @@ export default function Header() {
               <h1 className="font-amiri font-bold text-green-700 text-[16px]">
                 جامعة الإمام الزُّهري
               </h1>
-              <p className="text-base text-green-600">لإعداد علماء الحديث المحدثين</p>
+              <p className="text-green-600 text-[12px]">لإعداد علماء الحديث المحدثين</p>
             </div>
           </div>
           
