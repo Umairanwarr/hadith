@@ -49,7 +49,7 @@ export default function Header() {
                   className="h-8 w-8 rounded-full object-cover" 
                 />
               )}
-              <span className="text-sm font-semibold">
+              <span className="font-semibold text-[12px]">
                 {user.firstName && user.lastName 
                   ? `${user.firstName} ${user.lastName}` 
                   : user.email?.split('@')[0] || 'الطالب'
