@@ -173,19 +173,11 @@ export default function DiplomasPage() {
                   </p>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="text-center py-3 bg-gray-50 rounded-lg">
-                    <div className="text-xl font-bold text-green-600">
-                      {diploma.hours}
-                    </div>
-                    <div className="text-xs text-gray-500">ساعة دراسية</div>
+                <div className="text-center py-3 bg-gray-50 rounded-lg">
+                  <div className="text-xl font-bold text-green-600">
+                    {diploma.hours}
                   </div>
-                  
-                  <Link href="/levels">
-                    <Button size="sm" className="w-full group-hover:bg-green-600 transition-colors">
-                      عرض التفاصيل
-                    </Button>
-                  </Link>
+                  <div className="text-xs text-gray-500">ساعة دراسية</div>
                 </div>
               </CardContent>
             </Card>
