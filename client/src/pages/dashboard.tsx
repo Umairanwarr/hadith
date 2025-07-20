@@ -351,13 +351,13 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="flex gap-1">
-                      <Link href={`/courses/${enrollment.courseId}`} className="flex-1">
+                      <Link href={`/course/${enrollment.courseId}`} className="flex-1">
                         <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white text-xs">
                           متابعة
                         </Button>
                       </Link>
                       {Number(enrollment.progress) >= 100 && (
-                        <Link href={`/courses/${enrollment.courseId}/exam`}>
+                        <Link href={`/course/${enrollment.courseId}/exam`}>
                           <Button variant="outline" size="sm" className="bg-white text-green-700 hover:bg-gray-50 border border-green-700 px-2">
                             <i className="fas fa-clipboard-list text-xs"></i>
                           </Button>

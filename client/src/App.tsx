@@ -38,9 +38,9 @@ function Router() {
       ) : (
         <>
           <Route path="/" component={Dashboard} />
-          <Route path="/courses/:id" component={CourseDetails} />
-          <Route path="/courses/:courseId/lessons/:lessonId" component={VideoPlayer} />
-          <Route path="/courses/:courseId/exam" component={Exam} />
+          <Route path="/course/:id" component={CourseDetails} />
+          <Route path="/course/:courseId/lessons/:lessonId" component={VideoPlayer} />
+          <Route path="/course/:courseId/exam" component={Exam} />
           <Route path="/certificates" component={Certificates} />
           <Route path="/levels" component={LevelsPage} />
           <Route path="/diplomas" component={DiplomasPage} />
