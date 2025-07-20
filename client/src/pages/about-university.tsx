@@ -87,11 +87,8 @@ export default function AboutUniversity() {
         <section className="mb-12 text-center">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden p-8">
             <h1 className="text-4xl font-amiri font-bold text-gray-800 mb-4">
-              عن جامعة الإمام الزُّهري
+              جامعة الإمام الزُهري لإعداد علماء الحديث والمحدثين
             </h1>
-            <p className="text-xl text-gray-600 mb-6">
-              للعلوم الحديثية والدراسات الإسلامية
-            </p>
             
             {/* University Info Cards */}
             <div className="grid md:grid-cols-2 gap-6 mt-8">
