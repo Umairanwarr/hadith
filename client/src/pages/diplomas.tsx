@@ -99,12 +99,14 @@ export default function DiplomasPage() {
                 نظام الشهادات والديبلومات الجامعية المعتمدة في جامعة الإمام الزُّهري لعلوم الحديث
               </p>
             </div>
-            <Link href="/dashboard">
-              <Button variant="outline" className="gap-2">
-                <i className="fas fa-arrow-right"></i>
-                العودة للرئيسية
-              </Button>
-            </Link>
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => window.location.href = '/'}
+            >
+              <i className="fas fa-arrow-right"></i>
+              العودة للرئيسية
+            </Button>
           </div>
         </div>
       </div>
