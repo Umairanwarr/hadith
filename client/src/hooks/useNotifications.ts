@@ -222,10 +222,17 @@ export const useNotifications = () => {
     }
   }, []);
 
-  // مراقبة المحاضرات المباشرة والتنبيه عند تغيير حالتها
+  // مراقبة المحاضرات المباشرة - يتم استدعاؤها يدوياً عند الحاجة فقط
   const monitorLiveSessions = (sessions: LiveSession[]) => {
+    // تجنب الإشعارات المتكررة
+    const notifiedSessions = JSON.parse(localStorage.getItem('notifiedSessions') || '[]');
+    
     sessions.forEach(session => {
-      if (session.isLive) {
+      if (session.isLive && !notifiedSessions.includes(session.id)) {
+        // إضافة الجلسة للقائمة المُشعر بها
+        notifiedSessions.push(session.id);
+        localStorage.setItem('notifiedSessions', JSON.stringify(notifiedSessions));
+        
         // إشعار فوري للمحاضرات التي أصبحت مباشرة
         toast({
           title: "محاضرة مباشرة الآن!",

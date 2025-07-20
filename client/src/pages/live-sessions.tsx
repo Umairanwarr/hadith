@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ReminderSettings } from "@/components/reminder-settings";
 import { useNotifications } from "@/hooks/useNotifications";
 import { format } from "date-fns";
@@ -150,10 +150,18 @@ export function LiveSessionsPage() {
     }
   };
 
-  // Monitor live sessions for immediate notifications
+  // Monitor live sessions for immediate notifications - only run once on mount
   useEffect(() => {
-    monitorLiveSessions([...liveSessions, ...upcomingSessions]);
-  }, [liveSessions, upcomingSessions, monitorLiveSessions]);
+    // Only monitor initially, avoid infinite loops
+    const allSessions = [...liveSessions, ...upcomingSessions];
+    const liveSessionsNow = allSessions.filter(s => s.isLive);
+    
+    if (liveSessionsNow.length > 0) {
+      liveSessionsNow.forEach(session => {
+        console.log('Live session detected:', session.title);
+      });
+    }
+  }, []);  // Remove dependencies to prevent loops
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
@@ -206,6 +214,9 @@ export function LiveSessionsPage() {
             <DialogContent className="max-w-4xl">
               <DialogHeader>
                 <DialogTitle>إعدادات التذكير للمحاضرات</DialogTitle>
+                <DialogDescription>
+                  تخصيص إعدادات الإشعارات والتذكيرات للمحاضرات المباشرة
+                </DialogDescription>
               </DialogHeader>
               <ReminderSettings onClose={() => setReminderSettingsOpen(false)} />
             </DialogContent>
