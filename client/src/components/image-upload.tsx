@@ -79,11 +79,6 @@ export function ImageUpload({ onImageUpload, currentImage, label, accept = "imag
     }
   };
 
-  const handleUrlInput = (url: string) => {
-    setPreviewUrl(url);
-    onImageUpload(url);
-  };
-
   return (
     <div className="space-y-3">
       <label className="text-sm font-medium">{label}</label>
@@ -109,48 +104,34 @@ export function ImageUpload({ onImageUpload, currentImage, label, accept = "imag
         </div>
       )}
 
-      {/* Upload Options */}
-      <div className="flex flex-col gap-2">
-        {/* File Upload */}
-        <div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={accept}
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="w-full"
-          >
-            {isUploading ? (
-              <>
-                <i className="fas fa-spinner fa-spin ml-2"></i>
-                جاري الرفع...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-upload ml-2"></i>
-                رفع صورة من الجهاز
-              </>
-            )}
-          </Button>
-        </div>
-
-        {/* URL Input */}
-        <div>
-          <input
-            type="url"
-            placeholder="أو أدخل رابط الصورة"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-            value={previewUrl}
-            onChange={(e) => handleUrlInput(e.target.value)}
-          />
-        </div>
+      {/* File Upload */}
+      <div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={accept}
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          className="w-full"
+        >
+          {isUploading ? (
+            <>
+              <i className="fas fa-spinner fa-spin ml-2"></i>
+              جاري الرفع...
+            </>
+          ) : (
+            <>
+              <i className="fas fa-upload ml-2"></i>
+              اختر صورة من الجهاز
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );
