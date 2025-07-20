@@ -71,13 +71,13 @@ function Header() {
             </div>
 
             {/* Menu Content - University Info Only */}
-            <div className="p-4">
-              <div className="space-y-2">
-                <button className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold">
+            <div className="p-3 max-h-[calc(100vh-120px)] overflow-y-auto">
+              <div className="space-y-1">
+                <button className="w-full text-right p-2 hover:bg-green-50 rounded-md text-gray-700 font-medium text-sm">
                   عن الجامعة
                 </button>
                 <button 
-                  className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold"
+                  className="w-full text-right p-2 hover:bg-green-50 rounded-md text-gray-700 font-medium text-sm"
                   onClick={() => {
                     setIsMenuOpen(false);
                     window.open('/assets/university-program.pdf', '_blank');
@@ -87,7 +87,7 @@ function Header() {
                 </button>
                 <Link href="/diplomas">
                   <button 
-                    className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold"
+                    className="w-full text-right p-2 hover:bg-green-50 rounded-md text-gray-700 font-medium text-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     الديبلومات الجامعية
@@ -95,7 +95,7 @@ function Header() {
                 </Link>
                 <Link href="/ijazas">
                   <button 
-                    className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold"
+                    className="w-full text-right p-2 hover:bg-green-50 rounded-md text-gray-700 font-medium text-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     الإجازات
@@ -103,7 +103,7 @@ function Header() {
                 </Link>
                 <Link href="/diploma-samples">
                   <button 
-                    className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold"
+                    className="w-full text-right p-2 hover:bg-green-50 rounded-md text-gray-700 font-medium text-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     نماذج الديبلومات
@@ -111,7 +111,7 @@ function Header() {
                 </Link>
                 <Link href="/teachers">
                   <button 
-                    className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-gray-700 font-semibold"
+                    className="w-full text-right p-2 hover:bg-green-50 rounded-md text-gray-700 font-medium text-sm"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     المدرسون
@@ -120,68 +120,68 @@ function Header() {
                 
                 {/* Teacher Guide for Admin Users */}
                 {user?.role === 'admin' && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs text-gray-500 mb-2 pr-3">للمعلمين والمدراء</p>
+                  <div className="mt-3 pt-2 border-t border-gray-200">
+                    <p className="text-xs text-gray-500 mb-1 pr-2">للمعلمين والمدراء</p>
                     <Link href="/quick-add">
                       <button 
-                        className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-green-700 font-semibold bg-green-50 border border-green-200"
+                        className="w-full text-right p-2 hover:bg-green-50 rounded-md text-green-700 font-medium bg-green-50 border border-green-200 text-sm"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        <i className="fas fa-plus-circle ml-2"></i>
+                        <i className="fas fa-plus-circle ml-1 text-xs"></i>
                         إضافة درس سريع
                       </button>
                     </Link>
                     <Link href="/teacher-guide">
                       <button 
-                        className="w-full text-right p-3 hover:bg-blue-50 rounded-lg text-blue-700 font-semibold bg-blue-50 border border-blue-200 mt-2"
+                        className="w-full text-right p-2 hover:bg-blue-50 rounded-md text-blue-700 font-medium bg-blue-50 border border-blue-200 mt-1 text-sm"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        <i className="fas fa-chalkboard-teacher ml-2"></i>
+                        <i className="fas fa-chalkboard-teacher ml-1 text-xs"></i>
                         دليل المعلم
                       </button>
                     </Link>
                     <Link href="/manage-live-sessions">
                       <button 
-                        className="w-full text-right p-3 hover:bg-red-50 rounded-lg text-red-700 font-semibold bg-red-50 border border-red-200 mt-2"
+                        className="w-full text-right p-2 hover:bg-red-50 rounded-md text-red-700 font-medium bg-red-50 border border-red-200 mt-1 text-sm"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        <i className="fas fa-broadcast-tower ml-2"></i>
+                        <i className="fas fa-broadcast-tower ml-1 text-xs"></i>
                         إدارة البث المباشر
                       </button>
                     </Link>
                     <Link href="/diploma-management">
                       <button 
-                        className="w-full text-right p-3 hover:bg-amber-50 rounded-lg text-amber-700 font-semibold bg-amber-50 border border-amber-200 mt-2"
+                        className="w-full text-right p-2 hover:bg-amber-50 rounded-md text-amber-700 font-medium bg-amber-50 border border-amber-200 mt-1 text-sm"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        <i className="fas fa-certificate ml-2"></i>
+                        <i className="fas fa-certificate ml-1 text-xs"></i>
                         إدارة الديبلومات
                       </button>
                     </Link>
                     <Link href="/certificates">
                       <button 
-                        className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-green-700 font-semibold bg-green-50 border border-green-200 mt-2"
+                        className="w-full text-right p-2 hover:bg-green-50 rounded-md text-green-700 font-medium bg-green-50 border border-green-200 mt-1 text-sm"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        <i className="fas fa-medal ml-2"></i>
+                        <i className="fas fa-medal ml-1 text-xs"></i>
                         شهاداتي
                       </button>
                     </Link>
                     <Link href="/sample-certificates">
                       <button 
-                        className="w-full text-right p-3 hover:bg-purple-50 rounded-lg text-purple-700 font-semibold bg-purple-50 border border-purple-200 mt-2"
+                        className="w-full text-right p-2 hover:bg-purple-50 rounded-md text-purple-700 font-medium bg-purple-50 border border-purple-200 mt-1 text-sm"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        <i className="fas fa-award ml-2"></i>
+                        <i className="fas fa-award ml-1 text-xs"></i>
                         نماذج الديبلومات
                       </button>
                     </Link>
                     <Link href="/admin">
                       <button 
-                        className="w-full text-right p-3 hover:bg-indigo-50 rounded-lg text-indigo-700 font-semibold mt-2"
+                        className="w-full text-right p-2 hover:bg-indigo-50 rounded-md text-indigo-700 font-medium mt-1 text-sm"
                         onClick={() => setIsMenuOpen(false)}
                       >
-                        <i className="fas fa-tachometer-alt ml-2"></i>
+                        <i className="fas fa-tachometer-alt ml-1 text-xs"></i>
                         لوحة الإدارة
                       </button>
                     </Link>
@@ -190,16 +190,16 @@ function Header() {
               </div>
 
               {/* User Info */}
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <div className="flex items-center justify-end space-x-reverse space-x-3 mb-4">
+              <div className="mt-4 pt-3 border-t border-gray-200">
+                <div className="flex items-center justify-end space-x-reverse space-x-2 mb-3">
                   {user.profileImageUrl && (
                     <img 
                       src={user.profileImageUrl} 
                       alt="صورة الطالب" 
-                      className="h-10 w-10 rounded-full object-cover" 
+                      className="h-8 w-8 rounded-full object-cover" 
                     />
                   )}
-                  <span className="font-semibold text-gray-700">
+                  <span className="font-medium text-gray-700 text-sm">
                     {user.firstName && user.lastName 
                       ? `${user.firstName} ${user.lastName}` 
                       : user.email?.split('@')[0] || 'الطالب'
@@ -209,7 +209,7 @@ function Header() {
                 
                 <button 
                   onClick={() => window.location.href = '/api/logout'}
-                  className="w-full p-3 text-right bg-red-50 hover:bg-red-100 rounded-lg text-red-700 font-semibold"
+                  className="w-full p-2 text-right bg-red-50 hover:bg-red-100 rounded-md text-red-700 font-medium text-sm"
                 >
                   تسجيل الخروج
                 </button>
