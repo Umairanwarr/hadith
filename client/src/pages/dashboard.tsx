@@ -359,46 +359,7 @@ export default function Dashboard() {
           </section>
         )}
 
-        {/* Available Exams */}
-        {enrollments && enrollments.length > 0 && (
-          <section className="mb-12">
-            <h3 className="text-2xl font-amiri font-bold text-green-700 mb-6">
-              الاختبارات المتاحة
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {enrollments
-                .filter(enrollment => Number(enrollment.progress) >= 100)
-                .map((enrollment) => (
-                <Card key={`exam-${enrollment.id}`} className="hover-scale overflow-hidden">
-                  <div className="h-28 bg-gradient-to-br from-orange-500 to-orange-600 flex flex-col items-center justify-center text-white relative overflow-hidden">
-                    <div className="absolute inset-0 bg-black/10"></div>
-                    <div className="relative z-10 text-center">
-                      <i className="fas fa-clipboard-list text-2xl mb-1"></i>
-                      <h4 className="font-amiri text-xs font-bold opacity-95">
-                        اختبار {enrollment.course.title}
-                      </h4>
-                    </div>
-                  </div>
-                  <CardContent className="p-3">
-                    <h4 className="font-amiri font-bold text-sm mb-2">
-                      اختبار {enrollment.course.title}
-                    </h4>
-                    <p className="text-gray-600 text-xs mb-3">
-                      الاختبار النهائي للمادة
-                    </p>
-                    <Link href={`/courses/${enrollment.courseId}/exam`}>
-                      <Button size="sm" className="w-full bg-orange-500 hover:bg-orange-600 text-white text-xs">
-                        <i className="fas fa-play text-xs ml-1"></i>
-                        بدء الاختبار
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-              
-            </div>
-          </section>
-        )}
+        
 
         {/* Available Courses - Organized by Levels */}
         <section className="mb-12">
