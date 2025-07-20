@@ -7,7 +7,7 @@ import logo_better from "@assets/logo better.png";
 
 import logo_2 from "@assets/logo 2.png";
 
-export default function Header() {
+function Header() {
   const { user, isAuthenticated } = useAuth();
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -168,3 +168,6 @@ export default function Header() {
     </>
   );
 }
+
+export { Header };
+export default Header;

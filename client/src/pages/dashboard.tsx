@@ -198,106 +198,118 @@ export default function Dashboard() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Preparatory Diploma */}
-                <div className="border border-green-200 rounded-lg p-4 bg-green-50">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-green-700">1</span>
+                <Link href="/diploma/preparatory">
+                  <div className="border border-green-200 rounded-lg p-4 bg-green-50 hover:bg-green-100 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-green-700">1</span>
+                      </div>
+                      <div>
+                        <h4 className="font-amiri font-bold text-green-800">الديبلوم التمهيدي</h4>
+                        <p className="text-xs text-green-600">120 ساعة دراسية</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-amiri font-bold text-green-800">الديبلوم التمهيدي</h4>
-                      <p className="text-xs text-green-600">120 ساعة دراسية</p>
+                    <div className="w-full bg-green-200 rounded-full h-2 mb-2">
+                      <div className="bg-green-600 h-2 rounded-full" style={{ width: '75%' }}></div>
                     </div>
+                    <p className="text-xs text-green-700">التقدم: 75%</p>
                   </div>
-                  <div className="w-full bg-green-200 rounded-full h-2 mb-2">
-                    <div className="bg-green-600 h-2 rounded-full" style={{ width: '75%' }}></div>
-                  </div>
-                  <p className="text-xs text-green-700">التقدم: 75%</p>
-                </div>
+                </Link>
 
                 {/* Intermediate Diploma */}
-                <div className="border border-orange-200 rounded-lg p-4 bg-orange-50">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-orange-700">2</span>
+                <Link href="/diploma/intermediate">
+                  <div className="border border-orange-200 rounded-lg p-4 bg-orange-50 hover:bg-orange-100 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-orange-700">2</span>
+                      </div>
+                      <div>
+                        <h4 className="font-amiri font-bold text-orange-800">الدبلوم المتوسط</h4>
+                        <p className="text-xs text-orange-600">180 ساعة دراسية</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-amiri font-bold text-orange-800">الدبلوم المتوسط</h4>
-                      <p className="text-xs text-orange-600">180 ساعة دراسية</p>
+                    <div className="w-full bg-orange-200 rounded-full h-2 mb-2">
+                      <div className="bg-orange-600 h-2 rounded-full" style={{ width: '20%' }}></div>
                     </div>
+                    <p className="text-xs text-orange-700">التقدم: 20%</p>
                   </div>
-                  <div className="w-full bg-orange-200 rounded-full h-2 mb-2">
-                    <div className="bg-orange-600 h-2 rounded-full" style={{ width: '20%' }}></div>
-                  </div>
-                  <p className="text-xs text-orange-700">التقدم: 20%</p>
-                </div>
+                </Link>
 
                 {/* Certificate */}
-                <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-blue-700">3</span>
+                <Link href="/diploma/certificate">
+                  <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-blue-700">3</span>
+                      </div>
+                      <div>
+                        <h4 className="font-amiri font-bold text-blue-800">الإجازة</h4>
+                        <p className="text-xs text-blue-600">240 ساعة دراسية</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-amiri font-bold text-blue-800">الإجازة</h4>
-                      <p className="text-xs text-blue-600">240 ساعة دراسية</p>
+                    <div className="w-full bg-blue-200 rounded-full h-2 mb-2">
+                      <div className="bg-blue-600 h-2 rounded-full" style={{ width: '0%' }}></div>
                     </div>
+                    <p className="text-xs text-blue-700">لم يبدأ</p>
                   </div>
-                  <div className="w-full bg-blue-200 rounded-full h-2 mb-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '0%' }}></div>
-                  </div>
-                  <p className="text-xs text-blue-700">لم يبدأ</p>
-                </div>
+                </Link>
 
                 {/* Bachelor */}
-                <div className="border border-purple-200 rounded-lg p-4 bg-purple-50">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-purple-700">4</span>
+                <Link href="/diploma/bachelor">
+                  <div className="border border-purple-200 rounded-lg p-4 bg-purple-50 hover:bg-purple-100 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-purple-700">4</span>
+                      </div>
+                      <div>
+                        <h4 className="font-amiri font-bold text-purple-800">البكالوريوس</h4>
+                        <p className="text-xs text-purple-600">300 ساعة دراسية</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-amiri font-bold text-purple-800">البكالوريوس</h4>
-                      <p className="text-xs text-purple-600">300 ساعة دراسية</p>
+                    <div className="w-full bg-purple-200 rounded-full h-2 mb-2">
+                      <div className="bg-purple-600 h-2 rounded-full" style={{ width: '0%' }}></div>
                     </div>
+                    <p className="text-xs text-purple-700">لم يبدأ</p>
                   </div>
-                  <div className="w-full bg-purple-200 rounded-full h-2 mb-2">
-                    <div className="bg-purple-600 h-2 rounded-full" style={{ width: '0%' }}></div>
-                  </div>
-                  <p className="text-xs text-purple-700">لم يبدأ</p>
-                </div>
+                </Link>
 
                 {/* Master */}
-                <div className="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-yellow-700">5</span>
+                <Link href="/diploma/master">
+                  <div className="border border-yellow-200 rounded-lg p-4 bg-yellow-50 hover:bg-yellow-100 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-yellow-700">5</span>
+                      </div>
+                      <div>
+                        <h4 className="font-amiri font-bold text-yellow-800">الماجستير</h4>
+                        <p className="text-xs text-yellow-600">360 ساعة دراسية</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-amiri font-bold text-yellow-800">الماجستير</h4>
-                      <p className="text-xs text-yellow-600">360 ساعة دراسية</p>
+                    <div className="w-full bg-yellow-200 rounded-full h-2 mb-2">
+                      <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '0%' }}></div>
                     </div>
+                    <p className="text-xs text-yellow-700">لم يبدأ</p>
                   </div>
-                  <div className="w-full bg-yellow-200 rounded-full h-2 mb-2">
-                    <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '0%' }}></div>
-                  </div>
-                  <p className="text-xs text-yellow-700">لم يبدأ</p>
-                </div>
+                </Link>
 
                 {/* Doctorate */}
-                <div className="border border-red-200 rounded-lg p-4 bg-red-50">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-red-700">6</span>
+                <Link href="/diploma/doctorate">
+                  <div className="border border-red-200 rounded-lg p-4 bg-red-50 hover:bg-red-100 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-red-700">6</span>
+                      </div>
+                      <div>
+                        <h4 className="font-amiri font-bold text-red-800">الدكتوراه</h4>
+                        <p className="text-xs text-red-600">480 ساعة دراسية</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-amiri font-bold text-red-800">الدكتوراه</h4>
-                      <p className="text-xs text-red-600">480 ساعة دراسية</p>
+                    <div className="w-full bg-red-200 rounded-full h-2 mb-2">
+                      <div className="bg-red-600 h-2 rounded-full" style={{ width: '0%' }}></div>
                     </div>
+                    <p className="text-xs text-red-700">لم يبدأ</p>
                   </div>
-                  <div className="w-full bg-red-200 rounded-full h-2 mb-2">
-                    <div className="bg-red-600 h-2 rounded-full" style={{ width: '0%' }}></div>
-                  </div>
-                  <p className="text-xs text-red-700">لم يبدأ</p>
-                </div>
+                </Link>
               </div>
             </CardContent>
           </Card>

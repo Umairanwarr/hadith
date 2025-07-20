@@ -21,6 +21,12 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import AdminCreateCourse from "@/pages/admin-create-course";
 import AdminCreateExam from "@/pages/admin-create-exam";
 import AdminCourseDetails from "@/pages/admin-course-details";
+import { DiplomaPreparatoryPage } from "@/pages/diploma-preparatory";
+import { DiplomaIntermediatePage } from "@/pages/diploma-intermediate";
+import { DiplomaCertificatePage } from "@/pages/diploma-certificate";
+import { DiplomaBachelorPage } from "@/pages/diploma-bachelor";
+import { DiplomaMasterPage } from "@/pages/diploma-master";
+import { DiplomaDoctoratePage } from "@/pages/diploma-doctorate";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -42,6 +48,12 @@ function Router() {
           <Route path="/diploma-samples" component={DiplomaSamples} />
           <Route path="/teachers" component={Teachers} />
           <Route path="/profile" component={Profile} />
+          <Route path="/diploma/preparatory" component={DiplomaPreparatoryPage} />
+          <Route path="/diploma/intermediate" component={DiplomaIntermediatePage} />
+          <Route path="/diploma/certificate" component={DiplomaCertificatePage} />
+          <Route path="/diploma/bachelor" component={DiplomaBachelorPage} />
+          <Route path="/diploma/master" component={DiplomaMasterPage} />
+          <Route path="/diploma/doctorate" component={DiplomaDoctoratePage} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/create-course" component={AdminCreateCourse} />
           <Route path="/admin/create-exam" component={AdminCreateExam} />
