@@ -158,6 +158,15 @@ function Header() {
                         إدارة الديبلومات
                       </button>
                     </Link>
+                    <Link href="/course-management">
+                      <button 
+                        className="w-full text-right p-2 hover:bg-teal-50 rounded-md text-teal-700 font-medium bg-teal-50 border border-teal-200 mt-1 text-sm"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <i className="fas fa-graduation-cap ml-1 text-xs"></i>
+                        إدارة الكورسات
+                      </button>
+                    </Link>
                     <Link href="/certificates">
                       <button 
                         className="w-full text-right p-2 hover:bg-green-50 rounded-md text-green-700 font-medium bg-green-50 border border-green-200 mt-1 text-sm"

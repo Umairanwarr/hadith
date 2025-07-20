@@ -50,6 +50,7 @@ export const courses = pgTable("courses", {
   duration: integer("duration"), // in minutes
   totalLessons: integer("total_lessons").default(0),
   thumbnailUrl: text("thumbnail_url"),
+  imageUrl: text("image_url"), // صورة الكورس الإضافية
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -127,6 +127,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Course management (admin only)
+  app.post('/api/courses', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { title, description, instructor, level, duration, thumbnailUrl, imageUrl } = req.body;
+      
+      const course = await storage.createCourse({
+        title,
+        description,
+        instructor,
+        level,
+        duration,
+        thumbnailUrl,
+        imageUrl,
+        totalLessons: 0,
+        isActive: true,
+      });
+
+      res.json(course);
+    } catch (error) {
+      console.error("Error creating course:", error);
+      res.status(500).json({ message: "Failed to create course" });
+    }
+  });
+
+  app.patch('/api/courses/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const { title, description, instructor, level, duration, thumbnailUrl, imageUrl } = req.body;
+      
+      const course = await storage.updateCourse(courseId, {
+        title,
+        description,
+        instructor,
+        level,
+        duration,
+        thumbnailUrl,
+        imageUrl,
+      });
+
+      if (!course) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+
+      res.json(course);
+    } catch (error) {
+      console.error("Error updating course:", error);
+      res.status(500).json({ message: "Failed to update course" });
+    }
+  });
+
+  app.delete('/api/courses/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      
+      // Soft delete by setting isActive to false
+      const course = await storage.updateCourse(courseId, { isActive: false });
+
+      if (!course) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+
+      res.json({ message: 'Course deleted successfully' });
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      res.status(500).json({ message: "Failed to delete course" });
+    }
+  });
+
   // Enrollment routes
   app.post('/api/courses/:id/enroll', isAuthenticated, async (req: any, res) => {
     try {
