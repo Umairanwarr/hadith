@@ -141,20 +141,20 @@ export default function AboutUniversity() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-4 lg:grid-cols-8 gap-3">
             {pillars.map((pillar) => (
               <Card key={pillar.number} className={`${pillar.borderColor} ${pillar.bgColor} hover-scale`}>
-                <CardContent className="p-6 text-center">
-                  <div className="text-4xl mb-4">{pillar.icon}</div>
-                  <div className="mb-4">
-                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full bg-white ${pillar.textColor} font-bold text-lg mb-3`}>
+                <CardContent className="p-3 text-center">
+                  <div className="text-2xl mb-2">{pillar.icon}</div>
+                  <div className="mb-2">
+                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full bg-white ${pillar.textColor} font-bold text-sm mb-2`}>
                       {pillar.number}
                     </span>
                   </div>
-                  <h3 className={`text-lg font-amiri font-bold ${pillar.textColor} mb-3`}>
+                  <h3 className={`text-sm font-amiri font-bold ${pillar.textColor} mb-2`}>
                     {pillar.title}
                   </h3>
-                  <p className={`${pillar.textColor} opacity-80 text-sm leading-relaxed`}>
+                  <p className={`${pillar.textColor} opacity-80 text-xs leading-relaxed`}>
                     {pillar.description}
                   </p>
                 </CardContent>
