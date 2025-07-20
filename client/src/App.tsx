@@ -31,6 +31,7 @@ import { TeacherGuidePage } from "@/pages/teacher-guide";
 import { QuickAddPage } from "@/pages/quick-add";
 import { LiveSessionsPage } from "@/pages/live-sessions";
 import { AdminLiveSessionsPage } from "@/pages/admin-live-sessions";
+import { TestRemindersPage } from "@/pages/test-reminders";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -66,6 +67,7 @@ function Router() {
           <Route path="/quick-add" component={QuickAddPage} />
           <Route path="/live-sessions" component={LiveSessionsPage} />
           <Route path="/admin/live-sessions" component={AdminLiveSessionsPage} />
+          <Route path="/test-reminders" component={TestRemindersPage} />
         </>
       )}
       <Route component={NotFound} />

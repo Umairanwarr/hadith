@@ -32,7 +32,7 @@ const liveSessions: LiveSession[] = [
     title: "مقدمة في علم الحديث - المحاضرة الأولى",
     instructor: "الشيخ أحمد محمد الزهري",
     courseTitle: "أصول علم الحديث",
-    scheduledTime: "2025-01-20T19:00:00Z",
+    scheduledTime: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes from now
     duration: 90,
     isLive: true,
     meetingLink: "https://meet.google.com/abc-defg-hij",
@@ -44,7 +44,7 @@ const liveSessions: LiveSession[] = [
     title: "شرح الأربعين النووية - الحديث الأول",
     instructor: "الدكتور محمد عبد الرحمن",
     courseTitle: "شرح الأربعين النووية",
-    scheduledTime: "2025-01-20T20:30:00Z",
+    scheduledTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
     duration: 60,
     isLive: false,
     description: "شرح تفصيلي للحديث الأول من الأربعين النووية: إنما الأعمال بالنيات",
@@ -55,7 +55,7 @@ const liveSessions: LiveSession[] = [
     title: "علم الجرح والتعديل - أسس النقد",
     instructor: "الشيخ عبد الله الحديثي",
     courseTitle: "علم الرجال والأسانيد",
-    scheduledTime: "2025-01-21T18:00:00Z",
+    scheduledTime: new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(), // 1 day and 1 hour from now
     duration: 75,
     isLive: false,
     description: "دراسة أسس علم الجرح والتعديل وطرق نقد الرواة",
@@ -66,7 +66,7 @@ const liveSessions: LiveSession[] = [
     title: "ورشة عملية في تخريج الأحاديث",
     instructor: "الدكتور أحمد الفقيه",
     courseTitle: "تخريج الأحاديث",
-    scheduledTime: "2025-01-22T19:30:00Z",
+    scheduledTime: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4 hours from now
     duration: 120,
     isLive: true,
     meetingLink: "https://zoom.us/j/123456789",
@@ -81,7 +81,7 @@ const upcomingSessions: LiveSession[] = [
     title: "مناهج المحدثين في التصحيح والتضعيف",
     instructor: "الشيخ محمد الطبري",
     courseTitle: "أصول علم الحديث",
-    scheduledTime: "2025-01-23T19:00:00Z",
+    scheduledTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(), // 8 hours from now
     duration: 90,
     isLive: false,
     description: "دراسة مقارنة لمناهج العلماء في الحكم على الأحاديث",
@@ -92,7 +92,7 @@ const upcomingSessions: LiveSession[] = [
     title: "الإجازات العلمية وطرق الحصول عليها",
     instructor: "الدكتور يوسف الأثري",
     courseTitle: "نظام الإجازات",
-    scheduledTime: "2025-01-24T20:00:00Z",
+    scheduledTime: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(), // 12 hours from now
     duration: 60,
     isLive: false,
     description: "شرح نظام الإجازات العلمية التقليدي وكيفية الحصول عليها",

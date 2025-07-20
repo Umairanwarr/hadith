@@ -76,7 +76,7 @@ export const useNotifications = () => {
   const setReminder = (session: LiveSession) => {
     const timeUntilSession = getTimeUntilSession(session.scheduledTime);
     
-    // إذا كانت المحاضرة قد بدأت بالفعل
+    // إذا كانت المحاضرة قد بدأت بالفعل أو الوقت سالب
     if (timeUntilSession <= 0) {
       toast({
         title: "المحاضرة بدأت بالفعل!",
@@ -85,6 +85,27 @@ export const useNotifications = () => {
       });
       return;
     }
+
+    // إضافة تذكير تجريبي فوري للاختبار (بعد 10 ثوانِ)
+    setTimeout(() => {
+      toast({
+        title: "تذكير تجريبي - تعمل التذكيرات!",
+        description: `${session.title} - هذا مثال على التذكير`,
+        duration: 8000,
+      });
+
+      if (preferences.browserNotifications && permission === 'granted') {
+        showBrowserNotification(
+          "تذكير تجريبي",
+          {
+            body: `${session.title}\nهذا مثال على التذكير`,
+            tag: `test-reminder-${session.id}`,
+          }
+        );
+      }
+
+      playNotificationSound();
+    }, 10000); // 10 seconds for testing
 
     preferences.reminderMinutes.forEach(minutes => {
       const reminderTime = timeUntilSession - (minutes * 60 * 1000);
@@ -147,7 +168,7 @@ export const useNotifications = () => {
 
     toast({
       title: "تم تفعيل التذكير",
-      description: `سيتم تذكيرك قبل بدء المحاضرة`,
+      description: `سيتم تذكيرك قبل بدء المحاضرة (تذكير تجريبي خلال 10 ثوانِ)`,
     });
   };
 
