@@ -8,8 +8,6 @@ interface DiplomaLevel {
   name: string;
   arabicName: string;
   description: string;
-  requirements: string[];
-
   hours: number;
   color: string;
   bgColor: string;
@@ -23,13 +21,6 @@ const diplomaLevels: DiplomaLevel[] = [
     name: 'Preparatory Diploma',
     arabicName: 'الديبلوم التمهيدي في علوم الحديث',
     description: 'مرحلة التأسيس الأولى في علوم الحديث.',
-    requirements: [
-      'حفظ جزء عمّ وجزء تبارك',
-      'حفظ الأربعين النووية',
-      'دراسة البيقونية في مصطلح الحديث',
-      'أساسيات السيرة النبوية'
-    ],
-
     hours: 120,
     color: 'text-green-700',
     bgColor: 'bg-green-100',
@@ -41,13 +32,6 @@ const diplomaLevels: DiplomaLevel[] = [
     name: 'Intermediate Diploma',
     arabicName: 'الدبلوم المتوسط في علوم الحديث',
     description: 'المرحلة المتوسطة في علوم الحديث.',
-    requirements: [
-      'حفظ 15 حزباً من القرآن الكريم',
-      'حفظ عمدة الأحكام',
-      'نخبة الفكر في مصطلح الحديث',
-      'التدريب على البحث في الحديث'
-    ],
-
     hours: 180,
     color: 'text-orange-700',
     bgColor: 'bg-orange-100',
@@ -59,13 +43,6 @@ const diplomaLevels: DiplomaLevel[] = [
     name: 'Certificate in Hadith Sciences',
     arabicName: 'الإجازة في علوم الحديث',
     description: 'إجازة متخصصة في علوم الحديث.',
-    requirements: [
-      'حفظ 20 حزباً من القرآن الكريم',
-      'حفظ 200 حديث شريف',
-      'علم العلل وعلم التخريج',
-      'أصول التفسير'
-    ],
-
     hours: 240,
     color: 'text-blue-700',
     bgColor: 'bg-blue-100',
@@ -77,13 +54,6 @@ const diplomaLevels: DiplomaLevel[] = [
     name: 'Bachelor in Hadith Science',
     arabicName: 'بكالوريوس في علم الحديث',
     description: 'درجة البكالوريوس في علم الحديث.',
-    requirements: [
-      'حفظ 30 حزباً من القرآن الكريم',
-      'علم الرجال والتراجم',
-      'علم التحقيق ومناهج المحدّثين',
-      'التفسير المقارن'
-    ],
-
     hours: 300,
     color: 'text-purple-700',
     bgColor: 'bg-purple-100',
@@ -95,13 +65,6 @@ const diplomaLevels: DiplomaLevel[] = [
     name: 'Master Scholar in Hadith',
     arabicName: 'ماجستير عالم بالحديث',
     description: 'درجة الماجستير في علوم الحديث.',
-    requirements: [
-      'حفظ 40 حزباً من القرآن الكريم',
-      'مناهج التصنيف',
-      'مُختلَف الحديث وعلومه',
-      'إعداد رسالة الماجستير'
-    ],
-
     hours: 360,
     color: 'text-yellow-700',
     bgColor: 'bg-yellow-100',
@@ -113,13 +76,6 @@ const diplomaLevels: DiplomaLevel[] = [
     name: 'Doctor in Hadith Studies',
     arabicName: 'دكتور في الدراسات الحديثية',
     description: 'أعلى درجة علمية في الدراسات الحديثية.',
-    requirements: [
-      'حفظ 60 حزباً من القرآن الكريم',
-      'حفظ 1000 حديث شريف',
-      'إجازات في الكتب التسعة',
-      'إعداد رسالة دكتوراه أصيلة'
-    ],
-
     hours: 480,
     color: 'text-red-700',
     bgColor: 'bg-red-100',
@@ -187,69 +143,49 @@ export default function DiplomasPage() {
           </CardContent>
         </Card>
 
-        {/* Diploma Levels */}
-        <div className="space-y-6">
+        {/* Diploma Levels - Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {diplomaLevels.map((diploma, index) => (
-            <Card key={diploma.id} className="overflow-hidden border-2 hover:shadow-lg transition-shadow">
-              <CardContent className="p-0">
-                <div className="flex">
-                  {/* Level Info */}
-                  <div className="flex-1 p-6">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className={`w-16 h-16 ${diploma.bgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
-                        <div className="text-center">
-                          <i className={`${diploma.icon} text-lg ${diploma.color}`}></i>
-                          <div className={`text-sm font-bold ${diploma.color} mt-1`}>
-                            {index + 1}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-amiri font-bold text-gray-800 mb-1">
-                          {diploma.arabicName}
-                        </h3>
-                        <Badge className={`${diploma.bgColor} ${diploma.color} mb-3`}>
-                          {diploma.certificateType}
-                        </Badge>
-                        <p className="text-gray-600 leading-relaxed mb-4">
-                          {diploma.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Requirements */}
-                    <div className="mb-4">
-                      <h4 className="font-semibold text-gray-800 mb-3">متطلبات الحصول على الشهادة:</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {diploma.requirements.map((req, reqIndex) => (
-                          <div key={reqIndex} className="flex items-start gap-2 text-sm text-gray-600">
-                            <i className="fas fa-check-circle text-green-500 mt-1 flex-shrink-0"></i>
-                            <span>{req}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+            <Card key={diploma.id} className="relative overflow-hidden border-2 hover:shadow-xl transition-all duration-300 group">
+              {/* Level Number Badge */}
+              <div className={`absolute top-4 left-4 w-10 h-10 ${diploma.bgColor} rounded-full flex items-center justify-center z-10`}>
+                <span className={`text-lg font-bold ${diploma.color}`}>
+                  {index + 1}
+                </span>
+              </div>
+              
+              <CardContent className="p-6 pt-8">
+                <div className="text-center mb-6">
+                  <div className={`w-16 h-16 ${diploma.bgColor} rounded-full flex items-center justify-center mx-auto mb-4`}>
+                    <i className={`${diploma.icon} text-2xl ${diploma.color}`}></i>
                   </div>
+                  
+                  <h3 className="text-xl font-amiri font-bold text-gray-800 mb-2">
+                    {diploma.arabicName}
+                  </h3>
+                  
+                  <Badge className={`${diploma.bgColor} ${diploma.color} mb-3`}>
+                    {diploma.certificateType}
+                  </Badge>
+                  
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    {diploma.description}
+                  </p>
+                </div>
 
-                  {/* Stats Sidebar */}
-                  <div className="w-48 bg-gray-50 p-6 border-r border-gray-200">
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">
-                          {diploma.hours}
-                        </div>
-                        <div className="text-sm text-gray-500">ساعة دراسية</div>
-                      </div>
-
-                      <div className="pt-4">
-                        <Link href="/levels">
-                          <Button size="sm" className="w-full">
-                            عرض المواد
-                          </Button>
-                        </Link>
-                      </div>
+                <div className="space-y-4">
+                  <div className="text-center py-3 bg-gray-50 rounded-lg">
+                    <div className="text-xl font-bold text-green-600">
+                      {diploma.hours}
                     </div>
+                    <div className="text-xs text-gray-500">ساعة دراسية</div>
                   </div>
+                  
+                  <Link href="/levels">
+                    <Button size="sm" className="w-full group-hover:bg-green-600 transition-colors">
+                      عرض التفاصيل
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
