@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
-import Landing from "@/pages/landing";
+import LandingNew from "@/pages/landing-new";
 import Dashboard from "@/pages/dashboard";
 import CourseDetails from "@/pages/course-details";
 import VideoPlayer from "@/pages/video-player";
@@ -57,7 +57,7 @@ function Router() {
     <Switch>
       {!isAuthenticated ? (
         <>
-          <Route path="/" component={Landing} />
+          <Route path="/" component={LandingNew} />
           <Route path="/about-university" component={AboutUniversity} />
         </>
       ) : (
