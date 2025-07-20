@@ -1,7 +1,5 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import { useThemeClasses } from "@/hooks/useThemeClasses";
-import { ThemeSelector } from "@/components/theme-selector";
 import logoPath from "@assets/logo better_1752953272174.png";
 import { useState } from "react";
 
@@ -11,7 +9,6 @@ import logo_2 from "@assets/logo 2.png";
 
 function Header() {
   const { user, isAuthenticated } = useAuth();
-  const { classes } = useThemeClasses();
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -43,9 +40,8 @@ function Header() {
               />
             </div>
             
-            {/* Theme selector and Live button on right */}
-            <div className="flex items-center gap-2">
-              <ThemeSelector />
+            {/* Live button on right */}
+            <div className="flex items-center">
               {/* Live Button */}
               <Link href="/live-sessions">
                 <button className="relative px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-md transition-colors animate-pulse">
@@ -83,16 +79,6 @@ function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     عن الجامعة
-                  </button>
-                </Link>
-                
-                <Link href="/theme-settings">
-                  <button 
-                    className="w-full text-right p-2 hover:bg-green-50 rounded-md text-gray-700 font-medium text-sm"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <i className="fas fa-palette ml-2 text-green-600"></i>
-                    إعدادات الألوان
                   </button>
                 </Link>
                 <button 

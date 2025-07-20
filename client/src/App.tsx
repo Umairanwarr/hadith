@@ -4,7 +4,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
-import { ThemeProvider } from "@/contexts/ThemeContext";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -39,7 +38,6 @@ import { CertificateGeneratorPage } from "@/pages/certificate-generator";
 import { SampleCertificatesPage } from "@/pages/sample-certificates";
 import { CourseManagementPage } from "@/pages/course-management";
 import AboutUniversity from "@/pages/about-university";
-import ThemeSettings from "@/pages/theme-settings";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -92,7 +90,6 @@ function Router() {
           <Route path="/certificates" component={CertificateGeneratorPage} />
           <Route path="/sample-certificates" component={SampleCertificatesPage} />
           <Route path="/course-management" component={CourseManagementPage} />
-          <Route path="/theme-settings" component={ThemeSettings} />
         </>
       )}
       <Route path="/about-university" component={AboutUniversity} />
@@ -104,12 +101,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Router />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
