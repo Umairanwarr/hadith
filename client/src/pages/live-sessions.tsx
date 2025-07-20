@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ReminderSettings } from "@/components/reminder-settings";
+import { useNotifications } from "@/hooks/useNotifications";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 
@@ -99,6 +102,15 @@ const upcomingSessions: LiveSession[] = [
 
 export function LiveSessionsPage() {
   const [selectedSession, setSelectedSession] = useState<LiveSession | null>(null);
+  const [reminderSettingsOpen, setReminderSettingsOpen] = useState(false);
+  const { 
+    setReminder, 
+    cancelReminders, 
+    monitorLiveSessions, 
+    getTimeUntilSession, 
+    formatTimeRemaining,
+    permission 
+  } = useNotifications();
 
   const joinLiveSession = (session: LiveSession) => {
     if (session.isLive && session.meetingLink) {
@@ -138,6 +150,11 @@ export function LiveSessionsPage() {
     }
   };
 
+  // Monitor live sessions for immediate notifications
+  useEffect(() => {
+    monitorLiveSessions([...liveSessions, ...upcomingSessions]);
+  }, [liveSessions, upcomingSessions, monitorLiveSessions]);
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
       <Header />
@@ -175,6 +192,24 @@ export function LiveSessionsPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Notification Settings Button */}
+        <div className="flex justify-end mb-4">
+          <Dialog open={reminderSettingsOpen} onOpenChange={setReminderSettingsOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                <i className="fas fa-cog ml-2"></i>
+                إعدادات التذكير
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>إعدادات التذكير للمحاضرات</DialogTitle>
+              </DialogHeader>
+              <ReminderSettings onClose={() => setReminderSettingsOpen(false)} />
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Live Sessions Tabs */}
@@ -240,14 +275,25 @@ export function LiveSessionsPage() {
                           انضم للبث المباشر
                         </Button>
                       ) : (
-                        <Button 
-                          variant="outline" 
-                          className="flex-1"
-                          disabled
-                        >
-                          <i className="fas fa-clock ml-2"></i>
-                          في انتظار البدء
-                        </Button>
+                        <div className="flex gap-2 flex-1">
+                          <Button 
+                            variant="outline" 
+                            className="flex-1"
+                            disabled
+                          >
+                            <i className="fas fa-clock ml-2"></i>
+                            في انتظار البدء
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setReminder(session)}
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            title="تفعيل التذكير"
+                          >
+                            <i className="fas fa-bell"></i>
+                          </Button>
+                        </div>
                       )}
                       
                       <Button 
@@ -322,7 +368,11 @@ export function LiveSessionsPage() {
                     </div>
                     
                     <div className="flex gap-2">
-                      <Button variant="outline" className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-50">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-50"
+                        onClick={() => setReminder(session)}
+                      >
                         <i className="fas fa-bell ml-2"></i>
                         تذكيري
                       </Button>
