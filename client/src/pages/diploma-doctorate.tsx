@@ -48,34 +48,41 @@ export function DiplomaDoctoratePage() {
             المواد الدراسية ({subjects.length} مواد)
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {subjects.map((subject, index) => (
-              <Card key={subject.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <i className={`${subject.icon} text-red-600 text-lg`}></i>
+              <Card key={subject.id} className="hover-scale overflow-hidden cursor-pointer">
+                <div className="h-20 bg-gradient-to-br from-red-500 to-red-600 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                  <div className="absolute inset-0 bg-black/10"></div>
+                  <div className="relative z-10 text-center">
+                    <i className={`${subject.icon} text-sm mb-1`}></i>
+                    <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                      {subject.title.length > 25 ? subject.title.substring(0, 25) + '...' : subject.title}
+                    </h4>
+                  </div>
+                </div>
+                <CardContent className="p-3">
+                  <h4 className="font-amiri font-bold text-sm mb-2 truncate">
+                    {subject.title}
+                  </h4>
+                  <div className="flex justify-between items-center text-xs text-gray-600 mb-3">
+                    <span>{subject.hours} ساعة</span>
+                    <span>30 محاضرة</span>
+                  </div>
+                  <div className="mb-3">
+                    <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <span>التقدم</span>
+                      <span>0%</span>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="w-8 h-8 bg-red-600 text-white text-sm rounded-full flex items-center justify-center">
-                          {index + 1}
-                        </span>
-                        <h3 className="font-amiri font-bold text-gray-800 text-base">
-                          {subject.title}
-                        </h3>
-                      </div>
-                      <div className="flex justify-between items-center text-sm text-gray-600">
-                        <span className="font-medium">{subject.hours} ساعة دراسية</span>
-                        <span className="text-red-600 font-medium">متطلب أساسي</span>
-                      </div>
-                      {subject.id === 5 && (
-                        <p className="text-xs text-gray-500 mt-2">
-                          تتضمن البحث والكتابة والمناقشة والدفاع عن الرسالة
-                        </p>
-                      )}
+                    <div className="w-full bg-gray-200 rounded-full h-1">
+                      <div className="bg-red-600 h-1 rounded-full" style={{ width: '0%' }}></div>
                     </div>
                   </div>
+                  <Button 
+                    size="sm"
+                    className="w-full bg-red-500 text-white hover:bg-red-600 text-xs py-1 h-6"
+                  >
+                    بدء الدراسة
+                  </Button>
                 </CardContent>
               </Card>
             ))}

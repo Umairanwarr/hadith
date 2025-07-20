@@ -54,29 +54,41 @@ export function DiplomaIntermediatePage() {
             المواد الدراسية ({subjects.length} مادة)
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {subjects.map((subject, index) => (
-              <Card key={subject.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <i className={`${subject.icon} text-orange-600`}></i>
+              <Card key={subject.id} className="hover-scale overflow-hidden cursor-pointer">
+                <div className="h-20 bg-gradient-to-br from-orange-400 to-orange-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                  <div className="absolute inset-0 bg-black/10"></div>
+                  <div className="relative z-10 text-center">
+                    <i className={`${subject.icon} text-sm mb-1`}></i>
+                    <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                      {subject.title.length > 25 ? subject.title.substring(0, 25) + '...' : subject.title}
+                    </h4>
+                  </div>
+                </div>
+                <CardContent className="p-3">
+                  <h4 className="font-amiri font-bold text-sm mb-2 truncate">
+                    {subject.title}
+                  </h4>
+                  <div className="flex justify-between items-center text-xs text-gray-600 mb-3">
+                    <span>{subject.hours} ساعة</span>
+                    <span>15 محاضرة</span>
+                  </div>
+                  <div className="mb-3">
+                    <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <span>التقدم</span>
+                      <span>0%</span>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="w-6 h-6 bg-orange-600 text-white text-xs rounded-full flex items-center justify-center">
-                          {index + 1}
-                        </span>
-                        <h3 className="font-amiri font-bold text-gray-800 text-sm">
-                          {subject.title}
-                        </h3>
-                      </div>
-                      <div className="flex justify-between items-center text-xs text-gray-600">
-                        <span>{subject.hours} ساعة</span>
-                        <span className="text-orange-600">يتطلب إنهاء المستوى الأول</span>
-                      </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1">
+                      <div className="bg-orange-600 h-1 rounded-full" style={{ width: '0%' }}></div>
                     </div>
                   </div>
+                  <Button 
+                    size="sm"
+                    className="w-full bg-orange-500 text-white hover:bg-orange-600 text-xs py-1 h-6"
+                  >
+                    بدء الدراسة
+                  </Button>
                 </CardContent>
               </Card>
             ))}
