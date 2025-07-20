@@ -103,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -245,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enrollment routes
   app.post('/api/courses/:id/enroll', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const courseId = parseInt(req.params.id);
       
       // Check if already enrolled
@@ -267,7 +267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/my-enrollments', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const enrollments = await storage.getUserEnrollments(userId);
       res.json(enrollments);
     } catch (error) {
@@ -279,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Lesson progress routes
   app.post('/api/lessons/:id/progress', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const lessonId = parseInt(req.params.id);
       const { watchedDuration, isCompleted, courseId } = req.body;
 
@@ -310,7 +310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/courses/:courseId/progress', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const courseId = parseInt(req.params.courseId);
       const progress = await storage.getUserCourseProgress(userId, courseId);
       res.json(progress);
@@ -324,7 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/courses/:id/exam', isAuthenticated, async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       
       // Check if user has completed all lessons
       const allLessons = await storage.getLessonsByCourse(courseId);
@@ -367,7 +367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/exams/:id/start', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const examId = parseInt(req.params.id);
       
       const exam = await storage.getExamByCourse(examId);
@@ -394,7 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/exam-attempts/:id/submit', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const attemptId = parseInt(req.params.id);
       const { answers } = req.body;
 
@@ -481,7 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Certificate routes
   app.get('/api/my-certificates', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const certificates = await storage.getUserCertificates(userId);
       res.json(certificates);
     } catch (error) {
@@ -493,7 +493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard stats
   app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const stats = await storage.getUserStats(userId);
       res.json(stats);
     } catch (error) {
@@ -505,7 +505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User profile update
   app.patch('/api/profile', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       
       // Validate request body
       const validationResult = updateProfileSchema.safeParse(req.body);
@@ -810,7 +810,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Promote user to admin (temporary for testing)
   app.post('/api/promote-to-admin', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -833,7 +833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize authentic university courses
   app.post("/api/admin/initialize-courses", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const user = await storage.getUser(userId);
       
       if (!user || user.role !== "admin") {
