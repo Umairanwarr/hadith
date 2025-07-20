@@ -9,7 +9,7 @@ interface DiplomaLevel {
   arabicName: string;
   description: string;
   requirements: string[];
-  duration: string;
+
   hours: number;
   color: string;
   bgColor: string;
@@ -22,16 +22,14 @@ const diplomaLevels: DiplomaLevel[] = [
     id: 'preparatory',
     name: 'Preparatory Diploma',
     arabicName: 'الديبلوم التمهيدي في علوم الحديث',
-    description: 'مرحلة التأسيس الأولى حيث يتم بناء القواعد الأساسية ويحصل الطالب على مفاتيح العلم الشرعي في علوم الحديث.',
+    description: 'مرحلة التأسيس الأولى في علوم الحديث.',
     requirements: [
-      'حفظ جزء عمّ وجزء تبارك من القرآن الكريم',
-      'حفظ الأربعين النووية مع زيادات ابن رجب',
+      'حفظ جزء عمّ وجزء تبارك',
+      'حفظ الأربعين النووية',
       'دراسة البيقونية في مصطلح الحديث',
-      'تحفة الأطفال في التجويد',
-      'أساسيات السيرة النبوية',
-      'مقدمات في النحو والعقيدة الطحاوية'
+      'أساسيات السيرة النبوية'
     ],
-    duration: '4 أشهر',
+
     hours: 120,
     color: 'text-green-700',
     bgColor: 'bg-green-100',
@@ -42,16 +40,14 @@ const diplomaLevels: DiplomaLevel[] = [
     id: 'intermediate',
     name: 'Intermediate Diploma',
     arabicName: 'الدبلوم المتوسط في علوم الحديث',
-    description: 'المرحلة الثانية من التأهيل العلمي مع التركيز على التطبيق العملي والبحث في علوم الحديث.',
+    description: 'المرحلة المتوسطة في علوم الحديث.',
     requirements: [
       'حفظ 15 حزباً من القرآن الكريم',
-      'حفظ عمدة الأحكام لعبد الغني المقدسي (50 حديثاً)',
-      'دراسة السلسلة الذهبية في الإسناد',
-      'نخبة الفكر لابن حجر في مصطلح الحديث',
-      'الورقات للجويني في أصول الفقه',
-      'التدريب العملي على البحث في صحة الحديث'
+      'حفظ عمدة الأحكام',
+      'نخبة الفكر في مصطلح الحديث',
+      'التدريب على البحث في الحديث'
     ],
-    duration: '6 أشهر',
+
     hours: 180,
     color: 'text-orange-700',
     bgColor: 'bg-orange-100',
@@ -62,16 +58,14 @@ const diplomaLevels: DiplomaLevel[] = [
     id: 'certificate',
     name: 'Certificate in Hadith Sciences',
     arabicName: 'الإجازة في علوم الحديث',
-    description: 'شهادة متخصصة تؤهل للتعمق في علوم الحديث والبحث المتقدم في هذا المجال.',
+    description: 'إجازة متخصصة في علوم الحديث.',
     requirements: [
       'حفظ 20 حزباً من القرآن الكريم',
       'حفظ 200 حديث شريف',
-      'دراسة التاريخ الإسلامي ومناهج المفسرين',
-      'التعمق في علم العلل وعلم التخريج',
-      'أصول التفسير وقواعده',
-      'القواعد الفقهية وتطبيقاتها'
+      'علم العلل وعلم التخريج',
+      'أصول التفسير'
     ],
-    duration: '8 أشهر',
+
     hours: 240,
     color: 'text-blue-700',
     bgColor: 'bg-blue-100',
@@ -82,16 +76,14 @@ const diplomaLevels: DiplomaLevel[] = [
     id: 'bachelor',
     name: 'Bachelor in Hadith Science',
     arabicName: 'بكالوريوس في علم الحديث',
-    description: 'درجة البكالوريوس في علم الحديث تؤهل للتخصص المتقدم والتدريس في هذا المجال.',
+    description: 'درجة البكالوريوس في علم الحديث.',
     requirements: [
       'حفظ 30 حزباً من القرآن الكريم',
-      'حفظ 200 حديث إضافي',
-      'التخصص في علم الرجال والتراجم',
+      'علم الرجال والتراجم',
       'علم التحقيق ومناهج المحدّثين',
-      'التفسير المقارن والتحليلي',
-      'تحقيق النصوص التراثية'
+      'التفسير المقارن'
     ],
-    duration: '10 أشهر',
+
     hours: 300,
     color: 'text-purple-700',
     bgColor: 'bg-purple-100',
@@ -102,16 +94,14 @@ const diplomaLevels: DiplomaLevel[] = [
     id: 'master',
     name: 'Master Scholar in Hadith',
     arabicName: 'ماجستير عالم بالحديث',
-    description: 'درجة الماجستير في علوم الحديث مع التخصص المتقدم في البحث العلمي والتأليف.',
+    description: 'درجة الماجستير في علوم الحديث.',
     requirements: [
       'حفظ 40 حزباً من القرآن الكريم',
-      'التخصص المتقدم في مناهج التصنيف',
-      'دراسة مُختلَف الحديث وعلومه',
-      'علم الأنساب والقبائل',
-      'مناهج البحث العلمي',
+      'مناهج التصنيف',
+      'مُختلَف الحديث وعلومه',
       'إعداد رسالة الماجستير'
     ],
-    duration: '12 شهراً',
+
     hours: 360,
     color: 'text-yellow-700',
     bgColor: 'bg-yellow-100',
@@ -122,16 +112,14 @@ const diplomaLevels: DiplomaLevel[] = [
     id: 'doctorate',
     name: 'Doctor in Hadith Studies',
     arabicName: 'دكتور في الدراسات الحديثية',
-    description: 'أعلى درجة علمية في الدراسات الحديثية تؤهل للوصول إلى مرتبة المحدث المُسنِد.',
+    description: 'أعلى درجة علمية في الدراسات الحديثية.',
     requirements: [
       'حفظ 60 حزباً من القرآن الكريم',
       'حفظ 1000 حديث شريف',
-      'الحصول على إجازات في الكتب التسعة',
-      'إعداد رسالة دكتوراه أصيلة',
-      'التخصص في مجال دقيق من علوم الحديث',
-      'المشاركة في البحث العلمي والتأليف'
+      'إجازات في الكتب التسعة',
+      'إعداد رسالة دكتوراه أصيلة'
     ],
-    duration: '16 شهراً',
+
     hours: 480,
     color: 'text-red-700',
     bgColor: 'bg-red-100',
@@ -192,10 +180,7 @@ export default function DiplomasPage() {
                     <div className="font-semibold text-green-800">إجمالي الساعات</div>
                     <div className="text-2xl font-bold text-green-600">1680</div>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-green-200">
-                    <div className="font-semibold text-green-800">مدة البرنامج</div>
-                    <div className="text-2xl font-bold text-green-600">3.5 سنة</div>
-                  </div>
+
                 </div>
               </div>
             </div>
@@ -255,12 +240,7 @@ export default function DiplomasPage() {
                         </div>
                         <div className="text-sm text-gray-500">ساعة دراسية</div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {diploma.duration}
-                        </div>
-                        <div className="text-sm text-gray-500">مدة الدراسة</div>
-                      </div>
+
                       <div className="pt-4">
                         <Link href="/levels">
                           <Button size="sm" className="w-full">
