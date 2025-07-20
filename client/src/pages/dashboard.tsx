@@ -8,6 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import HeatmapComponent from "@/components/heatmap";
 
 interface Course {
   id: number;
@@ -24,6 +25,7 @@ interface Enrollment {
   id: number;
   courseId: number;
   progress: string;
+  enrolledAt: string;
   course: Course;
 }
 
@@ -177,6 +179,37 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Scholarly Progress Heatmap */}
+        <section className="mb-12">
+          <Card className="bg-white shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="text-xl font-amiri font-bold text-gray-800 mb-2">
+                    خريطة التقدم العلمي
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    نشاطك الدراسي خلال الأشهر الأخيرة
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-600">
+                  <span>أقل</span>
+                  <div className="flex gap-1">
+                    <div className="w-3 h-3 bg-gray-200 rounded-sm"></div>
+                    <div className="w-3 h-3 bg-green-200 rounded-sm"></div>
+                    <div className="w-3 h-3 bg-green-400 rounded-sm"></div>
+                    <div className="w-3 h-3 bg-green-600 rounded-sm"></div>
+                    <div className="w-3 h-3 bg-green-800 rounded-sm"></div>
+                  </div>
+                  <span>أكثر</span>
+                </div>
+              </div>
+              
+              <HeatmapComponent enrollments={enrollments || []} />
+            </CardContent>
+          </Card>
         </section>
 
         {/* Current Learning */}
