@@ -51,6 +51,8 @@ export const courses = pgTable("courses", {
   totalLessons: integer("total_lessons").default(0),
   thumbnailUrl: text("thumbnail_url"),
   imageUrl: text("image_url"), // صورة الكورس الإضافية
+  syllabusUrl: text("syllabus_url"), // رابط ملف مقرر المادة
+  syllabusFileName: text("syllabus_file_name"), // اسم ملف مقرر المادة الأصلي
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

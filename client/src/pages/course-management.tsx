@@ -17,6 +17,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ImageUpload } from "@/components/image-upload";
+import { FileUpload } from "@/components/file-upload";
 
 // Schema for course creation/editing
 const courseSchema = z.object({
@@ -27,6 +28,8 @@ const courseSchema = z.object({
   duration: z.number().min(1, "مدة الكورس مطلوبة").optional(),
   thumbnailUrl: z.string().optional(),
   imageUrl: z.string().optional(),
+  syllabusUrl: z.string().optional(),
+  syllabusFileName: z.string().optional(),
 });
 
 type CourseFormData = z.infer<typeof courseSchema>;
@@ -41,6 +44,8 @@ interface Course {
   totalLessons: number;
   thumbnailUrl?: string;
   imageUrl?: string;
+  syllabusUrl?: string;
+  syllabusFileName?: string;
   isActive: boolean;
   createdAt: string;
 }
@@ -49,6 +54,8 @@ export function CourseManagementPage() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [syllabusFile, setSyllabusFile] = useState<File | null>(null);
+  const [isUploadingSyllabus, setIsUploadingSyllabus] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<CourseFormData>({
@@ -61,6 +68,8 @@ export function CourseManagementPage() {
       duration: 120,
       thumbnailUrl: "",
       imageUrl: "",
+      syllabusUrl: "",
+      syllabusFileName: "",
     },
   });
 
@@ -155,12 +164,53 @@ export function CourseManagementPage() {
       duration: course.duration,
       thumbnailUrl: course.thumbnailUrl || "",
       imageUrl: course.imageUrl || "",
+      syllabusUrl: course.syllabusUrl || "",
+      syllabusFileName: course.syllabusFileName || "",
     });
     setIsEditDialogOpen(true);
   };
 
   const handleDelete = (courseId: number) => {
     deleteCourseMutation.mutate(courseId);
+  };
+
+  // Handle syllabus file upload
+  const handleSyllabusUpload = async (file: File) => {
+    setIsUploadingSyllabus(true);
+    try {
+      const formData = new FormData();
+      formData.append('syllabus', file);
+
+      const response = await fetch('/api/upload/syllabus', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+      
+      // Update form values
+      form.setValue('syllabusUrl', result.url);
+      form.setValue('syllabusFileName', result.fileName);
+      
+      setSyllabusFile(file);
+      
+      toast({
+        title: "نجح رفع الملف",
+        description: `تم رفع ملف "${result.fileName}" بنجاح`,
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ في رفع الملف",
+        description: "حدث خطأ أثناء رفع مقرر المادة",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingSyllabus(false);
+    }
   };
 
   const CourseCard = ({ course }: { course: Course }) => (
@@ -196,6 +246,28 @@ export function CourseManagementPage() {
           <span>المدرس: {course.instructor}</span>
           <span>{course.totalLessons} درس</span>
         </div>
+        
+        {/* Syllabus file info */}
+        {course.syllabusFileName && (
+          <div className="mb-3 p-2 bg-blue-50 rounded-md">
+            <div className="flex items-center gap-2 text-sm">
+              <i className="fas fa-file-alt text-blue-500"></i>
+              <span className="text-blue-700 font-medium">مقرر المادة:</span>
+              <span className="text-blue-600">{course.syllabusFileName}</span>
+              {course.syllabusUrl && (
+                <a 
+                  href={course.syllabusUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  <i className="fas fa-download ml-1"></i>
+                  تحميل
+                </a>
+              )}
+            </div>
+          </div>
+        )}
         
         <div className="flex gap-2">
           <Button 
@@ -378,6 +450,24 @@ export function CourseManagementPage() {
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Syllabus File Upload */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">مقرر المادة (ملف PDF/Word)</label>
+              <FileUpload
+                onFileSelect={handleSyllabusUpload}
+                accept=".pdf,.doc,.docx"
+                maxSize={10}
+                buttonText="رفع مقرر المادة"
+                currentFileName={form.watch('syllabusFileName')}
+              />
+              {isUploadingSyllabus && (
+                <div className="flex items-center gap-2 text-sm text-blue-600">
+                  <i className="fas fa-spinner fa-spin"></i>
+                  جاري رفع الملف...
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-2">

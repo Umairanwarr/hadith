@@ -76,6 +76,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Document upload configuration
+  const documentUpload = multer({ 
+    storage: storage_config,
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit for documents
+    },
+    fileFilter: function (req, file, cb) {
+      // Accept PDFs and Word documents
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only PDF and Word documents are allowed'));
+      }
+    }
+  });
+
   // Serve uploaded files statically
   app.use('/uploads', express.static(path.join(__dirname, '../public/uploads/')));
 
@@ -127,10 +148,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // File upload endpoint for course syllabi
+  app.post('/api/upload/syllabus', isAuthenticated, isAdmin, documentUpload.single('syllabus'), (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      const fileUrl = `/uploads/${req.file.filename}`;
+      const fileName = req.file.originalname;
+
+      res.json({ 
+        url: fileUrl,
+        fileName: fileName,
+        size: req.file.size,
+        message: 'File uploaded successfully'
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+
   // Course management (admin only)
   app.post('/api/courses', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const { title, description, instructor, level, duration, thumbnailUrl, imageUrl } = req.body;
+      const { title, description, instructor, level, duration, thumbnailUrl, imageUrl, syllabusUrl, syllabusFileName } = req.body;
       
       const course = await storage.createCourse({
         title,
@@ -140,6 +183,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration,
         thumbnailUrl,
         imageUrl,
+        syllabusUrl,
+        syllabusFileName,
         totalLessons: 0,
         isActive: true,
       });
@@ -154,7 +199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/courses/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
-      const { title, description, instructor, level, duration, thumbnailUrl, imageUrl } = req.body;
+      const { title, description, instructor, level, duration, thumbnailUrl, imageUrl, syllabusUrl, syllabusFileName } = req.body;
       
       const course = await storage.updateCourse(courseId, {
         title,
@@ -164,6 +209,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration,
         thumbnailUrl,
         imageUrl,
+        syllabusUrl,
+        syllabusFileName,
       });
 
       if (!course) {
