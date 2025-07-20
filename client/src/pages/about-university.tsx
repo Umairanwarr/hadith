@@ -190,13 +190,13 @@ export default function AboutUniversity() {
               </p>
               <div className="flex justify-center gap-4">
                 <button 
-                  onClick={() => window.location.href = '/'}
+                  onClick={() => window.location.href = '/diplomas'}
                   className="bg-white text-green-700 hover:bg-gray-50 font-semibold py-3 px-6 rounded-lg transition-colors"
                 >
                   استكشف الدبلومات
                 </button>
                 <button 
-                  onClick={() => window.location.href = '/api/login'}
+                  onClick={() => window.location.href = '/'}
                   className="border-2 border-white text-white hover:bg-white hover:text-green-700 font-semibold py-3 px-6 rounded-lg transition-colors"
                 >
                   ابدأ التعلم الآن
