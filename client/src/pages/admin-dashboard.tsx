@@ -346,14 +346,22 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="exams" className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-4">
               <h2 className="text-2xl font-bold">الاختبارات</h2>
-              <Link href="/admin/create-exam">
-                <Button>
-                  <PlusCircle className="ml-2 h-4 w-4" />
-                  إضافة اختبار جديد
-                </Button>
-              </Link>
+              <div className="flex gap-2 flex-wrap">
+                <Link href="/admin/live-sessions">
+                  <Button className="bg-red-600 hover:bg-red-700 text-white">
+                    <i className="fas fa-broadcast-tower ml-2"></i>
+                    إدارة البث المباشر
+                  </Button>
+                </Link>
+                <Link href="/admin/create-exam">
+                  <Button>
+                    <PlusCircle className="ml-2 h-4 w-4" />
+                    إضافة اختبار جديد
+                  </Button>
+                </Link>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

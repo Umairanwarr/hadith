@@ -43,12 +43,14 @@ function Header() {
             {/* Live button on right */}
             <div className="flex items-center">
               {/* Live Button */}
-              <button className="relative px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-md transition-colors animate-pulse">
-                <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>
-                  LIVE
-                </div>
-              </button>
+              <Link href="/live-sessions">
+                <button className="relative px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-md transition-colors animate-pulse">
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>
+                    LIVE
+                  </div>
+                </button>
+              </Link>
             </div>
             
           </div>
@@ -136,6 +138,15 @@ function Header() {
                       >
                         <i className="fas fa-chalkboard-teacher ml-2"></i>
                         دليل المعلم
+                      </button>
+                    </Link>
+                    <Link href="/admin/live-sessions">
+                      <button 
+                        className="w-full text-right p-3 hover:bg-red-50 rounded-lg text-red-700 font-semibold bg-red-50 border border-red-200 mt-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <i className="fas fa-broadcast-tower ml-2"></i>
+                        إدارة البث المباشر
                       </button>
                     </Link>
                     <Link href="/admin">

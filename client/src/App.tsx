@@ -29,6 +29,8 @@ import { DiplomaMasterPage } from "@/pages/diploma-master";
 import { DiplomaDoctoratePage } from "@/pages/diploma-doctorate";
 import { TeacherGuidePage } from "@/pages/teacher-guide";
 import { QuickAddPage } from "@/pages/quick-add";
+import { LiveSessionsPage } from "@/pages/live-sessions";
+import { AdminLiveSessionsPage } from "@/pages/admin-live-sessions";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -62,6 +64,8 @@ function Router() {
           <Route path="/admin/courses/:id" component={AdminCourseDetails} />
           <Route path="/teacher-guide" component={TeacherGuidePage} />
           <Route path="/quick-add" component={QuickAddPage} />
+          <Route path="/live-sessions" component={LiveSessionsPage} />
+          <Route path="/admin/live-sessions" component={AdminLiveSessionsPage} />
         </>
       )}
       <Route component={NotFound} />
