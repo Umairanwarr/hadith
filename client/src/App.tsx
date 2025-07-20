@@ -42,9 +42,20 @@ import AboutUniversity from "@/pages/about-university";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600 font-amiri">جارٍ التحميل...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
+      {!isAuthenticated ? (
         <Route path="/" component={Landing} />
       ) : (
         <>
@@ -79,9 +90,9 @@ function Router() {
           <Route path="/certificates" component={CertificateGeneratorPage} />
           <Route path="/sample-certificates" component={SampleCertificatesPage} />
           <Route path="/course-management" component={CourseManagementPage} />
-          <Route path="/about-university" component={AboutUniversity} />
         </>
       )}
+      <Route path="/about-university" component={AboutUniversity} />
       <Route component={NotFound} />
     </Switch>
   );
