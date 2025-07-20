@@ -32,6 +32,7 @@ import { QuickAddPage } from "@/pages/quick-add";
 import { LiveSessionsPage } from "@/pages/live-sessions";
 import { AdminLiveSessionsPage } from "@/pages/admin-live-sessions";
 import { TestRemindersPage } from "@/pages/test-reminders";
+import { ManageLiveSessionsPage } from "@/pages/manage-live-sessions";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -68,6 +69,7 @@ function Router() {
           <Route path="/live-sessions" component={LiveSessionsPage} />
           <Route path="/admin/live-sessions" component={AdminLiveSessionsPage} />
           <Route path="/test-reminders" component={TestRemindersPage} />
+          <Route path="/manage-live-sessions" component={ManageLiveSessionsPage} />
         </>
       )}
       <Route component={NotFound} />

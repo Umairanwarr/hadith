@@ -293,6 +293,26 @@ export const createExamQuestionSchema = insertExamQuestionSchema.omit({ id: true
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// Live Sessions table for managing live streaming sessions
+export const liveSessions = pgTable("live_sessions", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  instructor: varchar("instructor", { length: 255 }).notNull(),
+  courseTitle: varchar("course_title", { length: 255 }),
+  description: text("description"),
+  scheduledTime: timestamp("scheduled_time").notNull(),
+  duration: integer("duration").notNull().default(60), // duration in minutes
+  isLive: boolean("is_live").default(false),
+  meetingLink: varchar("meeting_link", { length: 500 }),
+  level: varchar("level", { length: 100 }),
+  createdBy: varchar("created_by").notNull(), // user ID who created the session
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type LiveSession = typeof liveSessions.$inferSelect;
+export type InsertLiveSession = typeof liveSessions.$inferInsert;
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
 export type CreateCourse = z.infer<typeof createCourseSchema>;
 export type CreateLesson = z.infer<typeof createLessonSchema>;

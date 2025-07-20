@@ -44,6 +44,14 @@ export interface IStorage {
   deleteCourse(id: number): Promise<void>;
   updateCourseLessonCount(courseId: number): Promise<void>;
   
+  // Live Sessions operations
+  getAllLiveSessions(): Promise<any[]>;
+  getLiveSession(id: number): Promise<any | undefined>;
+  createLiveSession(session: any): Promise<any>;
+  updateLiveSession(id: number, updates: any): Promise<any | undefined>;
+  deleteLiveSession(id: number): Promise<void>;
+  setSessionLive(id: number, isLive: boolean): Promise<void>;
+  
   // Lesson operations
   getLessonsByCourse(courseId: number): Promise<Lesson[]>;
   getLesson(id: number): Promise<Lesson | undefined>;
@@ -105,6 +113,31 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  
+  // Live Sessions operations
+  async getAllLiveSessions(): Promise<any[]> {
+    return []; // Mock for now until we implement database
+  }
+  
+  async getLiveSession(id: number): Promise<any | undefined> {
+    return undefined; // Mock for now
+  }
+  
+  async createLiveSession(session: any): Promise<any> {
+    return { id: Date.now(), ...session }; // Mock for now
+  }
+  
+  async updateLiveSession(id: number, updates: any): Promise<any | undefined> {
+    return undefined; // Mock for now
+  }
+  
+  async deleteLiveSession(id: number): Promise<void> {
+    // Mock for now
+  }
+  
+  async setSessionLive(id: number, isLive: boolean): Promise<void> {
+    // Mock for now
+  }
   // User operations (mandatory for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));

@@ -25,82 +25,15 @@ interface LiveSession {
   level: string;
 }
 
-// Mock data for demonstration - in real app this would come from API
-const liveSessions: LiveSession[] = [
-  {
-    id: 1,
-    title: "مقدمة في علم الحديث - المحاضرة الأولى",
-    instructor: "الشيخ أحمد محمد الزهري",
-    courseTitle: "أصول علم الحديث",
-    scheduledTime: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes from now
-    duration: 90,
-    isLive: true,
-    meetingLink: "https://meet.google.com/abc-defg-hij",
-    description: "مقدمة شاملة في علم الحديث وتاريخه وأهميته في العلوم الشرعية",
-    level: "مبتدئ"
-  },
-  {
-    id: 2,
-    title: "شرح الأربعين النووية - الحديث الأول",
-    instructor: "الدكتور محمد عبد الرحمن",
-    courseTitle: "شرح الأربعين النووية",
-    scheduledTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
-    duration: 60,
-    isLive: false,
-    description: "شرح تفصيلي للحديث الأول من الأربعين النووية: إنما الأعمال بالنيات",
-    level: "متوسط"
-  },
-  {
-    id: 3,
-    title: "علم الجرح والتعديل - أسس النقد",
-    instructor: "الشيخ عبد الله الحديثي",
-    courseTitle: "علم الرجال والأسانيد",
-    scheduledTime: new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(), // 1 day and 1 hour from now
-    duration: 75,
-    isLive: false,
-    description: "دراسة أسس علم الجرح والتعديل وطرق نقد الرواة",
-    level: "متقدم"
-  },
-  {
-    id: 4,
-    title: "ورشة عملية في تخريج الأحاديث",
-    instructor: "الدكتور أحمد الفقيه",
-    courseTitle: "تخريج الأحاديث",
-    scheduledTime: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // 4 hours from now
-    duration: 120,
-    isLive: true,
-    meetingLink: "https://zoom.us/j/123456789",
-    description: "ورشة عملية تطبيقية لتعلم طرق تخريج الأحاديث من المصادر الأصلية",
-    level: "متقدم"
-  }
-];
-
-const upcomingSessions: LiveSession[] = [
-  {
-    id: 5,
-    title: "مناهج المحدثين في التصحيح والتضعيف",
-    instructor: "الشيخ محمد الطبري",
-    courseTitle: "أصول علم الحديث",
-    scheduledTime: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(), // 8 hours from now
-    duration: 90,
-    isLive: false,
-    description: "دراسة مقارنة لمناهج العلماء في الحكم على الأحاديث",
-    level: "متوسط"
-  },
-  {
-    id: 6,
-    title: "الإجازات العلمية وطرق الحصول عليها",
-    instructor: "الدكتور يوسف الأثري",
-    courseTitle: "نظام الإجازات",
-    scheduledTime: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(), // 12 hours from now
-    duration: 60,
-    isLive: false,
-    description: "شرح نظام الإجازات العلمية التقليدي وكيفية الحصول عليها",
-    level: "مبتدئ"
-  }
-];
-
 export function LiveSessionsPage() {
+  // Fetch live sessions from API
+  const { data: allSessions = [], isLoading: isLoadingSessions } = useQuery({
+    queryKey: ["/api/live-sessions"],
+  });
+
+  // Separate live and upcoming sessions
+  const liveSessions = allSessions.filter((session: any) => session.isLive);
+  const upcomingSessions = allSessions.filter((session: any) => !session.isLive);
   const [selectedSession, setSelectedSession] = useState<LiveSession | null>(null);
   const [reminderSettingsOpen, setReminderSettingsOpen] = useState(false);
   const { 

@@ -863,6 +863,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Live Sessions routes
+  app.get("/api/live-sessions", async (req, res) => {
+    try {
+      // For now return mock data - in real app this would come from database
+      const mockSessions = [
+        {
+          id: 1,
+          title: "مقدمة في علم الحديث - المحاضرة الأولى",
+          instructor: "الشيخ أحمد محمد الزهري",
+          courseTitle: "أصول علم الحديث",
+          scheduledTime: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+          duration: 90,
+          isLive: true,
+          meetingLink: "https://meet.google.com/abc-defg-hij",
+          description: "مقدمة شاملة في علم الحديث وتاريخه وأهميته في العلوم الشرعية",
+          level: "مبتدئ",
+          createdBy: req.user?.claims?.sub || "admin"
+        },
+        {
+          id: 2,
+          title: "شرح الأربعين النووية - الحديث الأول",
+          instructor: "الدكتور محمد عبد الرحمن",
+          courseTitle: "شرح الأربعين النووية",
+          scheduledTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+          duration: 60,
+          isLive: false,
+          description: "شرح تفصيلي للحديث الأول من الأربعين النووية",
+          level: "متوسط",
+          createdBy: req.user?.claims?.sub || "admin"
+        }
+      ];
+      
+      res.json(mockSessions);
+    } catch (error) {
+      console.error("Error fetching live sessions:", error);
+      res.status(500).json({ message: "Failed to fetch live sessions" });
+    }
+  });
+
+  app.post("/api/live-sessions", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const sessionData = {
+        ...req.body,
+        createdBy: userId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const newSession = await storage.createLiveSession(sessionData);
+      res.json(newSession);
+    } catch (error) {
+      console.error("Error creating live session:", error);
+      res.status(500).json({ message: "Failed to create live session" });
+    }
+  });
+
+  app.put("/api/live-sessions/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const sessionId = parseInt(req.params.id);
+      const updates = {
+        ...req.body,
+        updatedAt: new Date()
+      };
+
+      const updatedSession = await storage.updateLiveSession(sessionId, updates);
+      if (!updatedSession) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+
+      res.json(updatedSession);
+    } catch (error) {
+      console.error("Error updating live session:", error);
+      res.status(500).json({ message: "Failed to update live session" });
+    }
+  });
+
+  app.delete("/api/live-sessions/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const sessionId = parseInt(req.params.id);
+      await storage.deleteLiveSession(sessionId);
+      
+      res.json({ message: "Session deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting live session:", error);
+      res.status(500).json({ message: "Failed to delete live session" });
+    }
+  });
+
+  app.patch("/api/live-sessions/:id/live-status", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const sessionId = parseInt(req.params.id);
+      const { isLive } = req.body;
+      
+      await storage.setSessionLive(sessionId, isLive);
+      
+      res.json({ message: "Live status updated successfully" });
+    } catch (error) {
+      console.error("Error updating live status:", error);
+      res.status(500).json({ message: "Failed to update live status" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

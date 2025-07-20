@@ -140,7 +140,7 @@ function Header() {
                         دليل المعلم
                       </button>
                     </Link>
-                    <Link href="/admin/live-sessions">
+                    <Link href="/manage-live-sessions">
                       <button 
                         className="w-full text-right p-3 hover:bg-red-50 rounded-lg text-red-700 font-semibold bg-red-50 border border-red-200 mt-2"
                         onClick={() => setIsMenuOpen(false)}
