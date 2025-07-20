@@ -271,19 +271,7 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
               ))}
-              {enrollments.filter(enrollment => Number(enrollment.progress) >= 100).length === 0 && (
-                <Card className="col-span-full">
-                  <CardContent className="p-4 text-center">
-                    <i className="fas fa-lock text-2xl text-gray-400 mb-2"></i>
-                    <h4 className="text-sm font-semibold text-gray-600 mb-2">
-                      لا توجد اختبارات متاحة
-                    </h4>
-                    <p className="text-gray-500 text-xs">
-                      أكمل جميع محاضرات المادة للوصول إلى الاختبار
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
+              
             </div>
           </section>
         )}
