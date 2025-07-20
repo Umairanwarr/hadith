@@ -6,17 +6,17 @@ import { Link } from "wouter";
 
 export function DiplomaMasterPage() {
   const subjects = [
-    { id: 1, title: "حفظ 40 حزب", icon: "fas fa-quran", hours: 45 },
-    { id: 2, title: "حفظ 700 حديث إجمالاً", icon: "fas fa-bookmark", hours: 50 },
-    { id: 3, title: "تفسير 40 حزب من القرآن", icon: "fas fa-book-open", hours: 50 },
-    { id: 4, title: "مناهج التصنيف في السنة", icon: "fas fa-layer-group", hours: 25 },
-    { id: 5, title: "مختلف الحديث", icon: "fas fa-code-branch", hours: 22 },
-    { id: 6, title: "علم الأنساب والقبائل", icon: "fas fa-sitemap", hours: 20 },
-    { id: 7, title: "تاريخ المحدثين المعاصرين وطرقهم إلى الأئمة", icon: "fas fa-users-cog", hours: 28 },
-    { id: 8, title: "فقه الأئمة الأربعة", icon: "fas fa-gavel", hours: 30 },
-    { id: 9, title: "علم الجدل", icon: "fas fa-comments", hours: 18 },
-    { id: 10, title: "مناهج وطرق البحث العلمي", icon: "fas fa-search", hours: 25 },
-    { id: 11, title: "رسالة الماجستير", icon: "fas fa-file-alt", hours: 47 }
+    { id: 1, courseId: 1, title: "حفظ 40 حزب", icon: "fas fa-quran", hours: 45 },
+    { id: 2, courseId: 2, title: "حفظ 700 حديث إجمالاً", icon: "fas fa-bookmark", hours: 50 },
+    { id: 3, courseId: 3, title: "تفسير 40 حزب من القرآن", icon: "fas fa-book-open", hours: 50 },
+    { id: 4, courseId: 4, title: "مناهج التصنيف في السنة", icon: "fas fa-layer-group", hours: 25 },
+    { id: 5, courseId: 5, title: "مختلف الحديث", icon: "fas fa-code-branch", hours: 22 },
+    { id: 6, courseId: 6, title: "علم الأنساب والقبائل", icon: "fas fa-sitemap", hours: 20 },
+    { id: 7, courseId: 1, title: "تاريخ المحدثين المعاصرين وطرقهم إلى الأئمة", icon: "fas fa-users-cog", hours: 28 },
+    { id: 8, courseId: 2, title: "فقه الأئمة الأربعة", icon: "fas fa-gavel", hours: 30 },
+    { id: 9, courseId: 3, title: "علم الجدل", icon: "fas fa-comments", hours: 18 },
+    { id: 10, courseId: 4, title: "مناهج وطرق البحث العلمي", icon: "fas fa-search", hours: 25 },
+    { id: 11, courseId: 5, title: "رسالة الماجستير", icon: "fas fa-file-alt", hours: 47 }
   ];
 
   const totalHours = subjects.reduce((sum, subject) => sum + subject.hours, 0);
@@ -56,8 +56,9 @@ export function DiplomaMasterPage() {
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {subjects.map((subject, index) => (
-              <Card key={subject.id} className="hover-scale overflow-hidden cursor-pointer">
-                <div className="h-20 bg-gradient-to-br from-yellow-400 to-yellow-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+              <Link key={subject.id} href={`/course/${subject.courseId}`}>
+                <Card className="hover-scale overflow-hidden cursor-pointer">
+                  <div className="h-20 bg-gradient-to-br from-yellow-400 to-yellow-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
                   <div className="absolute inset-0 bg-black/10"></div>
                   <div className="relative z-10 text-center">
                     <i className={`${subject.icon} text-sm mb-1`}></i>
@@ -90,7 +91,8 @@ export function DiplomaMasterPage() {
                     بدء الدراسة
                   </Button>
                 </CardContent>
-              </Card>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>

@@ -6,17 +6,17 @@ import { Link } from "wouter";
 
 export function DiplomaCertificatePage() {
   const subjects = [
-    { id: 1, title: "حفظ 20 حزب من القرآن", icon: "fas fa-quran", hours: 30 },
-    { id: 2, title: "حفظ 200 حديث", icon: "fas fa-bookmark", hours: 25 },
-    { id: 3, title: "التاريخ الإسلامي", icon: "fas fa-mosque", hours: 20 },
-    { id: 4, title: "التفسير لـ 20 حزب", icon: "fas fa-book-open", hours: 30 },
-    { id: 5, title: "الذكاء الاصطناعي", icon: "fas fa-robot", hours: 15 },
-    { id: 6, title: "المهارات التطبيقية", icon: "fas fa-tools", hours: 15 },
-    { id: 7, title: "مناهج المفسرين", icon: "fas fa-users-cog", hours: 18 },
-    { id: 8, title: "علم العلل", icon: "fas fa-search", hours: 22 },
-    { id: 9, title: "علم التخريج", icon: "fas fa-filter", hours: 20 },
-    { id: 10, title: "أصول التفسير وقواعده", icon: "fas fa-cogs", hours: 18 },
-    { id: 11, title: "القواعد الفقهية", icon: "fas fa-gavel", hours: 17 }
+    { id: 1, courseId: 1, title: "حفظ 20 حزب من القرآن", icon: "fas fa-quran", hours: 30 },
+    { id: 2, courseId: 2, title: "حفظ 200 حديث", icon: "fas fa-bookmark", hours: 25 },
+    { id: 3, courseId: 3, title: "التاريخ الإسلامي", icon: "fas fa-mosque", hours: 20 },
+    { id: 4, courseId: 4, title: "التفسير لـ 20 حزب", icon: "fas fa-book-open", hours: 30 },
+    { id: 5, courseId: 5, title: "الذكاء الاصطناعي", icon: "fas fa-robot", hours: 15 },
+    { id: 6, courseId: 6, title: "المهارات التطبيقية", icon: "fas fa-tools", hours: 15 },
+    { id: 7, courseId: 1, title: "مناهج المفسرين", icon: "fas fa-users-cog", hours: 18 },
+    { id: 8, courseId: 2, title: "علم العلل", icon: "fas fa-search", hours: 22 },
+    { id: 9, courseId: 3, title: "علم التخريج", icon: "fas fa-filter", hours: 20 },
+    { id: 10, courseId: 4, title: "أصول التفسير وقواعده", icon: "fas fa-cogs", hours: 18 },
+    { id: 11, courseId: 5, title: "القواعد الفقهية", icon: "fas fa-gavel", hours: 17 }
   ];
 
   const totalHours = subjects.reduce((sum, subject) => sum + subject.hours, 0);
@@ -56,8 +56,9 @@ export function DiplomaCertificatePage() {
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {subjects.map((subject, index) => (
-              <Card key={subject.id} className="hover-scale overflow-hidden cursor-pointer">
-                <div className="h-20 bg-gradient-to-br from-blue-400 to-blue-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+              <Link key={subject.id} href={`/course/${subject.courseId}`}>
+                <Card className="hover-scale overflow-hidden cursor-pointer">
+                  <div className="h-20 bg-gradient-to-br from-blue-400 to-blue-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
                   <div className="absolute inset-0 bg-black/10"></div>
                   <div className="relative z-10 text-center">
                     <i className={`${subject.icon} text-sm mb-1`}></i>
@@ -90,7 +91,8 @@ export function DiplomaCertificatePage() {
                     بدء الدراسة
                   </Button>
                 </CardContent>
-              </Card>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>

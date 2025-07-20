@@ -6,11 +6,11 @@ import { Link } from "wouter";
 
 export function DiplomaDoctoratePage() {
   const subjects = [
-    { id: 1, title: "حفظ القرآن كاملاً", icon: "fas fa-quran", hours: 60 },
-    { id: 2, title: "حفظ 1000 حديث إجمالاً", icon: "fas fa-bookmark", hours: 70 },
-    { id: 3, title: "تفسير القرآن كاملاً", icon: "fas fa-book-open", hours: 80 },
-    { id: 4, title: "إجازات الكتب التسعة", icon: "fas fa-certificate", hours: 60 },
-    { id: 5, title: "كتابة رسالة الدكتوراه", icon: "fas fa-file-alt", hours: 110 }
+    { id: 1, courseId: 1, title: "حفظ القرآن كاملاً", icon: "fas fa-quran", hours: 60 },
+    { id: 2, courseId: 2, title: "حفظ 1000 حديث إجمالاً", icon: "fas fa-bookmark", hours: 70 },
+    { id: 3, courseId: 3, title: "تفسير القرآن كاملاً", icon: "fas fa-book-open", hours: 80 },
+    { id: 4, courseId: 4, title: "إجازات الكتب التسعة", icon: "fas fa-certificate", hours: 60 },
+    { id: 5, courseId: 5, title: "كتابة رسالة الدكتوراه", icon: "fas fa-file-alt", hours: 110 }
   ];
 
   const totalHours = subjects.reduce((sum, subject) => sum + subject.hours, 0);
@@ -50,8 +50,9 @@ export function DiplomaDoctoratePage() {
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {subjects.map((subject, index) => (
-              <Card key={subject.id} className="hover-scale overflow-hidden cursor-pointer">
-                <div className="h-20 bg-gradient-to-br from-red-500 to-red-600 flex flex-col items-center justify-center text-white relative overflow-hidden">
+              <Link key={subject.id} href={`/course/${subject.courseId}`}>
+                <Card className="hover-scale overflow-hidden cursor-pointer">
+                  <div className="h-20 bg-gradient-to-br from-red-500 to-red-600 flex flex-col items-center justify-center text-white relative overflow-hidden">
                   <div className="absolute inset-0 bg-black/10"></div>
                   <div className="relative z-10 text-center">
                     <i className={`${subject.icon} text-sm mb-1`}></i>
@@ -84,7 +85,8 @@ export function DiplomaDoctoratePage() {
                     بدء الدراسة
                   </Button>
                 </CardContent>
-              </Card>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>

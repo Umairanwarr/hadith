@@ -6,16 +6,16 @@ import { Link } from "wouter";
 
 export function DiplomaBachelorPage() {
   const subjects = [
-    { id: 1, title: "حفظ 30 حزب", icon: "fas fa-quran", hours: 35 },
-    { id: 2, title: "حفظ 500 حديث إجمالاً", icon: "fas fa-bookmark", hours: 40 },
-    { id: 3, title: "تفسير نصف القرآن", icon: "fas fa-book-open", hours: 45 },
-    { id: 4, title: "الذكاء الاصطناعي", icon: "fas fa-robot", hours: 20 },
-    { id: 5, title: "المهارات التطبيقية", icon: "fas fa-tools", hours: 18 },
-    { id: 6, title: "علم الرجال والتراجم", icon: "fas fa-users", hours: 25 },
-    { id: 7, title: "علم التحقيق", icon: "fas fa-search-plus", hours: 22 },
-    { id: 8, title: "مناهج المحدثين", icon: "fas fa-route", hours: 28 },
-    { id: 9, title: "التفسير المقارن", icon: "fas fa-balance-scale", hours: 25 },
-    { id: 10, title: "التفسير التحليلي", icon: "fas fa-microscope", hours: 22 }
+    { id: 1, courseId: 1, title: "حفظ 30 حزب", icon: "fas fa-quran", hours: 35 },
+    { id: 2, courseId: 2, title: "حفظ 500 حديث إجمالاً", icon: "fas fa-bookmark", hours: 40 },
+    { id: 3, courseId: 3, title: "تفسير نصف القرآن", icon: "fas fa-book-open", hours: 45 },
+    { id: 4, courseId: 4, title: "الذكاء الاصطناعي", icon: "fas fa-robot", hours: 20 },
+    { id: 5, courseId: 5, title: "المهارات التطبيقية", icon: "fas fa-tools", hours: 18 },
+    { id: 6, courseId: 6, title: "علم الرجال والتراجم", icon: "fas fa-users", hours: 25 },
+    { id: 7, courseId: 1, title: "علم التحقيق", icon: "fas fa-search-plus", hours: 22 },
+    { id: 8, courseId: 2, title: "مناهج المحدثين", icon: "fas fa-route", hours: 28 },
+    { id: 9, courseId: 3, title: "التفسير المقارن", icon: "fas fa-balance-scale", hours: 25 },
+    { id: 10, courseId: 4, title: "التفسير التحليلي", icon: "fas fa-microscope", hours: 22 }
   ];
 
   const totalHours = subjects.reduce((sum, subject) => sum + subject.hours, 0);
@@ -55,8 +55,9 @@ export function DiplomaBachelorPage() {
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {subjects.map((subject, index) => (
-              <Card key={subject.id} className="hover-scale overflow-hidden cursor-pointer">
-                <div className="h-20 bg-gradient-to-br from-purple-400 to-purple-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+              <Link key={subject.id} href={`/course/${subject.courseId}`}>
+                <Card className="hover-scale overflow-hidden cursor-pointer">
+                  <div className="h-20 bg-gradient-to-br from-purple-400 to-purple-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
                   <div className="absolute inset-0 bg-black/10"></div>
                   <div className="relative z-10 text-center">
                     <i className={`${subject.icon} text-sm mb-1`}></i>
@@ -89,7 +90,8 @@ export function DiplomaBachelorPage() {
                     بدء الدراسة
                   </Button>
                 </CardContent>
-              </Card>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>

@@ -6,17 +6,17 @@ import { Link } from "wouter";
 
 export function DiplomaPreparatoryPage() {
   const subjects = [
-    { id: 1, title: "حفظ جزء عم و جزء تبارك", icon: "fas fa-quran", hours: 20 },
-    { id: 2, title: "إجازة حفظ الأربعين النووية", icon: "fas fa-certificate", hours: 15 },
-    { id: 3, title: "دراسة كتاب نخبة الفكر", icon: "fas fa-book", hours: 12 },
-    { id: 4, title: "شرح أحاديث الأربعين النووية", icon: "fas fa-comments", hours: 18 },
-    { id: 5, title: "دراسة متن الأجرومية", icon: "fas fa-language", hours: 10 },
-    { id: 6, title: "السيرة النبوية", icon: "fas fa-user-circle", hours: 15 },
-    { id: 7, title: "تفسير القرآن جزء عم و تبارك", icon: "fas fa-book-open", hours: 20 },
-    { id: 8, title: "اللغة العربية", icon: "fas fa-font", hours: 8 },
-    { id: 9, title: "أهمية دراسة علم الحديث", icon: "fas fa-star", hours: 6 },
-    { id: 10, title: "المهارات التطبيقية", icon: "fas fa-tools", hours: 8 },
-    { id: 11, title: "آداب طالب العلم", icon: "fas fa-heart", hours: 8 }
+    { id: 1, courseId: 1, title: "حفظ جزء عم و جزء تبارك", icon: "fas fa-quran", hours: 20 },
+    { id: 2, courseId: 2, title: "إجازة حفظ الأربعين النووية", icon: "fas fa-certificate", hours: 15 },
+    { id: 3, courseId: 3, title: "دراسة كتاب نخبة الفكر", icon: "fas fa-book", hours: 12 },
+    { id: 4, courseId: 4, title: "شرح أحاديث الأربعين النووية", icon: "fas fa-comments", hours: 18 },
+    { id: 5, courseId: 5, title: "دراسة متن الأجرومية", icon: "fas fa-language", hours: 10 },
+    { id: 6, courseId: 6, title: "السيرة النبوية", icon: "fas fa-user-circle", hours: 15 },
+    { id: 7, courseId: 1, title: "تفسير القرآن جزء عم و تبارك", icon: "fas fa-book-open", hours: 20 },
+    { id: 8, courseId: 2, title: "اللغة العربية", icon: "fas fa-font", hours: 8 },
+    { id: 9, courseId: 3, title: "أهمية دراسة علم الحديث", icon: "fas fa-star", hours: 6 },
+    { id: 10, courseId: 4, title: "المهارات التطبيقية", icon: "fas fa-tools", hours: 8 },
+    { id: 11, courseId: 5, title: "آداب طالب العلم", icon: "fas fa-heart", hours: 8 }
   ];
 
   const totalHours = subjects.reduce((sum, subject) => sum + subject.hours, 0);
@@ -56,41 +56,43 @@ export function DiplomaPreparatoryPage() {
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {subjects.map((subject, index) => (
-              <Card key={subject.id} className="hover-scale overflow-hidden cursor-pointer">
-                <div className="h-20 bg-gradient-to-br from-green-400 to-green-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
-                  <div className="absolute inset-0 bg-black/10"></div>
-                  <div className="relative z-10 text-center">
-                    <i className={`${subject.icon} text-sm mb-1`}></i>
-                    <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
-                      {subject.title.length > 25 ? subject.title.substring(0, 25) + '...' : subject.title}
+              <Link key={subject.id} href={`/course/${subject.courseId}`}>
+                <Card className="hover-scale overflow-hidden cursor-pointer">
+                  <div className="h-20 bg-gradient-to-br from-green-400 to-green-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                    <div className="absolute inset-0 bg-black/10"></div>
+                    <div className="relative z-10 text-center">
+                      <i className={`${subject.icon} text-sm mb-1`}></i>
+                      <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                        {subject.title.length > 25 ? subject.title.substring(0, 25) + '...' : subject.title}
+                      </h4>
+                    </div>
+                  </div>
+                  <CardContent className="p-3">
+                    <h4 className="font-amiri font-bold text-sm mb-2 truncate">
+                      {subject.title}
                     </h4>
-                  </div>
-                </div>
-                <CardContent className="p-3">
-                  <h4 className="font-amiri font-bold text-sm mb-2 truncate">
-                    {subject.title}
-                  </h4>
-                  <div className="flex justify-between items-center text-xs text-gray-600 mb-3">
-                    <span>{subject.hours} ساعة</span>
-                    <span>12 محاضرة</span>
-                  </div>
-                  <div className="mb-3">
-                    <div className="flex justify-between text-xs text-gray-600 mb-1">
-                      <span>التقدم</span>
-                      <span>0%</span>
+                    <div className="flex justify-between items-center text-xs text-gray-600 mb-3">
+                      <span>{subject.hours} ساعة</span>
+                      <span>12 محاضرة</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1">
-                      <div className="bg-green-600 h-1 rounded-full" style={{ width: '0%' }}></div>
+                    <div className="mb-3">
+                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>التقدم</span>
+                        <span>0%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-1">
+                        <div className="bg-green-600 h-1 rounded-full" style={{ width: '0%' }}></div>
+                      </div>
                     </div>
-                  </div>
-                  <Button 
-                    size="sm"
-                    className="w-full bg-green-600 text-white hover:bg-green-700 text-xs py-1 h-6"
-                  >
-                    بدء الدراسة
-                  </Button>
-                </CardContent>
-              </Card>
+                    <Button 
+                      size="sm"
+                      className="w-full bg-green-600 text-white hover:bg-green-700 text-xs py-1 h-6"
+                    >
+                      بدء الدراسة
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>
