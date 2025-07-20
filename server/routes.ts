@@ -1,7 +1,15 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import express from "express";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Admin middleware
 const isAdmin = async (req: any, res: any, next: any) => {
@@ -40,6 +48,36 @@ import { z } from "zod";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Configure multer for file uploads
+  const storage_config = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, path.join(__dirname, '../public/uploads/'));
+    },
+    filename: function (req, file, cb) {
+      // Generate unique filename
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  });
+
+  const upload = multer({ 
+    storage: storage_config,
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: function (req, file, cb) {
+      // Accept only image files
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed'));
+      }
+    }
+  });
+
+  // Serve uploaded files statically
+  app.use('/uploads', express.static(path.join(__dirname, '../public/uploads/')));
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -1009,6 +1047,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating live status:", error);
       res.status(500).json({ message: "Failed to update live status" });
+    }
+  });
+
+  // Image upload route
+  app.post('/api/upload-image', isAuthenticated, upload.single('image'), (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No image file provided' });
+      }
+
+      // Return the URL to access the uploaded image
+      const imageUrl = `/uploads/${req.file.filename}`;
+      res.json({ url: imageUrl });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      res.status(500).json({ message: 'Failed to upload image' });
     }
   });
 

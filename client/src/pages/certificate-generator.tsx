@@ -37,6 +37,7 @@ interface DiplomaTemplate {
   textColor: string;
   borderColor: string;
   logoUrl?: string;
+  sealUrl?: string;
   institutionName: string;
   templateStyle: string;
   requirements: string;
@@ -140,15 +141,24 @@ export function CertificateGeneratorPage() {
       canvas.height - 80
     );
 
-    // University seal (placeholder)
-    ctx.textAlign = "center";
-    ctx.font = "16px Arial";
-    ctx.fillText("ختم الجامعة", canvas.width - 150, canvas.height - 120);
-    ctx.strokeStyle = template.borderColor;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(canvas.width - 150, canvas.height - 150, 50, 0, 2 * Math.PI);
-    ctx.stroke();
+    // University seal
+    if (template.sealUrl) {
+      const sealImage = new Image();
+      sealImage.onload = () => {
+        ctx.drawImage(sealImage, canvas.width - 200, canvas.height - 200, 100, 100);
+      };
+      sealImage.src = template.sealUrl;
+    } else {
+      // Fallback placeholder seal
+      ctx.textAlign = "center";
+      ctx.font = "16px Arial";
+      ctx.fillText("ختم الجامعة", canvas.width - 150, canvas.height - 120);
+      ctx.strokeStyle = template.borderColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(canvas.width - 150, canvas.height - 150, 50, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
   };
 
   const downloadCertificate = () => {

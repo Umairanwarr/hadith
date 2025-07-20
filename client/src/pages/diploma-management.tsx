@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
+import { ImageUpload } from "@/components/image-upload";
 
 // Schema for diploma template creation
 const createDiplomaTemplateSchema = z.object({
@@ -25,7 +26,8 @@ const createDiplomaTemplateSchema = z.object({
   backgroundColor: z.string().min(3, "لون الخلفية مطلوب"),
   textColor: z.string().min(3, "لون النص مطلوب"),
   borderColor: z.string().min(3, "لون الحدود مطلوب"),
-  logoUrl: z.string().url("رابط صحيح للشعار").optional().or(z.literal("")),
+  logoUrl: z.string().optional(),
+  sealUrl: z.string().optional(),
   institutionName: z.string().min(5, "اسم المؤسسة مطلوب"),
   templateStyle: z.enum(["classic", "modern", "elegant"]),
   requirements: z.string().min(10, "متطلبات الديبلوم يجب أن تكون 10 أحرف على الأقل"),
@@ -41,6 +43,7 @@ interface DiplomaTemplate {
   textColor: string;
   borderColor: string;
   logoUrl?: string;
+  sealUrl?: string;
   institutionName: string;
   templateStyle: string;
   requirements: string;
@@ -65,6 +68,7 @@ export function DiplomaManagementPage() {
       textColor: "#000000",
       borderColor: "#d4af37",
       logoUrl: "",
+      sealUrl: "",
       institutionName: "جامعة الإمام الزُّهري",
       templateStyle: "classic",
       requirements: "",
@@ -193,6 +197,7 @@ export function DiplomaManagementPage() {
       textColor: template.textColor,
       borderColor: template.borderColor,
       logoUrl: template.logoUrl || "",
+      sealUrl: template.sealUrl || "",
       institutionName: template.institutionName,
       templateStyle: template.templateStyle as any,
       requirements: template.requirements,
@@ -251,7 +256,14 @@ export function DiplomaManagementPage() {
           قد أكمل بنجاح جميع متطلبات {template.title}
         </p>
         <div className="flex justify-between items-end pt-8 text-sm">
-          <div>التاريخ: [تاريخ الإصدار]</div>
+          <div>
+            التاريخ: [تاريخ الإصدار]
+            {template.sealUrl && (
+              <div className="mt-2">
+                <img src={template.sealUrl} alt="ختم الجامعة" className="w-16 h-16 object-contain" />
+              </div>
+            )}
+          </div>
           <div>رقم الشهادة: [رقم الشهادة]</div>
         </div>
       </div>
@@ -433,19 +445,41 @@ export function DiplomaManagementPage() {
                             />
                           </div>
 
-                          <FormField
-                            control={form.control}
-                            name="logoUrl"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>رابط الشعار (اختياري)</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="https://example.com/logo.png" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                              control={form.control}
+                              name="logoUrl"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <ImageUpload
+                                    label="شعار الجامعة"
+                                    currentImage={field.value}
+                                    onImageUpload={(url) => {
+                                      field.onChange(url);
+                                    }}
+                                  />
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="sealUrl"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <ImageUpload
+                                    label="ختم الجامعة"
+                                    currentImage={field.value}
+                                    onImageUpload={(url) => {
+                                      field.onChange(url);
+                                    }}
+                                  />
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
 
                           <FormField
                             control={form.control}
@@ -512,6 +546,7 @@ export function DiplomaManagementPage() {
                             textColor: form.watch('textColor') || '#000000',
                             borderColor: form.watch('borderColor') || '#d4af37',
                             logoUrl: form.watch('logoUrl') || '',
+                            sealUrl: form.watch('sealUrl') || '',
                             institutionName: form.watch('institutionName') || 'جامعة الإمام الزُّهري',
                             templateStyle: form.watch('templateStyle') || 'classic',
                             requirements: form.watch('requirements') || '',

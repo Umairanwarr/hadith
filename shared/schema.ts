@@ -328,6 +328,7 @@ export const diplomaTemplates = pgTable("diploma_templates", {
   textColor: varchar("text_color", { length: 50 }).default("#000000"),
   borderColor: varchar("border_color", { length: 50 }).default("#d4af37"),
   logoUrl: varchar("logo_url", { length: 500 }),
+  sealUrl: varchar("seal_url", { length: 500 }), // رابط ختم الجامعة
   institutionName: varchar("institution_name", { length: 255 }).notNull().default("جامعة الإمام الزُّهري"),
   templateStyle: varchar("template_style", { length: 50 }).default("classic"), // classic, modern, elegant
   requirements: text("requirements"), // متطلبات الحصول على الشهادة

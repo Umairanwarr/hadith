@@ -158,6 +158,24 @@ function Header() {
                         إدارة الديبلومات
                       </button>
                     </Link>
+                    <Link href="/certificates">
+                      <button 
+                        className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-green-700 font-semibold bg-green-50 border border-green-200 mt-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <i className="fas fa-medal ml-2"></i>
+                        شهاداتي
+                      </button>
+                    </Link>
+                    <Link href="/sample-certificates">
+                      <button 
+                        className="w-full text-right p-3 hover:bg-purple-50 rounded-lg text-purple-700 font-semibold bg-purple-50 border border-purple-200 mt-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <i className="fas fa-award ml-2"></i>
+                        نماذج الديبلومات
+                      </button>
+                    </Link>
                     <Link href="/admin">
                       <button 
                         className="w-full text-right p-3 hover:bg-indigo-50 rounded-lg text-indigo-700 font-semibold mt-2"
