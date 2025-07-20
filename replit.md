@@ -47,6 +47,10 @@ This is a full-stack Islamic educational platform built for "جامعة الإم
 - **Admin Live Session Management**: Complete CRUD interface for administrators to create, update, delete, and manage live streaming sessions
 - **Dynamic Meeting Links**: Automatic generation of Google Meet, Zoom, and Teams meeting links from admin interface
 - **Live Status Control**: Real-time toggle for live/scheduled status with instant updates
+- **Automated Certificate System**: Comprehensive certificate generation system that automatically creates certificates when students pass exams
+- **Diploma Template Management**: Admin interface for creating and customizing diploma templates with different styles and colors
+- **Certificate Generator**: Canvas-based certificate generator with student names, grades, honors, and custom templates
+- **Automated Honors Calculation**: Smart calculation of academic honors based on exam scores (Distinction with Honor, Distinction, Very Good, Good)
 
 ## User Preferences
 

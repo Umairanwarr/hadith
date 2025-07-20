@@ -149,6 +149,15 @@ function Header() {
                         إدارة البث المباشر
                       </button>
                     </Link>
+                    <Link href="/diploma-management">
+                      <button 
+                        className="w-full text-right p-3 hover:bg-amber-50 rounded-lg text-amber-700 font-semibold bg-amber-50 border border-amber-200 mt-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <i className="fas fa-certificate ml-2"></i>
+                        إدارة الديبلومات
+                      </button>
+                    </Link>
                     <Link href="/admin">
                       <button 
                         className="w-full text-right p-3 hover:bg-indigo-50 rounded-lg text-indigo-700 font-semibold mt-2"

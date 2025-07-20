@@ -135,9 +135,14 @@ export const certificates = pgTable("certificates", {
   userId: varchar("user_id").references(() => users.id).notNull(),
   courseId: integer("course_id").references(() => courses.id).notNull(),
   examAttemptId: integer("exam_attempt_id").references(() => examAttempts.id).notNull(),
+  diplomaTemplateId: integer("diploma_template_id").references(() => diplomaTemplates.id), // ربط بقالب الشهادة
   certificateNumber: varchar("certificate_number").unique().notNull(),
+  studentName: varchar("student_name", { length: 255 }).notNull(), // اسم الطالب على الشهادة
   issuedAt: timestamp("issued_at").defaultNow(),
   grade: decimal("grade", { precision: 5, scale: 2 }).notNull(),
+  completionDate: timestamp("completion_date"), // تاريخ الإنجاز
+  specialization: varchar("specialization", { length: 255 }), // التخصص
+  honors: varchar("honors", { length: 100 }), // مرتبة الشرف (امتياز، جيد جداً، إلخ)
   isValid: boolean("is_valid").default(true),
 });
 
@@ -313,6 +318,26 @@ export const liveSessions = pgTable("live_sessions", {
 
 export type LiveSession = typeof liveSessions.$inferSelect;
 export type InsertLiveSession = typeof liveSessions.$inferInsert;
+
+// Diploma Templates table for customizable certificate templates
+export const diplomaTemplates = pgTable("diploma_templates", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(), // اسم الديبلوم
+  level: varchar("level", { length: 100 }).notNull(), // المستوى (تحضيري، متوسط، إلخ)
+  backgroundColor: varchar("background_color", { length: 50 }).default("#ffffff"),
+  textColor: varchar("text_color", { length: 50 }).default("#000000"),
+  borderColor: varchar("border_color", { length: 50 }).default("#d4af37"),
+  logoUrl: varchar("logo_url", { length: 500 }),
+  institutionName: varchar("institution_name", { length: 255 }).notNull().default("جامعة الإمام الزُّهري"),
+  templateStyle: varchar("template_style", { length: 50 }).default("classic"), // classic, modern, elegant
+  requirements: text("requirements"), // متطلبات الحصول على الشهادة
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type DiplomaTemplate = typeof diplomaTemplates.$inferSelect;
+export type InsertDiplomaTemplate = typeof diplomaTemplates.$inferInsert;
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
 export type CreateCourse = z.infer<typeof createCourseSchema>;
 export type CreateLesson = z.infer<typeof createLessonSchema>;

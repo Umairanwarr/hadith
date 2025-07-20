@@ -283,13 +283,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create certificate if passed
       if (passed) {
+        // Get user info for certificate
+        const user = await storage.getUser(userId);
+        const course = await storage.getCourse(attempt.courseId);
+        
         const certificateNumber = `CERT-${Date.now()}-${userId.slice(-4)}`;
+        const studentName = user && (user.firstName && user.lastName) 
+          ? `${user.firstName} ${user.lastName}` 
+          : user?.email?.split('@')[0] || 'الطالب';
+        
+        // Determine honors based on score
+        let honors = '';
+        if (score >= 95) honors = 'امتياز مع مرتبة الشرف';
+        else if (score >= 85) honors = 'امتياز';
+        else if (score >= 75) honors = 'جيد جداً';
+        else if (score >= 70) honors = 'جيد';
+
         await storage.createCertificate({
           userId,
           courseId: attempt.courseId,
           examAttemptId: attemptId,
           certificateNumber,
           grade: score.toString(),
+          studentName,
+          specialization: course?.title || 'علوم الحديث',
+          honors,
+          completionDate: new Date(),
         });
       }
 
@@ -990,6 +1009,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating live status:", error);
       res.status(500).json({ message: "Failed to update live status" });
+    }
+  });
+
+  // Diploma Templates routes
+  app.get("/api/diploma-templates", async (req, res) => {
+    try {
+      const templates = await storage.getDiplomaTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching diploma templates:", error);
+      res.status(500).json({ message: "Failed to fetch diploma templates" });
+    }
+  });
+
+  app.post("/api/diploma-templates", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const template = await storage.createDiplomaTemplate(req.body);
+      res.json(template);
+    } catch (error) {
+      console.error("Error creating diploma template:", error);
+      res.status(500).json({ message: "Failed to create diploma template" });
+    }
+  });
+
+  app.put("/api/diploma-templates/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const templateId = parseInt(req.params.id);
+      const updatedTemplate = await storage.updateDiplomaTemplate(templateId, req.body);
+      
+      if (!updatedTemplate) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+
+      res.json(updatedTemplate);
+    } catch (error) {
+      console.error("Error updating diploma template:", error);
+      res.status(500).json({ message: "Failed to update diploma template" });
+    }
+  });
+
+  app.delete("/api/diploma-templates/:id", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const templateId = parseInt(req.params.id);
+      await storage.deleteDiplomaTemplate(templateId);
+      
+      res.json({ message: "Template deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting diploma template:", error);
+      res.status(500).json({ message: "Failed to delete diploma template" });
+    }
+  });
+
+  app.patch("/api/diploma-templates/:id/status", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const templateId = parseInt(req.params.id);
+      const { isActive } = req.body;
+      
+      await storage.toggleDiplomaTemplateStatus(templateId, isActive);
+      
+      res.json({ message: "Template status updated successfully" });
+    } catch (error) {
+      console.error("Error updating template status:", error);
+      res.status(500).json({ message: "Failed to update template status" });
     }
   });
 

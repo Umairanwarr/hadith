@@ -8,6 +8,8 @@ import {
   examQuestions,
   examAttempts,
   certificates,
+  liveSessions,
+  diplomaTemplates,
   type User,
   type UpsertUser,
   type Course,
@@ -26,6 +28,10 @@ import {
   type InsertExamAttempt,
   type Certificate,
   type InsertCertificate,
+  type LiveSession,
+  type InsertLiveSession,
+  type DiplomaTemplate,
+  type InsertDiplomaTemplate,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
@@ -398,18 +404,49 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Certificate operations
-  async createCertificate(certificate: InsertCertificate): Promise<Certificate> {
-    const [newCertificate] = await db.insert(certificates).values(certificate).returning();
-    return newCertificate;
+  async createCertificate(data: {
+    userId: string;
+    courseId: number;
+    examAttemptId: number;
+    certificateNumber: string;
+    grade: string;
+    studentName: string;
+    diplomaTemplateId?: number;
+    completionDate?: Date;
+    specialization?: string;
+    honors?: string;
+  }): Promise<any> {
+    const [certificate] = await db
+      .insert(certificates)
+      .values({
+        userId: data.userId,
+        courseId: data.courseId,
+        examAttemptId: data.examAttemptId,
+        certificateNumber: data.certificateNumber,
+        grade: data.grade,
+        studentName: data.studentName,
+        diplomaTemplateId: data.diplomaTemplateId,
+        completionDate: data.completionDate || new Date(),
+        specialization: data.specialization,
+        honors: data.honors,
+      })
+      .returning();
+
+    return certificate;
   }
 
-  async getUserCertificates(userId: string): Promise<(Certificate & { course: Course })[]> {
+  async getUserCertificates(userId: string): Promise<any[]> {
     return db.select({
       id: certificates.id,
       userId: certificates.userId,
       courseId: certificates.courseId,
       examAttemptId: certificates.examAttemptId,
       certificateNumber: certificates.certificateNumber,
+      studentName: certificates.studentName,
+      specialization: certificates.specialization,
+      honors: certificates.honors,
+      completionDate: certificates.completionDate,
+      diplomaTemplateId: certificates.diplomaTemplateId,
       issuedAt: certificates.issuedAt,
       grade: certificates.grade,
       isValid: certificates.isValid,
@@ -419,6 +456,63 @@ export class DatabaseStorage implements IStorage {
     .innerJoin(courses, eq(certificates.courseId, courses.id))
     .where(and(eq(certificates.userId, userId), eq(certificates.isValid, true)))
     .orderBy(desc(certificates.issuedAt));
+  }
+
+  // Diploma Templates operations
+  async createDiplomaTemplate(data: {
+    title: string;
+    level: string;
+    backgroundColor?: string;
+    textColor?: string;
+    borderColor?: string;
+    logoUrl?: string;
+    institutionName: string;
+    templateStyle?: string;
+    requirements: string;
+  }): Promise<any> {
+    const [template] = await db
+      .insert(diplomaTemplates)
+      .values(data)
+      .returning();
+    return template;
+  }
+
+  async getDiplomaTemplates(): Promise<any[]> {
+    return await db
+      .select()
+      .from(diplomaTemplates)
+      .orderBy(desc(diplomaTemplates.createdAt));
+  }
+
+  async getDiplomaTemplate(id: number): Promise<any | undefined> {
+    const [template] = await db
+      .select()
+      .from(diplomaTemplates)
+      .where(eq(diplomaTemplates.id, id));
+    return template;
+  }
+
+  async updateDiplomaTemplate(id: number, updates: any): Promise<any | undefined> {
+    const [updated] = await db
+      .update(diplomaTemplates)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(diplomaTemplates.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteDiplomaTemplate(id: number): Promise<void> {
+    await db.delete(diplomaTemplates).where(eq(diplomaTemplates.id, id));
+  }
+
+  async toggleDiplomaTemplateStatus(id: number, isActive: boolean): Promise<void> {
+    await db
+      .update(diplomaTemplates)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(diplomaTemplates.id, id));
   }
 
   async getCertificate(id: number): Promise<Certificate | undefined> {

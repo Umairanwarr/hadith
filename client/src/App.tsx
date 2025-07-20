@@ -33,6 +33,8 @@ import { LiveSessionsPage } from "@/pages/live-sessions";
 import { AdminLiveSessionsPage } from "@/pages/admin-live-sessions";
 import { TestRemindersPage } from "@/pages/test-reminders";
 import { ManageLiveSessionsPage } from "@/pages/manage-live-sessions";
+import { DiplomaManagementPage } from "@/pages/diploma-management";
+import { CertificateGeneratorPage } from "@/pages/certificate-generator";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -70,6 +72,8 @@ function Router() {
           <Route path="/admin/live-sessions" component={AdminLiveSessionsPage} />
           <Route path="/test-reminders" component={TestRemindersPage} />
           <Route path="/manage-live-sessions" component={ManageLiveSessionsPage} />
+          <Route path="/diploma-management" component={DiplomaManagementPage} />
+          <Route path="/certificates" component={CertificateGeneratorPage} />
         </>
       )}
       <Route component={NotFound} />
