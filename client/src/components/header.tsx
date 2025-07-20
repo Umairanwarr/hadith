@@ -115,6 +115,40 @@ function Header() {
                     المدرسون
                   </button>
                 </Link>
+                
+                {/* Teacher Guide for Admin Users */}
+                {user?.role === 'admin' && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-xs text-gray-500 mb-2 pr-3">للمعلمين والمدراء</p>
+                    <Link href="/quick-add">
+                      <button 
+                        className="w-full text-right p-3 hover:bg-green-50 rounded-lg text-green-700 font-semibold bg-green-50 border border-green-200"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <i className="fas fa-plus-circle ml-2"></i>
+                        إضافة درس سريع
+                      </button>
+                    </Link>
+                    <Link href="/teacher-guide">
+                      <button 
+                        className="w-full text-right p-3 hover:bg-blue-50 rounded-lg text-blue-700 font-semibold bg-blue-50 border border-blue-200 mt-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <i className="fas fa-chalkboard-teacher ml-2"></i>
+                        دليل المعلم
+                      </button>
+                    </Link>
+                    <Link href="/admin">
+                      <button 
+                        className="w-full text-right p-3 hover:bg-indigo-50 rounded-lg text-indigo-700 font-semibold mt-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <i className="fas fa-tachometer-alt ml-2"></i>
+                        لوحة الإدارة
+                      </button>
+                    </Link>
+                  </div>
+                )}
               </div>
 
               {/* User Info */}

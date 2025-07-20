@@ -250,6 +250,18 @@ export default function AdminDashboard() {
             <div className="flex justify-between items-center flex-wrap gap-4">
               <h2 className="text-2xl font-bold">المواد الدراسية</h2>
               <div className="flex gap-2 flex-wrap">
+                <Link href="/quick-add">
+                  <Button className="bg-green-600 hover:bg-green-700 text-white">
+                    <i className="fas fa-plus ml-2"></i>
+                    إضافة سريعة
+                  </Button>
+                </Link>
+                <Link href="/teacher-guide">
+                  <Button variant="outline" className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100">
+                    <i className="fas fa-question-circle ml-2"></i>
+                    دليل المعلم
+                  </Button>
+                </Link>
                 <InitializeCoursesButton />
                 <Link href="/admin/create-course">
                   <Button>
