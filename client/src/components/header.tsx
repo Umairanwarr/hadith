@@ -73,9 +73,14 @@ function Header() {
             {/* Menu Content - University Info Only */}
             <div className="p-3 max-h-[calc(100vh-120px)] overflow-y-auto">
               <div className="space-y-1">
-                <button className="w-full text-right p-2 hover:bg-green-50 rounded-md text-gray-700 font-medium text-sm">
-                  عن الجامعة
-                </button>
+                <Link href="/about-university">
+                  <button 
+                    className="w-full text-right p-2 hover:bg-green-50 rounded-md text-gray-700 font-medium text-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    عن الجامعة
+                  </button>
+                </Link>
                 <button 
                   className="w-full text-right p-2 hover:bg-green-50 rounded-md text-gray-700 font-medium text-sm"
                   onClick={() => {

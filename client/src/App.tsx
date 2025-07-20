@@ -37,6 +37,7 @@ import { DiplomaManagementPage } from "@/pages/diploma-management";
 import { CertificateGeneratorPage } from "@/pages/certificate-generator";
 import { SampleCertificatesPage } from "@/pages/sample-certificates";
 import { CourseManagementPage } from "@/pages/course-management";
+import AboutUniversity from "@/pages/about-university";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -78,6 +79,7 @@ function Router() {
           <Route path="/certificates" component={CertificateGeneratorPage} />
           <Route path="/sample-certificates" component={SampleCertificatesPage} />
           <Route path="/course-management" component={CourseManagementPage} />
+          <Route path="/about-university" component={AboutUniversity} />
         </>
       )}
       <Route component={NotFound} />
