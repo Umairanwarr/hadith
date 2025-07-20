@@ -81,14 +81,12 @@ export default function AboutUniversity() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20">
         {/* Hero Section */}
         <section className="mb-12 text-center">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden p-8">
-            <h1 className="text-4xl font-amiri font-bold text-gray-800 mb-4">
-              جامعة الإمام الزُهري لإعداد علماء الحديث والمحدثين
-            </h1>
+            <h1 className="font-amiri font-bold text-gray-800 pl-[4px] pr-[4px] pt-[28px] pb-[28px] mt-[12px] mb-[12px] text-[30px]">جامعة الإمام الزُهري
+             لإعداد علماء الحديث والمحدثين</h1>
             
             {/* University Info Cards */}
             <div className="grid md:grid-cols-2 gap-6 mt-8">
@@ -208,7 +206,6 @@ export default function AboutUniversity() {
           </Card>
         </section>
       </main>
-
       <Footer />
     </div>
   );
