@@ -206,17 +206,17 @@ function Header() {
               {/* User Info */}
               <div className="mt-4 pt-3 border-t border-gray-200">
                 <div className="flex items-center justify-end space-x-reverse space-x-2 mb-3">
-                  {user.profileImageUrl && (
+                  {((user as any).profileImageUrl) && (
                     <img 
-                      src={user.profileImageUrl} 
+                      src={((user as any).profileImageUrl)} 
                       alt="صورة الطالب" 
                       className="h-8 w-8 rounded-full object-cover" 
                     />
                   )}
                   <span className="font-medium text-gray-700 text-sm">
-                    {user.firstName && user.lastName 
-                      ? `${user.firstName} ${user.lastName}` 
-                      : user.email?.split('@')[0] || 'الطالب'
+                    {((user as any).firstName) && ((user as any).lastName) 
+                      ? `${((user as any).firstName)} ${((user as any).lastName)}` 
+                      : ((user as any).email)?.split('@')[0] || 'الطالب'
                     }
                   </span>
                 </div>
