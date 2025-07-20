@@ -56,7 +56,10 @@ function Router() {
   return (
     <Switch>
       {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
+        <>
+          <Route path="/" component={Landing} />
+          <Route path="/about-university" component={AboutUniversity} />
+        </>
       ) : (
         <>
           <Route path="/" component={Dashboard} />
@@ -90,9 +93,9 @@ function Router() {
           <Route path="/certificates" component={CertificateGeneratorPage} />
           <Route path="/sample-certificates" component={SampleCertificatesPage} />
           <Route path="/course-management" component={CourseManagementPage} />
+          <Route path="/about-university" component={AboutUniversity} />
         </>
       )}
-      <Route path="/about-university" component={AboutUniversity} />
       <Route component={NotFound} />
     </Switch>
   );

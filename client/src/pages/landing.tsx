@@ -4,11 +4,12 @@ import logoPath from "@assets/logo better_1752953272174.png";
 
 export default function Landing() {
   const handleLogin = () => {
-    window.location.href = "/api/login";
+    // Add timestamp to force cache refresh
+    window.location.href = "/api/login?t=" + Date.now();
   };
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50" dir="rtl" data-version="2025-01-20-v2">
       {/* Header */}
       <header className="bg-white shadow-lg border-b-4 border-[hsl(45,76%,58%)]">
         <div className="container mx-auto px-4 py-3">
@@ -39,11 +40,11 @@ export default function Landing() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-gradient-to-l from-[hsl(158,40%,34%)] to-[hsl(158,46%,47%)] rounded-2xl text-white p-12 mb-12 islamic-pattern">
             <h2 className="text-4xl font-amiri font-bold mb-6">
-              منهج غير مسبوق لإعداد علماء الحديث
+              منهج غير مسبوق لإعداد علماء الحديث والمحدثين
             </h2>
             <p className="text-lg mb-6 text-green-100 leading-relaxed">
               في زمن باتت فيه العلوم تُتناقل في القاعات دون سند، وتُدرس في النظم الحديثة دون روح، 
-              جاءت جامعة الزهري بمنهجٍ غير مسبوق يمزج بين عراقة السند وجدّة المنهج الأكاديمي
+              جاءت جامعة الإمام الزُّهري بمنهجٍ غير مسبوق يمزج بين عراقة السند وجدّة المنهج الأكاديمي
             </p>
             <p className="text-base mb-8 text-green-200">
               منهجنا لا يُقلّد، بل يُجدِّد. لا يُشابه الموجود، بل يبني هويةً جديدة لطالب العلم 
