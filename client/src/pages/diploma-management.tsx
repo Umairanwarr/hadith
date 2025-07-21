@@ -83,10 +83,7 @@ export function DiplomaManagementPage() {
   // Create template mutation
   const createTemplateMutation = useMutation({
     mutationFn: async (data: CreateDiplomaTemplate) => {
-      return apiRequest("/api/diploma-templates", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", "/api/diploma-templates", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/diploma-templates"] });
@@ -109,10 +106,7 @@ export function DiplomaManagementPage() {
   // Update template mutation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<CreateDiplomaTemplate> }) => {
-      return apiRequest(`/api/diploma-templates/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("PUT", `/api/diploma-templates/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/diploma-templates"] });
@@ -136,9 +130,7 @@ export function DiplomaManagementPage() {
   // Delete template mutation
   const deleteTemplateMutation = useMutation({
     mutationFn: async (templateId: number) => {
-      return apiRequest(`/api/diploma-templates/${templateId}`, {
-        method: "DELETE",
-      });
+      return apiRequest("DELETE", `/api/diploma-templates/${templateId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/diploma-templates"] });
@@ -159,10 +151,7 @@ export function DiplomaManagementPage() {
   // Toggle active status mutation
   const toggleActiveStatusMutation = useMutation({
     mutationFn: async ({ templateId, isActive }: { templateId: number; isActive: boolean }) => {
-      return apiRequest(`/api/diploma-templates/${templateId}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({ isActive }),
-      });
+      return apiRequest("PATCH", `/api/diploma-templates/${templateId}/status`, { isActive });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/diploma-templates"] });
@@ -228,39 +217,39 @@ export function DiplomaManagementPage() {
   // Certificate Preview Component
   const CertificatePreview = ({ template }: { template: DiplomaTemplate }) => (
     <div 
-      className="mx-auto p-8 border-4 rounded-lg shadow-lg bg-white"
+      className="mx-auto p-12 border-8 rounded-lg shadow-xl bg-white"
       style={{ 
         backgroundColor: template.backgroundColor,
         color: template.textColor,
         borderColor: template.borderColor,
-        width: '600px',
-        height: '400px'
+        width: '900px',
+        height: '600px'
       }}
     >
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-6">
         {template.logoUrl && (
-          <img src={template.logoUrl} alt="شعار الجامعة" className="mx-auto h-16 w-16 object-contain" />
+          <img src={template.logoUrl} alt="شعار الجامعة" className="mx-auto h-24 w-24 object-contain" />
         )}
-        <h1 className="text-2xl font-amiri font-bold">{template.institutionName}</h1>
-        <div className="border-t border-b border-current py-4">
-          <h2 className="text-xl font-amiri">شهادة {template.title}</h2>
-          <p className="text-lg mt-2">المستوى: {template.level}</p>
+        <h1 className="text-4xl font-amiri font-bold">{template.institutionName}</h1>
+        <div className="border-t-2 border-b-2 border-current py-6">
+          <h2 className="text-3xl font-amiri">شهادة {template.title}</h2>
+          <p className="text-2xl mt-3">المستوى: {template.level}</p>
         </div>
-        <p className="text-center">
+        <p className="text-center text-xl">
           تشهد هذه الجامعة بأن الطالب/الطالبة:
         </p>
-        <div className="text-2xl font-bold border-b border-current pb-2 mx-8">
+        <div className="text-3xl font-bold border-b-2 border-current pb-3 mx-12">
           [اسم الطالب]
         </div>
-        <p className="text-sm">
+        <p className="text-lg">
           قد أكمل بنجاح جميع متطلبات {template.title}
         </p>
-        <div className="flex justify-between items-end pt-8 text-sm">
+        <div className="flex justify-between items-end pt-12 text-base">
           <div>
             التاريخ: [تاريخ الإصدار]
             {template.sealUrl && (
-              <div className="mt-2">
-                <img src={template.sealUrl} alt="ختم الجامعة" className="w-16 h-16 object-contain" />
+              <div className="mt-3">
+                <img src={template.sealUrl} alt="ختم الجامعة" className="w-24 h-24 object-contain" />
               </div>
             )}
           </div>

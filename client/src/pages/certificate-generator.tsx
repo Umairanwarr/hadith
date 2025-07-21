@@ -68,9 +68,9 @@ export function CertificateGeneratorPage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas size (A4 landscape ratio)
-    canvas.width = 1200;
-    canvas.height = 800;
+    // Set canvas size (A3 landscape ratio for more space)
+    canvas.width = 1800;
+    canvas.height = 1200;
 
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -81,52 +81,52 @@ export function CertificateGeneratorPage() {
 
     // Border
     ctx.strokeStyle = template.borderColor;
-    ctx.lineWidth = 10;
-    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+    ctx.lineWidth = 15;
+    ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
     
     // Inner border
     ctx.strokeStyle = template.borderColor;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
+    ctx.lineWidth = 3;
+    ctx.strokeRect(60, 60, canvas.width - 120, canvas.height - 120);
 
     // Text color
     ctx.fillStyle = template.textColor;
     ctx.textAlign = "center";
 
     // Institution name
-    ctx.font = "bold 48px Arial";
-    ctx.fillText(template.institutionName, canvas.width / 2, 120);
+    ctx.font = "bold 72px Arial";
+    ctx.fillText(template.institutionName, canvas.width / 2, 180);
 
     // Certificate title
-    ctx.font = "32px Arial";
-    ctx.fillText(`شهادة ${certificate.course.title}`, canvas.width / 2, 180);
-    ctx.fillText(`المستوى: ${certificate.course.level}`, canvas.width / 2, 220);
+    ctx.font = "48px Arial";
+    ctx.fillText(`شهادة ${certificate.course.title}`, canvas.width / 2, 270);
+    ctx.fillText(`المستوى: ${certificate.course.level}`, canvas.width / 2, 330);
 
     // Main text
-    ctx.font = "24px Arial";
-    ctx.fillText("تشهد هذه الجامعة بأن الطالب/الطالبة:", canvas.width / 2, 300);
+    ctx.font = "36px Arial";
+    ctx.fillText("تشهد هذه الجامعة بأن الطالب/الطالبة:", canvas.width / 2, 450);
 
     // Student name
-    ctx.font = "bold 36px Arial";
-    ctx.fillText(certificate.studentName, canvas.width / 2, 380);
+    ctx.font = "bold 54px Arial";
+    ctx.fillText(certificate.studentName, canvas.width / 2, 570);
 
     // Course completion text
-    ctx.font = "24px Arial";
-    ctx.fillText(`قد أكمل بنجاح جميع متطلبات ${certificate.specialization}`, canvas.width / 2, 440);
+    ctx.font = "36px Arial";
+    ctx.fillText(`قد أكمل بنجاح جميع متطلبات ${certificate.specialization}`, canvas.width / 2, 660);
 
     // Grade and honors
     if (certificate.honors) {
-      ctx.fillText(`بتقدير: ${certificate.honors}`, canvas.width / 2, 480);
+      ctx.fillText(`بتقدير: ${certificate.honors}`, canvas.width / 2, 720);
     }
-    ctx.fillText(`الدرجة: ${certificate.grade}%`, canvas.width / 2, 520);
+    ctx.fillText(`الدرجة: ${certificate.grade}%`, canvas.width / 2, 780);
 
     // Completion date
     const completionDate = new Date(certificate.completionDate);
-    ctx.font = "20px Arial";
+    ctx.font = "30px Arial";
     ctx.fillText(
       `تاريخ الإنجاز: ${format(completionDate, "dd MMMM yyyy", { locale: ar })}`, 
       canvas.width / 2, 
-      580
+      840
     );
 
     // Footer information
@@ -388,7 +388,9 @@ export function CertificateGeneratorPage() {
                       className="border border-gray-300 rounded-lg shadow-lg max-w-full h-auto"
                       style={{
                         maxWidth: '100%',
-                        height: 'auto'
+                        height: 'auto',
+                        width: '800px',
+                        display: 'block'
                       }}
                     />
                   </div>

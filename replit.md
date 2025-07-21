@@ -60,6 +60,9 @@ This is a full-stack Islamic educational platform built for "جامعة الإم
 - **University Partnership**: Added collaboration information with Rabitat Al 3alamia lil Mohadithine al mosnadine
 - **University Mission**: Explained unique global position and goal to create new generation of hadith scholars
 - **Page Title Update**: Updated about university page title to match user preferences
+- **Enhanced Diploma Template Sizing**: Increased canvas from 1200x800 to 1800x1200 pixels and preview from 600x400 to 900x600 pixels
+- **Improved Certificate Generation**: Enhanced diploma templates with larger fonts and better spacing to accommodate Arabic text properly
+- **Fixed Certificate Text Layout**: Adjusted positioning and sizing of all text elements to prevent overlapping and ensure proper readability
 
 ## User Preferences
 
