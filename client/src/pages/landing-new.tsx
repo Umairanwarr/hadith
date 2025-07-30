@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "wouter";
 import logoPath from "@assets/logo better_1752953272174.png";
 
 export default function LandingNew() {
@@ -126,13 +127,14 @@ export default function LandingNew() {
               >
                 سجل الآن
               </Button>
-              <Button 
-                variant="outline"
-                onClick={() => window.location.href = "/about-university"}
-                className="border-green-600 text-green-600 hover:bg-green-50 px-10 py-4 text-lg font-semibold"
-              >
-                تعرف على الجامعة
-              </Button>
+              <Link href="/about-university">
+                <Button 
+                  variant="outline"
+                  className="border-green-600 text-green-600 hover:bg-green-50 px-10 py-4 text-lg font-semibold"
+                >
+                  تعرف على الجامعة
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
