@@ -5,6 +5,7 @@ import logoPath from "@assets/logo better_1752953272174.png";
 
 export default function LandingNew() {
   const handleLogin = () => {
+    console.log("Login button clicked, redirecting to /api/login");
     window.location.href = "/api/login";
   };
 
