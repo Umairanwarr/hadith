@@ -32,24 +32,30 @@ import {
   type InsertLiveSession,
   type DiplomaTemplate,
   type InsertDiplomaTemplate,
-} from "@shared/schema";
-import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+  UserRole,
+} from '@shared/schema';
+import { db } from './db';
+import { eq, desc, and, sql } from 'drizzle-orm';
 
 export interface IStorage {
-  // User operations (mandatory for Replit Auth)
-  getUser(id: string): Promise<User | undefined>;
-  upsertUser(user: UpsertUser): Promise<User>;
-  updateUserRole(userId: string, role: string): Promise<void>;
-  
+  // Auth operations
+  registerUser(user: UpsertUser): Promise<User>;
+
+  // User operations
+  getUserById(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+
   // Course operations
   getAllCourses(): Promise<Course[]>;
   getCourse(id: number): Promise<Course | undefined>;
   createCourse(course: InsertCourse): Promise<Course>;
-  updateCourse(id: number, updates: Partial<Course>): Promise<Course | undefined>;
+  updateCourse(
+    id: number,
+    updates: Partial<Course>
+  ): Promise<Course | undefined>;
   deleteCourse(id: number): Promise<void>;
   updateCourseLessonCount(courseId: number): Promise<void>;
-  
+
   // Live Sessions operations
   getAllLiveSessions(): Promise<any[]>;
   getLiveSession(id: number): Promise<any | undefined>;
@@ -57,25 +63,43 @@ export interface IStorage {
   updateLiveSession(id: number, updates: any): Promise<any | undefined>;
   deleteLiveSession(id: number): Promise<void>;
   setSessionLive(id: number, isLive: boolean): Promise<void>;
-  
+
   // Lesson operations
   getLessonsByCourse(courseId: number): Promise<Lesson[]>;
   getLesson(id: number): Promise<Lesson | undefined>;
   createLesson(lesson: InsertLesson): Promise<Lesson>;
-  updateLesson(id: number, updates: Partial<Lesson>): Promise<Lesson | undefined>;
+  updateLesson(
+    id: number,
+    updates: Partial<Lesson>
+  ): Promise<Lesson | undefined>;
   deleteLesson(id: number): Promise<void>;
-  
+
   // Enrollment operations
   enrollUserInCourse(enrollment: InsertEnrollment): Promise<Enrollment>;
-  getUserEnrollments(userId: string): Promise<(Enrollment & { course: Course })[]>;
-  getUserEnrollment(userId: string, courseId: number): Promise<Enrollment | undefined>;
-  updateEnrollmentProgress(userId: string, courseId: number, progress: number): Promise<void>;
-  
+  getUserEnrollments(
+    userId: string
+  ): Promise<(Enrollment & { course: Course })[]>;
+  getUserEnrollment(
+    userId: string,
+    courseId: number
+  ): Promise<Enrollment | undefined>;
+  updateEnrollmentProgress(
+    userId: string,
+    courseId: number,
+    progress: number
+  ): Promise<void>;
+
   // Lesson progress operations
   updateLessonProgress(progress: InsertLessonProgress): Promise<LessonProgress>;
-  getUserLessonProgress(userId: string, lessonId: number): Promise<LessonProgress | undefined>;
-  getUserCourseProgress(userId: string, courseId: number): Promise<LessonProgress[]>;
-  
+  getUserLessonProgress(
+    userId: string,
+    lessonId: number
+  ): Promise<LessonProgress | undefined>;
+  getUserCourseProgress(
+    userId: string,
+    courseId: number
+  ): Promise<LessonProgress[]>;
+
   // Exam operations
   getExamByCourse(courseId: number): Promise<Exam | undefined>;
   getExams(): Promise<Exam[]>;
@@ -85,19 +109,27 @@ export interface IStorage {
   deleteExam(id: number): Promise<void>;
   updateExamQuestionCount(examId: number): Promise<void>;
   createExamQuestion(question: InsertExamQuestion): Promise<ExamQuestion>;
-  updateExamQuestion(id: number, updates: Partial<ExamQuestion>): Promise<ExamQuestion | undefined>;
+  updateExamQuestion(
+    id: number,
+    updates: Partial<ExamQuestion>
+  ): Promise<ExamQuestion | undefined>;
   deleteExamQuestion(id: number): Promise<void>;
   getExamQuestion(id: number): Promise<ExamQuestion | undefined>;
   createExamAttempt(attempt: InsertExamAttempt): Promise<ExamAttempt>;
   getUserExamAttempts(userId: string, examId: number): Promise<ExamAttempt[]>;
   getExamAttempt(id: number): Promise<ExamAttempt | undefined>;
-  updateExamAttempt(id: number, updates: Partial<ExamAttempt>): Promise<ExamAttempt>;
-  
+  updateExamAttempt(
+    id: number,
+    updates: Partial<ExamAttempt>
+  ): Promise<ExamAttempt>;
+
   // Certificate operations
   createCertificate(certificate: InsertCertificate): Promise<Certificate>;
-  getUserCertificates(userId: string): Promise<(Certificate & { course: Course })[]>;
+  getUserCertificates(
+    userId: string
+  ): Promise<(Certificate & { course: Course })[]>;
   getCertificate(id: number): Promise<Certificate | undefined>;
-  
+
   // Dashboard statistics
   getUserStats(userId: string): Promise<{
     completedCourses: number;
@@ -105,7 +137,7 @@ export interface IStorage {
     totalHours: number;
     averageGrade: number;
   }>;
-  
+
   // Admin statistics
   getAdminStats(): Promise<{
     totalUsers: number;
@@ -113,61 +145,67 @@ export interface IStorage {
     totalExams: number;
     totalEnrollments: number;
   }>;
-  
-  // User role management
-  updateUserRole(userId: string, role: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
-  
-  // Live Sessions operations
-  async getAllLiveSessions(): Promise<any[]> {
-    return []; // Mock for now until we implement database
-  }
-  
-  async getLiveSession(id: number): Promise<any | undefined> {
-    return undefined; // Mock for now
-  }
-  
-  async createLiveSession(session: any): Promise<any> {
-    return { id: Date.now(), ...session }; // Mock for now
-  }
-  
-  async updateLiveSession(id: number, updates: any): Promise<any | undefined> {
-    return undefined; // Mock for now
-  }
-  
-  async deleteLiveSession(id: number): Promise<void> {
-    // Mock for now
-  }
-  
-  async setSessionLive(id: number, isLive: boolean): Promise<void> {
-    // Mock for now
-  }
-  // User operations (mandatory for Replit Auth)
-  async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
-  }
-
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
+  // Auth operations
+  async registerUser(userData: UpsertUser): Promise<User> {
+    const newUser = await db
       .insert(users)
       .values(userData)
       .onConflictDoUpdate({
         target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
+        set: { ...userData, updatedAt: new Date() },
       })
       .returning();
+    return newUser[0];
+  }
+
+  // User operations
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
+    return user ?? undefined;
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
+  }
+
+  // Live Sessions operations
+  async getAllLiveSessions(): Promise<any[]> {
+    return []; // Mock for now until we implement database
+  }
+
+  async getLiveSession(id: number): Promise<any | undefined> {
+    return undefined; // Mock for now
+  }
+
+  async createLiveSession(session: any): Promise<any> {
+    return { id: Date.now(), ...session }; // Mock for now
+  }
+
+  async updateLiveSession(id: number, updates: any): Promise<any | undefined> {
+    return undefined; // Mock for now
+  }
+
+  async deleteLiveSession(id: number): Promise<void> {
+    // Mock for now
+  }
+
+  async setSessionLive(id: number, isLive: boolean): Promise<void> {
+    // Mock for now
   }
 
   // Course operations
   async getAllCourses(): Promise<Course[]> {
-    return db.select().from(courses).where(eq(courses.isActive, true)).orderBy(courses.createdAt);
+    return db
+      .select()
+      .from(courses)
+      .where(eq(courses.isActive, true))
+      .orderBy(courses.createdAt);
   }
 
   async getCourse(id: number): Promise<Course | undefined> {
@@ -180,7 +218,10 @@ export class DatabaseStorage implements IStorage {
     return newCourse;
   }
 
-  async updateCourse(id: number, updates: Partial<Course>): Promise<Course | undefined> {
+  async updateCourse(
+    id: number,
+    updates: Partial<Course>
+  ): Promise<Course | undefined> {
     const [updatedCourse] = await db
       .update(courses)
       .set(updates)
@@ -198,7 +239,7 @@ export class DatabaseStorage implements IStorage {
       .select({ count: sql<number>`count(*)` })
       .from(lessons)
       .where(eq(lessons.courseId, courseId));
-      
+
     await db
       .update(courses)
       .set({ totalLessons: lessonsCount[0].count })
@@ -207,7 +248,9 @@ export class DatabaseStorage implements IStorage {
 
   // Lesson operations
   async getLessonsByCourse(courseId: number): Promise<Lesson[]> {
-    return db.select().from(lessons)
+    return db
+      .select()
+      .from(lessons)
       .where(and(eq(lessons.courseId, courseId), eq(lessons.isActive, true)))
       .orderBy(lessons.order);
   }
@@ -222,7 +265,10 @@ export class DatabaseStorage implements IStorage {
     return newLesson;
   }
 
-  async updateLesson(id: number, updates: Partial<Lesson>): Promise<Lesson | undefined> {
+  async updateLesson(
+    id: number,
+    updates: Partial<Lesson>
+  ): Promise<Lesson | undefined> {
     const [updatedLesson] = await db
       .update(lessons)
       .set(updates)
@@ -237,51 +283,78 @@ export class DatabaseStorage implements IStorage {
 
   // Enrollment operations
   async enrollUserInCourse(enrollment: InsertEnrollment): Promise<Enrollment> {
-    const [newEnrollment] = await db.insert(enrollments).values(enrollment).returning();
+    const [newEnrollment] = await db
+      .insert(enrollments)
+      .values(enrollment)
+      .returning();
     return newEnrollment;
   }
 
-  async getUserEnrollments(userId: string): Promise<(Enrollment & { course: Course })[]> {
-    return db.select({
-      id: enrollments.id,
-      userId: enrollments.userId,
-      courseId: enrollments.courseId,
-      enrolledAt: enrollments.enrolledAt,
-      completedAt: enrollments.completedAt,
-      progress: enrollments.progress,
-      course: courses,
-    })
-    .from(enrollments)
-    .innerJoin(courses, eq(enrollments.courseId, courses.id))
-    .where(eq(enrollments.userId, userId))
-    .orderBy(desc(enrollments.enrolledAt));
+  async getUserEnrollments(
+    userId: string
+  ): Promise<(Enrollment & { course: Course })[]> {
+    return db
+      .select({
+        id: enrollments.id,
+        userId: enrollments.userId,
+        courseId: enrollments.courseId,
+        enrolledAt: enrollments.enrolledAt,
+        completedAt: enrollments.completedAt,
+        progress: enrollments.progress,
+        course: courses,
+      })
+      .from(enrollments)
+      .innerJoin(courses, eq(enrollments.courseId, courses.id))
+      .where(eq(enrollments.userId, userId))
+      .orderBy(desc(enrollments.enrolledAt));
   }
 
-  async getUserEnrollment(userId: string, courseId: number): Promise<Enrollment | undefined> {
-    const [enrollment] = await db.select().from(enrollments)
-      .where(and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId)));
+  async getUserEnrollment(
+    userId: string,
+    courseId: number
+  ): Promise<Enrollment | undefined> {
+    const [enrollment] = await db
+      .select()
+      .from(enrollments)
+      .where(
+        and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId))
+      );
     return enrollment;
   }
 
-  async updateEnrollmentProgress(userId: string, courseId: number, progress: number): Promise<void> {
-    await db.update(enrollments)
-      .set({ 
+  async updateEnrollmentProgress(
+    userId: string,
+    courseId: number,
+    progress: number
+  ): Promise<void> {
+    await db
+      .update(enrollments)
+      .set({
         progress: progress.toString(),
-        completedAt: progress >= 100 ? new Date() : null 
+        completedAt: progress >= 100 ? new Date() : null,
       })
-      .where(and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId)));
+      .where(
+        and(eq(enrollments.userId, userId), eq(enrollments.courseId, courseId))
+      );
   }
 
   // Lesson progress operations
-  async updateLessonProgress(progress: InsertLessonProgress): Promise<LessonProgress> {
-    const [existingProgress] = await db.select().from(lessonProgress)
-      .where(and(
-        eq(lessonProgress.userId, progress.userId),
-        eq(lessonProgress.lessonId, progress.lessonId)
-      ));
+  async updateLessonProgress(
+    progress: InsertLessonProgress
+  ): Promise<LessonProgress> {
+    const [existingProgress] = await db
+      .select()
+      .from(lessonProgress)
+      .where(
+        and(
+          eq(lessonProgress.userId, progress.userId),
+          eq(lessonProgress.lessonId, progress.lessonId)
+        )
+      );
 
     if (existingProgress) {
-      const [updated] = await db.update(lessonProgress)
+      const [updated] = await db
+        .update(lessonProgress)
         .set({
           watchedDuration: progress.watchedDuration,
           isCompleted: progress.isCompleted,
@@ -292,36 +365,62 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return updated;
     } else {
-      const [newProgress] = await db.insert(lessonProgress).values(progress).returning();
+      const [newProgress] = await db
+        .insert(lessonProgress)
+        .values(progress)
+        .returning();
       return newProgress;
     }
   }
 
-  async getUserLessonProgress(userId: string, lessonId: number): Promise<LessonProgress | undefined> {
-    const [progress] = await db.select().from(lessonProgress)
-      .where(and(eq(lessonProgress.userId, userId), eq(lessonProgress.lessonId, lessonId)));
+  async getUserLessonProgress(
+    userId: string,
+    lessonId: number
+  ): Promise<LessonProgress | undefined> {
+    const [progress] = await db
+      .select()
+      .from(lessonProgress)
+      .where(
+        and(
+          eq(lessonProgress.userId, userId),
+          eq(lessonProgress.lessonId, lessonId)
+        )
+      );
     return progress;
   }
 
-  async getUserCourseProgress(userId: string, courseId: number): Promise<LessonProgress[]> {
-    return db.select().from(lessonProgress)
-      .where(and(eq(lessonProgress.userId, userId), eq(lessonProgress.courseId, courseId)));
+  async getUserCourseProgress(
+    userId: string,
+    courseId: number
+  ): Promise<LessonProgress[]> {
+    return db
+      .select()
+      .from(lessonProgress)
+      .where(
+        and(
+          eq(lessonProgress.userId, userId),
+          eq(lessonProgress.courseId, courseId)
+        )
+      );
   }
 
   // Exam operations
   async getExamByCourse(courseId: number): Promise<Exam | undefined> {
-    const [exam] = await db.select().from(exams)
+    const [exam] = await db
+      .select()
+      .from(exams)
       .where(and(eq(exams.courseId, courseId), eq(exams.isActive, true)));
     return exam;
   }
 
   async getExams(): Promise<Exam[]> {
-    return db.select().from(exams)
-      .orderBy(desc(exams.createdAt));
+    return db.select().from(exams).orderBy(desc(exams.createdAt));
   }
 
   async getExamQuestions(examId: number): Promise<ExamQuestion[]> {
-    return db.select().from(examQuestions)
+    return db
+      .select()
+      .from(examQuestions)
       .where(eq(examQuestions.examId, examId))
       .orderBy(examQuestions.order);
   }
@@ -331,7 +430,10 @@ export class DatabaseStorage implements IStorage {
     return newExam;
   }
 
-  async updateExam(id: number, updates: Partial<Exam>): Promise<Exam | undefined> {
+  async updateExam(
+    id: number,
+    updates: Partial<Exam>
+  ): Promise<Exam | undefined> {
     const [updatedExam] = await db
       .update(exams)
       .set(updates)
@@ -349,19 +451,27 @@ export class DatabaseStorage implements IStorage {
       .select({ count: sql<number>`count(*)` })
       .from(examQuestions)
       .where(eq(examQuestions.examId, examId));
-      
+
     await db
       .update(exams)
       .set({ totalQuestions: questionsCount[0].count })
       .where(eq(exams.id, examId));
   }
 
-  async createExamQuestion(question: InsertExamQuestion): Promise<ExamQuestion> {
-    const [newQuestion] = await db.insert(examQuestions).values(question).returning();
+  async createExamQuestion(
+    question: InsertExamQuestion
+  ): Promise<ExamQuestion> {
+    const [newQuestion] = await db
+      .insert(examQuestions)
+      .values(question)
+      .returning();
     return newQuestion;
   }
 
-  async updateExamQuestion(id: number, updates: Partial<ExamQuestion>): Promise<ExamQuestion | undefined> {
+  async updateExamQuestion(
+    id: number,
+    updates: Partial<ExamQuestion>
+  ): Promise<ExamQuestion | undefined> {
     const [updatedQuestion] = await db
       .update(examQuestions)
       .set(updates)
@@ -375,28 +485,48 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getExamQuestion(id: number): Promise<ExamQuestion | undefined> {
-    const [question] = await db.select().from(examQuestions).where(eq(examQuestions.id, id));
+    const [question] = await db
+      .select()
+      .from(examQuestions)
+      .where(eq(examQuestions.id, id));
     return question;
   }
 
   async createExamAttempt(attempt: InsertExamAttempt): Promise<ExamAttempt> {
-    const [newAttempt] = await db.insert(examAttempts).values(attempt).returning();
+    const [newAttempt] = await db
+      .insert(examAttempts)
+      .values(attempt)
+      .returning();
     return newAttempt;
   }
 
-  async getUserExamAttempts(userId: string, examId: number): Promise<ExamAttempt[]> {
-    return db.select().from(examAttempts)
-      .where(and(eq(examAttempts.userId, userId), eq(examAttempts.examId, examId)))
+  async getUserExamAttempts(
+    userId: string,
+    examId: number
+  ): Promise<ExamAttempt[]> {
+    return db
+      .select()
+      .from(examAttempts)
+      .where(
+        and(eq(examAttempts.userId, userId), eq(examAttempts.examId, examId))
+      )
       .orderBy(desc(examAttempts.startedAt));
   }
 
   async getExamAttempt(id: number): Promise<ExamAttempt | undefined> {
-    const [attempt] = await db.select().from(examAttempts).where(eq(examAttempts.id, id));
+    const [attempt] = await db
+      .select()
+      .from(examAttempts)
+      .where(eq(examAttempts.id, id));
     return attempt;
   }
 
-  async updateExamAttempt(id: number, updates: Partial<ExamAttempt>): Promise<ExamAttempt> {
-    const [updated] = await db.update(examAttempts)
+  async updateExamAttempt(
+    id: number,
+    updates: Partial<ExamAttempt>
+  ): Promise<ExamAttempt> {
+    const [updated] = await db
+      .update(examAttempts)
       .set(updates)
       .where(eq(examAttempts.id, id))
       .returning();
@@ -436,26 +566,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserCertificates(userId: string): Promise<any[]> {
-    return db.select({
-      id: certificates.id,
-      userId: certificates.userId,
-      courseId: certificates.courseId,
-      examAttemptId: certificates.examAttemptId,
-      certificateNumber: certificates.certificateNumber,
-      studentName: certificates.studentName,
-      specialization: certificates.specialization,
-      honors: certificates.honors,
-      completionDate: certificates.completionDate,
-      diplomaTemplateId: certificates.diplomaTemplateId,
-      issuedAt: certificates.issuedAt,
-      grade: certificates.grade,
-      isValid: certificates.isValid,
-      course: courses,
-    })
-    .from(certificates)
-    .innerJoin(courses, eq(certificates.courseId, courses.id))
-    .where(and(eq(certificates.userId, userId), eq(certificates.isValid, true)))
-    .orderBy(desc(certificates.issuedAt));
+    return db
+      .select({
+        id: certificates.id,
+        userId: certificates.userId,
+        courseId: certificates.courseId,
+        examAttemptId: certificates.examAttemptId,
+        certificateNumber: certificates.certificateNumber,
+        studentName: certificates.studentName,
+        specialization: certificates.specialization,
+        honors: certificates.honors,
+        completionDate: certificates.completionDate,
+        diplomaTemplateId: certificates.diplomaTemplateId,
+        issuedAt: certificates.issuedAt,
+        grade: certificates.grade,
+        isValid: certificates.isValid,
+        course: courses,
+      })
+      .from(certificates)
+      .innerJoin(courses, eq(certificates.courseId, courses.id))
+      .where(
+        and(eq(certificates.userId, userId), eq(certificates.isValid, true))
+      )
+      .orderBy(desc(certificates.issuedAt));
   }
 
   // Diploma Templates operations
@@ -492,7 +625,10 @@ export class DatabaseStorage implements IStorage {
     return template;
   }
 
-  async updateDiplomaTemplate(id: number, updates: any): Promise<any | undefined> {
+  async updateDiplomaTemplate(
+    id: number,
+    updates: any
+  ): Promise<any | undefined> {
     const [updated] = await db
       .update(diplomaTemplates)
       .set({
@@ -508,7 +644,10 @@ export class DatabaseStorage implements IStorage {
     await db.delete(diplomaTemplates).where(eq(diplomaTemplates.id, id));
   }
 
-  async toggleDiplomaTemplateStatus(id: number, isActive: boolean): Promise<void> {
+  async toggleDiplomaTemplateStatus(
+    id: number,
+    isActive: boolean
+  ): Promise<void> {
     await db
       .update(diplomaTemplates)
       .set({ isActive, updatedAt: new Date() })
@@ -516,7 +655,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCertificate(id: number): Promise<Certificate | undefined> {
-    const [certificate] = await db.select().from(certificates).where(eq(certificates.id, id));
+    const [certificate] = await db
+      .select()
+      .from(certificates)
+      .where(eq(certificates.id, id));
     return certificate;
   }
 
@@ -527,21 +669,31 @@ export class DatabaseStorage implements IStorage {
     totalExams: number;
     totalEnrollments: number;
   }> {
-    const [usersCount] = await db.select({
-      count: sql<number>`count(*)::int`
-    }).from(users);
+    const [usersCount] = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(users);
 
-    const [coursesCount] = await db.select({
-      count: sql<number>`count(*)::int`
-    }).from(courses).where(eq(courses.isActive, true));
+    const [coursesCount] = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(courses)
+      .where(eq(courses.isActive, true));
 
-    const [examsCount] = await db.select({
-      count: sql<number>`count(*)::int`
-    }).from(exams).where(eq(exams.isActive, true));
+    const [examsCount] = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(exams)
+      .where(eq(exams.isActive, true));
 
-    const [enrollmentsCount] = await db.select({
-      count: sql<number>`count(*)::int`
-    }).from(enrollments);
+    const [enrollmentsCount] = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(enrollments);
 
     return {
       totalUsers: usersCount?.count || 0,
@@ -559,29 +711,51 @@ export class DatabaseStorage implements IStorage {
     averageGrade: number;
   }> {
     // Completed courses count
-    const [completedResult] = await db.select({
-      count: sql<number>`count(*)::int`
-    }).from(enrollments)
-    .where(and(eq(enrollments.userId, userId), sql`${enrollments.completedAt} IS NOT NULL`));
+    const [completedResult] = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(enrollments)
+      .where(
+        and(
+          eq(enrollments.userId, userId),
+          sql`${enrollments.completedAt} IS NOT NULL`
+        )
+      );
 
     // Certificates count
-    const [certificatesResult] = await db.select({
-      count: sql<number>`count(*)::int`
-    }).from(certificates)
-    .where(and(eq(certificates.userId, userId), eq(certificates.isValid, true)));
+    const [certificatesResult] = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(certificates)
+      .where(
+        and(eq(certificates.userId, userId), eq(certificates.isValid, true))
+      );
 
     // Total hours from completed lessons
-    const [hoursResult] = await db.select({
-      totalSeconds: sql<number>`COALESCE(SUM(${lessons.duration}), 0)::int`
-    }).from(lessonProgress)
-    .innerJoin(lessons, eq(lessonProgress.lessonId, lessons.id))
-    .where(and(eq(lessonProgress.userId, userId), eq(lessonProgress.isCompleted, true)));
+    const [hoursResult] = await db
+      .select({
+        totalSeconds: sql<number>`COALESCE(SUM(${lessons.duration}), 0)::int`,
+      })
+      .from(lessonProgress)
+      .innerJoin(lessons, eq(lessonProgress.lessonId, lessons.id))
+      .where(
+        and(
+          eq(lessonProgress.userId, userId),
+          eq(lessonProgress.isCompleted, true)
+        )
+      );
 
     // Average grade from passed exams
-    const [gradeResult] = await db.select({
-      avgGrade: sql<number>`COALESCE(AVG(${examAttempts.score}), 0)::decimal`
-    }).from(examAttempts)
-    .where(and(eq(examAttempts.userId, userId), eq(examAttempts.passed, true)));
+    const [gradeResult] = await db
+      .select({
+        avgGrade: sql<number>`COALESCE(AVG(${examAttempts.score}), 0)::decimal`,
+      })
+      .from(examAttempts)
+      .where(
+        and(eq(examAttempts.userId, userId), eq(examAttempts.passed, true))
+      );
 
     return {
       completedCourses: completedResult?.count || 0,
@@ -589,14 +763,6 @@ export class DatabaseStorage implements IStorage {
       totalHours: Math.round((hoursResult?.totalSeconds || 0) / 3600), // Convert seconds to hours
       averageGrade: Math.round(Number(gradeResult?.avgGrade) || 0),
     };
-  }
-
-  // User role management
-  async updateUserRole(userId: string, role: string): Promise<void> {
-    await db
-      .update(users)
-      .set({ role, updatedAt: new Date() })
-      .where(eq(users.id, userId));
   }
 }
 

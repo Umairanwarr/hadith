@@ -1,0 +1,16 @@
+{
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "email": "Email",
+    "password": "Password"
+  },
+  "validation": {
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required"
+  },
+  "toast": {
+    "loginSuccess": "Login successful",
+    "loginError": "Login error"
+  }
+}

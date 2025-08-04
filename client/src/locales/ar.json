@@ -1,0 +1,16 @@
+{
+  "auth": {
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور"
+  },
+  "validation": {
+    "emailRequired": "البريد الإلكتروني مطلوب",
+    "passwordRequired": "كلمة المرور مطلوبة"
+  },
+  "toast": {
+    "loginSuccess": "تم تسجيل الدخول بنجاح",
+    "loginError": "خطأ في تسجيل الدخول"
+  }
+}
