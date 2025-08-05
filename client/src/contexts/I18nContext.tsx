@@ -1,29 +1,39 @@
-import React, { createContext, useReducer, useEffect } from 'react';
+import React, { createContext, useReducer, useEffect, ReactNode, useContext } from 'react';
 import { translations, defaultLanguage } from '../locales';
 
+interface I18nState {
+  currentLanguage: string;
+  translations: Record<string, any>;
+  isRTL: boolean;
+}
+
+interface I18nContextType extends I18nState {
+  t: (key: string, params?: Record<string, any>) => string;
+  changeLanguage: (language: string) => void;
+}
+
 // Initial state
-const initialState = {
+const initialState: I18nState = {
   currentLanguage: defaultLanguage,
   translations: translations[defaultLanguage],
   isRTL: defaultLanguage === 'ar',
 };
 
 // Action types
-const I18N_ACTIONS = {
-  CHANGE_LANGUAGE: 'CHANGE_LANGUAGE',
-  SET_LANGUAGE: 'SET_LANGUAGE',
-};
+type I18nAction = 
+  | { type: 'CHANGE_LANGUAGE'; payload: { language: string } }
+  | { type: 'SET_LANGUAGE'; payload: { language: string } };
 
 // Reducer
-const i18nReducer = (state, action) => {
+const i18nReducer = (state: I18nState, action: I18nAction): I18nState => {
   switch (action.type) {
-    case I18N_ACTIONS.CHANGE_LANGUAGE:
-    case I18N_ACTIONS.SET_LANGUAGE:
+    case 'CHANGE_LANGUAGE':
+    case 'SET_LANGUAGE':
       const { language } = action.payload;
       return {
         ...state,
         currentLanguage: language,
-        translations: translations[language],
+        translations: translations[language as keyof typeof translations] || translations[defaultLanguage],
         isRTL: language === 'ar',
       };
     default:
@@ -32,18 +42,18 @@ const i18nReducer = (state, action) => {
 };
 
 // Create context
-export const I18nContext = createContext();
+export const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
 // Provider component
-export const I18nProvider = ({ children }) => {
+export const I18nProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(i18nReducer, initialState);
 
   // Load saved language from localStorage on mount
   useEffect(() => {
     const savedLanguage = localStorage.getItem('preferred-language');
-    if (savedLanguage && translations[savedLanguage]) {
+    if (savedLanguage && translations[savedLanguage as keyof typeof translations]) {
       dispatch({
-        type: I18N_ACTIONS.SET_LANGUAGE,
+        type: 'SET_LANGUAGE',
         payload: { language: savedLanguage },
       });
     }
@@ -56,14 +66,14 @@ export const I18nProvider = ({ children }) => {
   }, [state.currentLanguage, state.isRTL]);
 
   // Change language function
-  const changeLanguage = (language) => {
-    if (!translations[language]) {
+  const changeLanguage = (language: string) => {
+    if (!translations[language as keyof typeof translations]) {
       console.warn(`Language ${language} not supported`);
       return;
     }
 
     dispatch({
-      type: I18N_ACTIONS.CHANGE_LANGUAGE,
+      type: 'CHANGE_LANGUAGE',
       payload: { language },
     });
 
@@ -72,9 +82,9 @@ export const I18nProvider = ({ children }) => {
   };
 
   // Translation function with parameter interpolation
-  const t = (key, params = {}) => {
+  const t = (key: string, params: Record<string, any> = {}) => {
     const keys = key.split('.');
-    let value = state.translations;
+    let value: any = state.translations;
 
     for (const k of keys) {
       value = value?.[k];
@@ -101,4 +111,13 @@ export const I18nProvider = ({ children }) => {
   };
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+};
+
+// Hook to use I18n context
+export const useI18n = (): I18nContextType => {
+  const context = useContext(I18nContext);
+  if (context === undefined) {
+    throw new Error('useI18n must be used within an I18nProvider');
+  }
+  return context;
 };

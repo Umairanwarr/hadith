@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import {
@@ -26,63 +26,15 @@ import {
 import { setCookie } from '@/utils/cookies';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { useTranslation } from '@/hooks/use-translation';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLocation } from 'wouter';
 
 // API Configuration
 const API_BASE_URL =
-  process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+  import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// API functions using fetch
-const loginApi = async (data: { email: string; password: string }) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.message || 'Login failed');
-    }
-
-    return result;
-  } catch (error) {
-    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      throw new Error('NETWORK_ERROR');
-    }
-    throw error;
-  }
-};
-
-const signupApi = async (data) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.message || 'Signup failed');
-    }
-
-    return result;
-  } catch (error) {
-    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      throw new Error('NETWORK_ERROR');
-    }
-    throw error;
-  }
-};
-
-const forgotPasswordApi = async (data) => {
+// Forgot password API function (keeping this since AuthContext doesn't have it)
+const forgotPasswordApi = async (data: any) => {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
       method: 'POST',
@@ -99,7 +51,7 @@ const forgotPasswordApi = async (data) => {
     }
 
     return result;
-  } catch (error) {
+  } catch (error: any) {
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
       throw new Error('NETWORK_ERROR');
     }
@@ -114,6 +66,18 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
   const { t, currentLanguage } = useTranslation();
+  const { login, register: authRegister, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // Redirect to dashboard when authenticated
+  useEffect(() => {
+    console.log('Auth useEffect triggered, isAuthenticated:', isAuthenticated);
+    if (isAuthenticated) {
+      console.log('Redirecting to dashboard...');
+      setLocation('/');
+      console.log('setLocation called');
+    }
+  }, [isAuthenticated, setLocation]);
 
   // React Hook Form configurations
   const loginForm = useForm({
@@ -142,7 +106,7 @@ const Auth = () => {
   });
 
   // Error message helper
-  const getErrorMessage = (error) => {
+  const getErrorMessage = (error: any) => {
     if (error.message === 'NETWORK_ERROR') {
       return t('toast.networkError');
     }
@@ -151,25 +115,25 @@ const Auth = () => {
 
   // TanStack Query Mutations
   const loginMutation = useMutation({
-    mutationFn: loginApi,
-    onSuccess: (data) => {
-      if (data.token) {
-        setCookie('authToken', data.token, 7);
-      }
-
-      if (data.user) {
-        setCookie('userData', JSON.stringify(data.user), 7);
-      }
-
-      const roleName = t(`auth.${data.user?.role || 'student'}`);
+    mutationFn: async (data: { email: string; password: string }) => {
+      await login(data.email, data.password);
+    },
+    onSuccess: () => {
+      const roleName = t('auth.student');
       toast({
         title: t('toast.loginSuccess'),
         description: t('toast.loginWelcome', {
-          name: data.user?.firstName || '',
+          name: '',
           role: roleName,
         }),
         duration: 3000,
       });
+      
+      // Force redirect to dashboard after successful login
+      console.log('Login mutation success, redirecting to dashboard...');
+      setTimeout(() => {
+        setLocation('/');
+      }, 100);
     },
     onError: (error) => {
       toast({
@@ -182,21 +146,15 @@ const Auth = () => {
   });
 
   const signupMutation = useMutation({
-    mutationFn: signupApi,
-    onSuccess: (data) => {
-      if (data.token) {
-        setCookie('authToken', data.token, 7);
-      }
-
-      if (data.user) {
-        setCookie('userData', JSON.stringify(data.user), 7);
-      }
-
-      const roleName = t(`auth.${data.user?.role || 'student'}`);
+    mutationFn: async (data: any) => {
+      await authRegister(data);
+    },
+    onSuccess: () => {
+      const roleName = t('auth.student');
       toast({
         title: t('toast.signupSuccess'),
         description: t('toast.signupWelcome', {
-          name: data.user?.firstName || '',
+          name: '',
           role: roleName,
         }),
         duration: 3000,
@@ -234,11 +192,11 @@ const Auth = () => {
     },
   });
 
-  const onLoginSubmit = (data) => {
+  const onLoginSubmit = (data: any) => {
     loginMutation.mutate(data);
   };
 
-  const onSignupSubmit = (data) => {
+  const onSignupSubmit = (data: any) => {
     if (data.password !== data.confirmPassword) {
       toast({
         variant: 'destructive',
@@ -256,7 +214,7 @@ const Auth = () => {
     });
   };
 
-  const onForgotPasswordSubmit = (data) => {
+  const onForgotPasswordSubmit = (data: any) => {
     forgotPasswordMutation.mutate(data);
   };
 

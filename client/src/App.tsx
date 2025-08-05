@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import PWAInstallBanner from '@/components/pwa-install-banner';
 import OfflineIndicator from '@/components/offline-indicator';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import NotFound from '@/pages/not-found';
 import LandingNew from '@/pages/landing-new';
 import Dashboard from '@/pages/dashboard';
@@ -41,7 +41,8 @@ import { SampleCertificatesPage } from '@/pages/sample-certificates';
 import { CourseManagementPage } from '@/pages/course-management';
 import AboutUniversity from '@/pages/about-university';
 import Auth from './pages/auth';
-import { I18nProvider } from './contexts/I18nContext';
+import { AppContextProvider } from './contexts/AppContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -68,6 +69,7 @@ function Router() {
       ) : (
         <>
           <Route path='/' component={Dashboard} />
+          <Route path='/auth' component={Dashboard} />
           <Route path='/course/:id' component={CourseDetails} />
           <Route
             path='/course/:courseId/lessons/:lessonId'
@@ -130,14 +132,16 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <I18nProvider defaultLanguage='ar'>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-          <PWAInstallBanner />
-          <OfflineIndicator />
-        </TooltipProvider>
-      </I18nProvider>
+      <AuthProvider>
+        <AppContextProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+            <PWAInstallBanner />
+            <OfflineIndicator />
+          </TooltipProvider>
+        </AppContextProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
