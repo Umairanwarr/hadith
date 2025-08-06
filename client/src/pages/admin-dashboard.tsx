@@ -31,7 +31,7 @@ function InitializeCoursesButton() {
     onError: (error: any) => {
       if (error.message?.includes("already exist")) {
         toast({
-          title: "تنبيه", 
+          title: "تنبيه",
           description: "المواد الدراسية موجودة بالفعل",
           variant: "destructive",
         });
@@ -57,7 +57,7 @@ function InitializeCoursesButton() {
   });
 
   return (
-    <Button 
+    <Button
       onClick={() => initializeMutation.mutate()}
       disabled={initializeMutation.isPending}
       className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -192,8 +192,18 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-white pt-24 pb-20" dir="rtl">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">لوحة الإدارة</h1>
-          <p className="text-gray-600">إدارة المواد والاختبارات والطلاب</p>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">لوحة الإدارة</h1>
+              <p className="text-gray-600">إدارة المواد والاختبارات والطلاب</p>
+            </div>
+            <Link href="/">
+              <Button variant="outline" className="bg-white hover:bg-gray-50 border-gray-300">
+                <i className="fas fa-arrow-right ml-2"></i>
+                العودة للوحة الرئيسية
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats Cards */}

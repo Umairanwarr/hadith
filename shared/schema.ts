@@ -27,7 +27,7 @@ import { relations } from 'drizzle-orm';
 //   (table) => [index('IDX_session_expire').on(table.expire)]
 // ); // since we are using jwt
 
-export const userRoleEnum = pgEnum('role', ['student', 'admin']);
+export const userRoleEnum = pgEnum('role', ['student', 'admin', 'teacher']);
 export type UserRole = (typeof userRoleEnum.enumValues)[number];
 
 // User storage table

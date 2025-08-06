@@ -8,6 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 interface Course {
@@ -39,6 +40,7 @@ interface DashboardStats {
 export default function Dashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
@@ -149,7 +151,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8">
         {/* Dashboard Hero - Compact */}
         <section className="mb-8">
@@ -162,6 +164,17 @@ export default function Dashboard() {
                 <p className="text-xs md:text-sm mb-3 text-green-100">
                   ادرس علوم الحديث الشريف مع نخبة من العلماء المختصين واحصل على شهادات معتمدة
                 </p>
+                {/* Admin Button - Only show for admin users */}
+                {user?.role === 'admin' && (
+                  <div className="mt-3">
+                    <Link href="/admin">
+                      <Button className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm">
+                        <i className="fas fa-cog ml-2"></i>
+                        لوحة الإدارة
+                      </Button>
+                    </Link>
+                  </div>
+                )}
               </div>
               <div className="flex gap-2">
                 <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-center border border-white/30 min-w-[60px]">
@@ -195,7 +208,7 @@ export default function Dashboard() {
                   </p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Preparatory Diploma */}
                 <Link href="/diploma/preparatory">
@@ -344,8 +357,8 @@ export default function Dashboard() {
                         <span>{Math.round(Number(enrollment.progress))}%</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1">
-                        <div 
-                          className="bg-green-600 h-1 rounded-full transition-all duration-300" 
+                        <div
+                          className="bg-green-600 h-1 rounded-full transition-all duration-300"
                           style={{ width: `${Number(enrollment.progress)}%` }}
                         ></div>
                       </div>
@@ -371,7 +384,7 @@ export default function Dashboard() {
           </section>
         )}
 
-        
+
 
 
       </main>

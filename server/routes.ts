@@ -394,7 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     async (req: any, res) => {
       try {
-        const userId = (req.user as any)?.claims?.sub;
+        const userId = (req.user as any)?.id;
         const courseId = parseInt(req.params.id);
 
         // Check if already enrolled
@@ -419,7 +419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/my-enrollments', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = (req.user as any)?.id;
       const enrollments = await storage.getUserEnrollments(userId);
       res.json(enrollments);
     } catch (error) {
@@ -434,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     async (req: any, res) => {
       try {
-        const userId = (req.user as any)?.claims?.sub;
+        const userId = (req.user as any)?.id;
         const lessonId = parseInt(req.params.id);
         const { watchedDuration, isCompleted, courseId } = req.body;
 
@@ -478,7 +478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     async (req: any, res) => {
       try {
-        const userId = (req.user as any)?.claims?.sub;
+        const userId = (req.user as any)?.id;
         const courseId = parseInt(req.params.courseId);
         const progress = await storage.getUserCourseProgress(userId, courseId);
         res.json(progress);
@@ -571,7 +571,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     async (req: any, res) => {
       try {
-        const userId = (req.user as any)?.claims?.sub;
+        const userId = (req.user as any)?.id;
         const attemptId = parseInt(req.params.id);
         const { answers } = req.body;
 
@@ -662,7 +662,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Certificate routes
   app.get('/api/my-certificates', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = (req.user as any)?.id;
       const certificates = await storage.getUserCertificates(userId);
       res.json(certificates);
     } catch (error) {
@@ -1084,7 +1084,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     async (req: any, res) => {
       try {
-        const userId = (req.user as any)?.claims?.sub;
+        const userId = (req.user as any)?.id;
         const user = await storage.getUserById(userId);
 
         if (!user || user.role !== 'admin') {
@@ -1314,7 +1314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Temporary route to promote user to admin (for development only)
   app.post('/api/promote-to-admin', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({ message: 'Unauthorized' });
       }
@@ -1344,7 +1344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           description:
             'مقدمة شاملة في علم الحديث وتاريخه وأهميته في العلوم الشرعية',
           level: 'مبتدئ',
-          createdBy: req.user?.claims?.sub || 'admin',
+          createdBy: req.user?.id || 'admin',
         },
         {
           id: 2,
@@ -1358,7 +1358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isLive: false,
           description: 'شرح تفصيلي للحديث الأول من الأربعين النووية',
           level: 'متوسط',
-          createdBy: req.user?.claims?.sub || 'admin',
+          createdBy: req.user?.id || 'admin',
         },
       ];
 
@@ -1371,7 +1371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/live-sessions', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const user = await storage.getUserById(userId);
 
       if (!user || user.role !== 'admin') {
@@ -1395,7 +1395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/live-sessions/:id', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const user = await storage.getUserById(userId);
 
       if (!user || user.role !== 'admin') {
@@ -1425,7 +1425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/live-sessions/:id', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const user = await storage.getUserById(userId);
 
       if (!user || user.role !== 'admin') {
@@ -1447,7 +1447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     async (req, res) => {
       try {
-        const userId = req.user?.claims?.sub;
+        const userId = req.user?.id;
         const user = await storage.getUserById(userId);
 
         if (!user || user.role !== 'admin') {
@@ -1501,7 +1501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/diploma-templates', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const user = await storage.getUserById(userId);
 
       if (!user || user.role !== 'admin') {
@@ -1518,7 +1518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/diploma-templates/:id', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const user = await storage.getUserById(userId);
 
       if (!user || user.role !== 'admin') {
@@ -1547,7 +1547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     async (req, res) => {
       try {
-        const userId = req.user?.claims?.sub;
+        const userId = req.user?.id;
         const user = await storage.getUserById(userId);
 
         if (!user || user.role !== 'admin') {
@@ -1570,7 +1570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     async (req, res) => {
       try {
-        const userId = req.user?.claims?.sub;
+        const userId = req.user?.id;
         const user = await storage.getUserById(userId);
 
         if (!user || user.role !== 'admin') {
