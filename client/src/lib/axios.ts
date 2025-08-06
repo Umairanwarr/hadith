@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 // Create axios instance with default configuration
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  baseURL: (import.meta.env.VITE_API_URL || 'http://localhost:5000'),
   timeout: 10000,
   withCredentials: true,
   headers: {
@@ -15,14 +15,14 @@ api.interceptors.request.use(
   (config: AxiosRequestConfig) => {
     // Get token from localStorage or sessionStorage
     const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-    
+
     if (token) {
       config.headers = {
         ...config.headers,
         Authorization: `Bearer ${token}`,
       };
     }
-    
+
     return config;
   },
   (error) => {
@@ -41,16 +41,16 @@ api.interceptors.response.use(
       // Clear stored tokens
       localStorage.removeItem('authToken');
       sessionStorage.removeItem('authToken');
-      
+
       // Redirect to login page
       window.location.href = '/auth';
     }
-    
+
     // Handle other errors
     if (error.response?.status >= 500) {
       console.error('Server error:', error.response.data);
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -61,22 +61,22 @@ export const apiService = {
   get: <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     return api.get(url, config).then(response => response.data);
   },
-  
+
   // POST request
   post: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
     return api.post(url, data, config).then(response => response.data);
   },
-  
+
   // PUT request
   put: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
     return api.put(url, data, config).then(response => response.data);
   },
-  
+
   // DELETE request
   delete: <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     return api.delete(url, config).then(response => response.data);
   },
-  
+
   // PATCH request
   patch: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
     return api.patch(url, data, config).then(response => response.data);

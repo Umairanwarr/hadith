@@ -94,11 +94,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = (req.user as any)?.claims?.sub;
+      console.log('🔐 Authenticated request, user payload:', req.user);
+
+      const userId = req.user?.id || req.user?.sub;
+      if (!userId) {
+        console.warn('⚠️ Missing sub in JWT payload');
+        return res.status(401).json({ message: 'Unauthorized: Invalid token payload' });
+      }
+
       const user = await storage.getUserById(userId);
+      if (!user) {
+        console.warn('⚠️ No user found for ID:', userId);
+        return res.status(404).json({ message: 'User not found' });
+      }
+
       res.json(user);
     } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error('❌ Error fetching user:', error);
       res.status(500).json({ message: 'Failed to fetch user' });
     }
   });
@@ -106,38 +118,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register
   app.post('/api/auth/register', async (req, res) => {
     try {
-      const data = insertUserSchema.parse(req.body.user); // zod validation
+      console.log('➡️ Incoming registration request...');
+      console.log('📦 Request body:', req.body);
 
-      // check required fields manually if your drizzle schema has nullable columns
+      // Handle both formats: { user: {...} } and direct user data
+      const userData = req.body.user || req.body;
+      console.log('🔍 Attempting to validate userData:', userData);
+
+      let data;
+      try {
+        data = insertUserSchema.parse(userData);
+        console.log('✅ Passed Zod validation:', data);
+      } catch (validationError) {
+        console.error('❌ Zod validation failed:', validationError);
+        throw validationError;
+      }
+
       const { email, password, role } = data;
+
       if (!email || !password || !role) {
-        return res
-          .status(400)
-          .json({ message: 'email, password & role are required' });
+        console.warn('❌ Missing required fields.');
+        return res.status(400).json({ message: 'Email, password, and role are required.' });
       }
 
       const exists = await storage.getUserByEmail(email);
-      if (exists)
-        return res.status(409).json({ message: 'User already exists' });
+      if (exists) {
+        console.warn(`⚠️ User already exists with email: ${email}`);
+        return res.status(409).json({ message: 'User already exists.' });
+      }
 
       const hashedPassword = await bcrypt.hash(password, 10);
+      console.log('🔒 Password hashed.');
 
       const user = await storage.registerUser({
         ...data,
         password: hashedPassword,
       });
 
+      if (!user || !user.id) {
+        console.error('🚨 registerUser returned null or undefined.');
+        return res.status(500).json({ message: 'Failed to create user.' });
+      }
+
+      console.log('✅ User registered successfully:', user);
+
       const token = jwt.sign(
         { id: user.id, role: user.role },
-        process.env.JWT_SECRET!
+        process.env.JWT_SECRET!,
+        { expiresIn: '7d' }
       );
+
+      console.log('🔑 Token generated:', token);
       return res.status(201).json({ token });
     } catch (err) {
       if (err instanceof z.ZodError) {
+        console.error('❌ Zod validation error:', err.errors);
         return res.status(400).json({ errors: err.errors });
       }
-      console.error(err);
-      return res.status(500).json({ message: 'Server error' });
+
+      console.error('🔥 Unexpected error in registration route:', err);
+      return res.status(500).json({ message: 'Server error during registration.' });
     }
   });
 
@@ -170,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // In a JWT-based system, logout is typically handled client-side
       // by removing the token. However, we can implement server-side
       // token blacklisting if needed for additional security.
-      
+
       // For now, we'll just return a success response
       // The client should remove the token from storage
       return res.status(200).json({ message: 'Logged out successfully' });

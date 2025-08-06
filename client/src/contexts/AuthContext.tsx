@@ -116,7 +116,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (token) {
         try {
           dispatch({ type: 'AUTH_START' });
-          const user = await apiService.get<User>('/api/auth/user');
+          const user = await apiService.get<User>('/auth/user');
           dispatch({ type: 'AUTH_SUCCESS', payload: user });
         } catch (error) {
           // Clear invalid token
@@ -135,7 +135,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('AuthContext: Starting login...');
       dispatch({ type: 'AUTH_START' });
 
-      const response = await apiService.post<{ token: string }>('/api/auth/login', {
+      const response = await apiService.post<{ token: string }>('/auth/login', {
         email,
         password,
       });
@@ -145,7 +145,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('authToken', response.token);
 
       // Fetch user data after successful login
-      const user = await apiService.get<User>('/api/auth/user');
+      const user = await apiService.get<User>('/auth/user');
       console.log('AuthContext: User data fetched, dispatching AUTH_SUCCESS');
       dispatch({ type: 'AUTH_SUCCESS', payload: user });
     } catch (error: any) {
@@ -160,15 +160,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       dispatch({ type: 'AUTH_START' });
 
-      const response = await apiService.post<{ token: string }>('/api/auth/register', {
+      console.log('🔗 Making registration request to:', '/auth/register');
+      console.log('📦 User data:', userData);
+
+      const response = await apiService.post<{ token: string }>('/auth/register', {
         user: userData
       });
+
+      console.log('✅ Registration successful. Token received:', response.token);
+
 
       // Store token
       localStorage.setItem('authToken', response.token);
 
       // Fetch user data after successful registration
-      const user = await apiService.get<User>('/api/auth/user');
+      const user = await apiService.get<User>('/auth/user');
       dispatch({ type: 'AUTH_SUCCESS', payload: user });
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Registration failed';
@@ -180,7 +186,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async () => {
     try {
       // Call backend logout endpoint for additional security
-      await apiService.post('/api/auth/logout');
+      await apiService.post('/auth/logout');
     } catch (error) {
       // Even if backend call fails, we still logout client-side
       console.error('Backend logout failed:', error);

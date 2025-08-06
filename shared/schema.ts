@@ -67,7 +67,7 @@ export const courses = pgTable('courses', {
 // Course videos/lessons table
 export const lessons = pgTable('lessons', {
   id: uuid('id').primaryKey().defaultRandom(),
-  courseId: integer('course_id')
+  courseId: uuid('course_id')
     .references(() => courses.id)
     .notNull(),
   title: text('title').notNull(),
@@ -82,10 +82,10 @@ export const lessons = pgTable('lessons', {
 // User course enrollments
 export const enrollments = pgTable('enrollments', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: varchar('user_id')
+  userId: uuid('user_id')
     .references(() => users.id)
     .notNull(),
-  courseId: integer('course_id')
+  courseId: uuid('course_id')
     .references(() => courses.id)
     .notNull(),
   enrolledAt: timestamp('enrolled_at').defaultNow(),
@@ -96,13 +96,13 @@ export const enrollments = pgTable('enrollments', {
 // User lesson progress
 export const lessonProgress = pgTable('lesson_progress', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: varchar('user_id')
+  userId: uuid('user_id')
     .references(() => users.id)
     .notNull(),
-  lessonId: integer('lesson_id')
+  lessonId: uuid('lesson_id')
     .references(() => lessons.id)
     .notNull(),
-  courseId: integer('course_id')
+  courseId: uuid('course_id')
     .references(() => courses.id)
     .notNull(),
   watchedDuration: integer('watched_duration').default(0), // in seconds
@@ -114,7 +114,7 @@ export const lessonProgress = pgTable('lesson_progress', {
 // Exams table
 export const exams = pgTable('exams', {
   id: uuid('id').primaryKey().defaultRandom(),
-  courseId: integer('course_id')
+  courseId: uuid('course_id')
     .references(() => courses.id)
     .notNull(),
   title: text('title').notNull(),
@@ -131,7 +131,7 @@ export const exams = pgTable('exams', {
 // Exam questions table
 export const examQuestions = pgTable('exam_questions', {
   id: uuid('id').primaryKey().defaultRandom(),
-  examId: integer('exam_id')
+  examId: uuid('exam_id')
     .references(() => exams.id)
     .notNull(),
   question: text('question').notNull(),
@@ -144,13 +144,13 @@ export const examQuestions = pgTable('exam_questions', {
 // User exam attempts
 export const examAttempts = pgTable('exam_attempts', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: varchar('user_id')
+  userId: uuid('user_id')
     .references(() => users.id)
     .notNull(),
-  examId: integer('exam_id')
+  examId: uuid('exam_id')
     .references(() => exams.id)
     .notNull(),
-  courseId: integer('course_id')
+  courseId: uuid('course_id')
     .references(() => courses.id)
     .notNull(),
   answers: jsonb('answers').notNull(), // User's answers
@@ -166,16 +166,16 @@ export const examAttempts = pgTable('exam_attempts', {
 // Certificates table
 export const certificates = pgTable('certificates', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: varchar('user_id')
+  userId: uuid('user_id')
     .references(() => users.id)
     .notNull(),
-  courseId: integer('course_id')
+  courseId: uuid('course_id')
     .references(() => courses.id)
     .notNull(),
-  examAttemptId: integer('exam_attempt_id')
+  examAttemptId: uuid('exam_attempt_id')
     .references(() => examAttempts.id)
     .notNull(),
-  diplomaTemplateId: integer('diploma_template_id').references(
+  diplomaTemplateId: uuid('diploma_template_id').references(
     () => diplomaTemplates.id
   ), // ربط بقالب الشهادة
   certificateNumber: varchar('certificate_number').unique().notNull(),

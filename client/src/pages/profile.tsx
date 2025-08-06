@@ -74,7 +74,7 @@ export default function Profile() {
       await apiRequest('POST', '/api/promote-to-admin');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/auth/user"] });
       toast({
         title: "تم الترقية بنجاح",
         description: "تم ترقيتك إلى مدير",

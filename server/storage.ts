@@ -153,13 +153,16 @@ export class DatabaseStorage implements IStorage {
     const newUser = await db
       .insert(users)
       .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: { ...userData, updatedAt: new Date() },
-      })
+      .onConflictDoNothing() // Just skip insert if duplicate
       .returning();
+
+    if (newUser.length === 0) {
+      throw new Error('User insertion failed or already exists.');
+    }
+
     return newUser[0];
   }
+
 
   // User operations
   async getUserByEmail(email: string): Promise<User | undefined> {

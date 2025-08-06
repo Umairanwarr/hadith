@@ -31,7 +31,7 @@ import { useLocation } from 'wouter';
 
 // API Configuration
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // Forgot password API function (keeping this since AuthContext doesn't have it)
 const forgotPasswordApi = async (data: any) => {
@@ -128,7 +128,7 @@ const Auth = () => {
         }),
         duration: 3000,
       });
-      
+
       // Force redirect to dashboard after successful login
       console.log('Login mutation success, redirecting to dashboard...');
       setTimeout(() => {
@@ -232,9 +232,8 @@ const Auth = () => {
             <Label htmlFor='email'>{t('auth.email')}</Label>
             <div className='relative'>
               <Mail
-                className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                  currentLanguage === 'ar' ? 'left-3' : 'right-3'
-                }`}
+                className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
+                  }`}
               />
               <Input
                 id='email'
@@ -261,17 +260,15 @@ const Auth = () => {
             <Label htmlFor='password'>{t('auth.password')}</Label>
             <div className='relative'>
               <Lock
-                className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                  currentLanguage === 'ar' ? 'left-3' : 'right-3'
-                }`}
+                className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
+                  }`}
               />
               <Input
                 id='password'
                 type={showPassword ? 'text' : 'password'}
                 placeholder={t('auth.enterPassword')}
-                className={`${
-                  currentLanguage === 'ar' ? 'pl-10 pr-10' : 'pr-10 pl-10'
-                }`}
+                className={`${currentLanguage === 'ar' ? 'pl-10 pr-10' : 'pr-10 pl-10'
+                  }`}
                 {...loginForm.register('password', {
                   required: t('validation.passwordRequired'),
                 })}
@@ -280,9 +277,8 @@ const Auth = () => {
                 type='button'
                 variant='ghost'
                 size='sm'
-                className={`absolute top-2 h-6 w-6 p-0 ${
-                  currentLanguage === 'ar' ? 'right-2' : 'left-2'
-                }`}
+                className={`absolute top-2 h-6 w-6 p-0 ${currentLanguage === 'ar' ? 'right-2' : 'left-2'
+                  }`}
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -375,9 +371,8 @@ const Auth = () => {
               <Label htmlFor='firstName'>{t('auth.firstName')} *</Label>
               <div className='relative'>
                 <User
-                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                    currentLanguage === 'ar' ? 'left-3' : 'right-3'
-                  }`}
+                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
+                    }`}
                 />
                 <Input
                   id='firstName'
@@ -399,9 +394,8 @@ const Auth = () => {
               <Label htmlFor='lastName'>{t('auth.lastName')} *</Label>
               <div className='relative'>
                 <User
-                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                    currentLanguage === 'ar' ? 'left-3' : 'right-3'
-                  }`}
+                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
+                    }`}
                 />
                 <Input
                   id='lastName'
@@ -424,9 +418,8 @@ const Auth = () => {
             <Label htmlFor='email'>{t('auth.email')} *</Label>
             <div className='relative'>
               <Mail
-                className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                  currentLanguage === 'ar' ? 'left-3' : 'right-3'
-                }`}
+                className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
+                  }`}
               />
               <Input
                 id='email'
@@ -453,9 +446,8 @@ const Auth = () => {
             <Label htmlFor='phone'>{t('auth.phone')}</Label>
             <div className='relative'>
               <Phone
-                className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                  currentLanguage === 'ar' ? 'left-3' : 'right-3'
-                }`}
+                className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
+                  }`}
               />
               <Input
                 id='phone'
@@ -480,17 +472,15 @@ const Auth = () => {
             <Label htmlFor='password'>{t('auth.password')} *</Label>
             <div className='relative'>
               <Lock
-                className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                  currentLanguage === 'ar' ? 'left-3' : 'right-3'
-                }`}
+                className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
+                  }`}
               />
               <Input
                 id='password'
                 type={showPassword ? 'text' : 'password'}
                 placeholder={t('auth.enterPassword')}
-                className={`${
-                  currentLanguage === 'ar' ? 'pl-10 pr-10' : 'pr-10 pl-10'
-                }`}
+                className={`${currentLanguage === 'ar' ? 'pl-10 pr-10' : 'pr-10 pl-10'
+                  }`}
                 {...signupForm.register('password', {
                   required: t('validation.passwordRequired'),
                   minLength: {
@@ -503,9 +493,8 @@ const Auth = () => {
                 type='button'
                 variant='ghost'
                 size='sm'
-                className={`absolute top-2 h-6 w-6 p-0 ${
-                  currentLanguage === 'ar' ? 'right-2' : 'left-2'
-                }`}
+                className={`absolute top-2 h-6 w-6 p-0 ${currentLanguage === 'ar' ? 'right-2' : 'left-2'
+                  }`}
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
@@ -528,17 +517,15 @@ const Auth = () => {
             </Label>
             <div className='relative'>
               <Lock
-                className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                  currentLanguage === 'ar' ? 'left-3' : 'right-3'
-                }`}
+                className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
+                  }`}
               />
               <Input
                 id='confirmPassword'
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder={t('auth.reEnterPassword')}
-                className={`${
-                  currentLanguage === 'ar' ? 'pl-10 pr-10' : 'pr-10 pl-10'
-                }`}
+                className={`${currentLanguage === 'ar' ? 'pl-10 pr-10' : 'pr-10 pl-10'
+                  }`}
                 {...signupForm.register('confirmPassword', {
                   required: t('validation.confirmPasswordRequired'),
                 })}
@@ -547,9 +534,8 @@ const Auth = () => {
                 type='button'
                 variant='ghost'
                 size='sm'
-                className={`absolute top-2 h-6 w-6 p-0 ${
-                  currentLanguage === 'ar' ? 'right-2' : 'left-2'
-                }`}
+                className={`absolute top-2 h-6 w-6 p-0 ${currentLanguage === 'ar' ? 'right-2' : 'left-2'
+                  }`}
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? (
@@ -616,9 +602,8 @@ const Auth = () => {
             <Label htmlFor='email'>{t('auth.email')}</Label>
             <div className='relative'>
               <Mail
-                className={`absolute top-3 h-4 w-4 text-muted-foreground ${
-                  currentLanguage === 'ar' ? 'left-3' : 'right-3'
-                }`}
+                className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
+                  }`}
               />
               <Input
                 id='email'
@@ -680,9 +665,8 @@ const Auth = () => {
   return (
     <>
       <div
-        className={`min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4 ${
-          currentLanguage === 'ar' ? 'rtl' : 'ltr'
-        }`}
+        className={`min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5 flex items-center justify-center p-4 ${currentLanguage === 'ar' ? 'rtl' : 'ltr'
+          }`}
       >
         <LanguageSwitcher />
         <div className='w-full max-w-md'>
