@@ -325,6 +325,51 @@ export const createCourseSchema = insertCourseSchema.pick({
   imageUrl: true,
   syllabusUrl: true,
   syllabusFileName: true,
+}).refine((data) => {
+  // Validate level field
+  const validLevels = ['تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه'];
+  return validLevels.includes(data.level);
+}, {
+  message: 'Invalid level. Must be one of: تمهيدي, متوسط, متقدم, بكالوريوس, ماجستير, دكتوراه',
+  path: ['level']
+}).refine((data) => {
+  // Validate title length
+  return data.title && data.title.length >= 1 && data.title.length <= 200;
+}, {
+  message: 'Title must be between 1 and 200 characters',
+  path: ['title']
+}).refine((data) => {
+  // Validate description length
+  return data.description && data.description.length >= 1 && data.description.length <= 2000;
+}, {
+  message: 'Description must be between 1 and 2000 characters',
+  path: ['description']
+}).refine((data) => {
+  // Validate instructor length
+  return data.instructor && data.instructor.length >= 1 && data.instructor.length <= 100;
+}, {
+  message: 'Instructor name must be between 1 and 100 characters',
+  path: ['instructor']
+}).refine((data) => {
+  // Validate duration
+  return data.duration && data.duration >= 1 && data.duration <= 10080;
+}, {
+  message: 'Duration must be between 1 and 10080 minutes',
+  path: ['duration']
+});
+
+// Admin course update schema
+export const updateCourseSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters').optional(),
+  description: z.string().min(1, 'Description is required').max(2000, 'Description must be less than 2000 characters').optional(),
+  instructor: z.string().min(1, 'Instructor name is required').max(100, 'Instructor name must be less than 100 characters').optional(),
+  level: z.enum(['تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه']).optional(),
+  duration: z.number().min(1, 'Duration is required').max(10080, 'Duration must be less than 10080 minutes').optional(),
+  thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional(),
+  imageUrl: z.string().url('Image URL must be valid').optional(),
+  syllabusUrl: z.string().url('Syllabus URL must be valid').optional(),
+  syllabusFileName: z.string().max(255, 'File name must be less than 255 characters').optional(),
+  isActive: z.boolean().optional(),
 });
 
 // Admin lesson creation schema
@@ -458,6 +503,7 @@ export type InsertCertificateImage = typeof certificateImages.$inferInsert;
 
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
 export type CreateCourse = z.infer<typeof createCourseSchema>;
+export type UpdateCourse = z.infer<typeof updateCourseSchema>;
 export type CreateLesson = z.infer<typeof createLessonSchema>;
 export type CreateExam = z.infer<typeof createExamSchema>;
 export type CreateExamQuestion = z.infer<typeof createExamQuestionSchema>;

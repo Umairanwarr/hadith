@@ -22,6 +22,7 @@ import {
   insertCertificateSchema,
   updateProfileSchema,
   createCourseSchema,
+  updateCourseSchema,
   createLessonSchema,
   createExamSchema,
   createExamQuestionSchema,
@@ -272,9 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // File upload endpoint for course syllabi
-  app.post('/api/upload/syllabus',
-    isAuthenticated,
-    isAdmin,
+  app.post('/api/upload/syllabus', isAuthenticated, isAdmin,
     documentUpload.single('syllabus'),
     (req: any, res) => {
       try {
@@ -308,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!validationResult.success) {
         console.error('❌ Validation failed:', validationResult.error);
         return res.status(400).json({
-          message: 'بيانات غير صحيحة',
+          message: 'Invalid data',
           errors: validationResult.error.issues.map((issue) => ({
             field: issue.path.join('.'),
             message: issue.message,
@@ -336,29 +335,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: any, res) => {
       try {
         const courseId = req.params.id; // Pass UUID string directly
-        const {
-          title,
-          description,
-          instructor,
-          level,
-          duration,
-          thumbnailUrl,
-          imageUrl,
-          syllabusUrl,
-          syllabusFileName,
-        } = req.body;
+        
+        // Validate the request body using the schema
+        const validationResult = updateCourseSchema.safeParse(req.body);
+        if (!validationResult.success) {
+          console.error('❌ Course update validation failed:', validationResult.error);
+          return res.status(400).json({
+            message: 'Invalid data',
+            errors: validationResult.error.issues.map((issue) => ({
+              field: issue.path.join('.'),
+              message: issue.message,
+            })),
+          });
+        }
 
-        const updatedCourse = await storage.updateCourse(courseId, {
-          title,
-          description,
-          instructor,
-          level,
-          duration,
-          thumbnailUrl,
-          imageUrl,
-          syllabusUrl,
-          syllabusFileName,
-        });
+        const courseData = validationResult.data;
+        console.log('✅ Validated course update data:', courseData);
+
+        const updatedCourse = await storage.updateCourse(courseId, courseData);
 
         if (!updatedCourse) {
           return res.status(404).json({ message: 'Course not found' });
