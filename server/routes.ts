@@ -372,12 +372,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  app.delete('/api/courses/:id',
-    isAuthenticated,
-    isAdmin,
+  app.delete('/api/courses/:id', isAuthenticated, isAdmin,
     async (req: any, res) => {
       try {
-        const courseId = parseInt(req.params.id);
+        const courseId = req.params.id; // Pass UUID string directly
 
         // Soft delete by setting isActive to false
         const course = await storage.updateCourse(courseId, {
