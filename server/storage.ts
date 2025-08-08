@@ -68,14 +68,14 @@ export interface IStorage {
   setSessionLive(id: number, isLive: boolean): Promise<void>;
 
   // Lesson operations
-  getLessonsByCourse(courseId: number): Promise<Lesson[]>;
-  getLesson(id: number): Promise<Lesson | undefined>;
+  getLessonsByCourse(courseId: string): Promise<Lesson[]>;
+  getLesson(id: string): Promise<Lesson | undefined>;
   createLesson(lesson: InsertLesson): Promise<Lesson>;
   updateLesson(
-    id: number,
+    id: string,
     updates: Partial<Lesson>
   ): Promise<Lesson | undefined>;
-  deleteLesson(id: number): Promise<void>;
+  deleteLesson(id: string): Promise<void>;
 
   // Enrollment operations
   enrollUserInCourse(enrollment: InsertEnrollment): Promise<Enrollment>;
@@ -100,7 +100,7 @@ export interface IStorage {
   ): Promise<LessonProgress | undefined>;
   getUserCourseProgress(
     userId: string,
-    courseId: number
+    courseId: string
   ): Promise<LessonProgress[]>;
 
   // Exam operations
@@ -277,7 +277,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(lessons.order);
   }
 
-  async getLesson(id: number): Promise<Lesson | undefined> {
+  async getLesson(id: string): Promise<Lesson | undefined> {
     const [lesson] = await db.select().from(lessons).where(eq(lessons.id, id));
     return lesson;
   }
@@ -288,7 +288,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateLesson(
-    id: number,
+    id: string,
     updates: Partial<Lesson>
   ): Promise<Lesson | undefined> {
     const [updatedLesson] = await db
@@ -299,7 +299,10 @@ export class DatabaseStorage implements IStorage {
     return updatedLesson;
   }
 
-  async deleteLesson(id: number): Promise<void> {
+  async deleteLesson(id: string): Promise<void> {
+    // First delete all lesson progress records that reference this lesson
+    await db.delete(lessonProgress).where(eq(lessonProgress.lessonId, id));
+    // Then delete the lesson
     await db.delete(lessons).where(eq(lessons.id, id));
   }
 
@@ -413,7 +416,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserCourseProgress(
     userId: string,
-    courseId: number
+    courseId: string
   ): Promise<LessonProgress[]> {
     return db
       .select()

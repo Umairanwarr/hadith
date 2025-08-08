@@ -373,24 +373,15 @@ export const updateCourseSchema = z.object({
 });
 
 // Admin lesson creation schema
-export const createLessonSchema = insertLessonSchema
-  .omit({ id: true, createdAt: true })
-  .extend({
-    title: z
-      .string()
-      .min(1, 'عنوان الدرس مطلوب')
-      .max(200, 'العنوان يجب أن يكون أقل من 200 حرف'),
-    description: z
-      .string()
-      .min(1, 'وصف الدرس مطلوب')
-      .max(1000, 'الوصف يجب أن يكون أقل من 1000 حرف'),
-    videoUrl: z.string().url('رابط الفيديو يجب أن يكون صحيح').optional(),
-    duration: z
-      .number()
-      .min(1, 'مدة الدرس مطلوبة')
-      .max(7200, 'المدة يجب أن تكون أقل من 7200 ثانية'),
-    order: z.number().min(1, 'ترتيب الدرس مطلوب'),
-  });
+export const createLessonSchema = insertLessonSchema.pick({
+  title: true,
+  description: true,
+  videoUrl: true,
+  duration: true,
+  order: true,
+  courseId: true,
+  isActive: true,
+});
 
 // Admin exam creation schema
 export const createExamSchema = insertExamSchema

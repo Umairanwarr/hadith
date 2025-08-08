@@ -498,6 +498,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create lesson
+  app.post('/api/admin/courses/:id/lessons', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const courseId = req.params.id; // Pass UUID string directly
+      const validationResult = createLessonSchema.safeParse({
+        ...req.body,
+        courseId,
+      });
+
+      if (!validationResult.success) {
+        return res.status(400).json({
+          message: 'بيانات غير صحيحة',
+          errors: validationResult.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      const lesson = await storage.createLesson(validationResult.data);
+
+      // Update course lesson count
+      await storage.updateCourseLessonCount(courseId);
+
+      res.status(201).json(lesson);
+    } catch (error) {
+      console.error('Error creating lesson:', error);
+      res.status(500).json({ message: 'Failed to create lesson' });
+    }
+  }
+  );
+
+  // Update lesson
+  app.patch('/api/admin/lessons/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const lessonId = req.params.id; // Pass UUID string directly
+      const validationResult = createLessonSchema
+        .partial()
+        .safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({
+          message: 'بيانات غير صحيحة',
+          errors: validationResult.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      const updatedLesson = await storage.updateLesson(
+        lessonId,
+        validationResult.data
+      );
+      if (!updatedLesson) {
+        return res.status(404).json({ message: 'Lesson not found' });
+      }
+      res.json(updatedLesson);
+    } catch (error) {
+      console.error('Error updating lesson:', error);
+      res.status(500).json({ message: 'Failed to update lesson' });
+    }
+  }
+  );
+
+  // Delete lesson
+  app.delete('/api/admin/lessons/:id', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const lessonId = req.params.id; // Pass UUID string directly
+      const lesson = await storage.getLesson(lessonId);
+      if (!lesson) {
+        return res.status(404).json({ message: 'Lesson not found' });
+      }
+
+      await storage.deleteLesson(lessonId);
+
+      // Update course lesson count
+      await storage.updateCourseLessonCount(lesson.courseId);
+
+      res.status(200).json({ 
+        message: 'Lesson and all associated progress records deleted successfully',
+        lessonId: lessonId,
+        lessonTitle: lesson.title
+      });
+    } catch (error) {
+      console.error('Error deleting lesson:', error);
+      res.status(500).json({ message: 'Failed to delete lesson' });
+    }
+  }
+  );
+
   // Lesson progress routes
   app.post('/api/lessons/:id/progress', isAuthenticated, async (req: any, res) => {
     try {
@@ -543,9 +633,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/courses/:courseId/progress', isAuthenticated, async (req: any, res) => {
     try {
       const userId = (req.user as any)?.id;
-      const courseId = parseInt(req.params.courseId);
-      const progress = await storage.getUserCourseProgress(userId, courseId);
-      res.json(progress);
+      const courseId = req.params.courseId; // Pass UUID string directly
+      
+      // Get all lessons in the course
+      const allLessons = await storage.getLessonsByCourse(courseId);
+      
+      // Get user's progress for this course
+      const userProgress = await storage.getUserCourseProgress(userId, courseId);
+      
+      // Calculate completion statistics
+      const completedLessons = userProgress.filter((p) => p.isCompleted).length;
+      const totalLessons = allLessons.length;
+      const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+      const isCourseCompleted = completedLessons === totalLessons && totalLessons > 0;
+      
+      // Create detailed progress response
+      const lessonProgressDetails = allLessons.map(lesson => {
+        const userLessonProgress = userProgress.find(p => p.lessonId === lesson.id);
+        return {
+          lessonId: lesson.id,
+          lessonTitle: lesson.title,
+          lessonOrder: lesson.order,
+          isCompleted: userLessonProgress?.isCompleted || false,
+          watchedDuration: userLessonProgress?.watchedDuration || 0,
+          completedAt: userLessonProgress?.completedAt || null,
+          lastWatchedAt: userLessonProgress?.lastWatchedAt || null
+        };
+      });
+      
+      res.json({
+        courseId: courseId,
+        totalLessons: totalLessons,
+        completedLessons: completedLessons,
+        progressPercentage: Math.round(progressPercentage * 100) / 100, // Round to 2 decimal places
+        isCourseCompleted: isCourseCompleted,
+        lessonProgress: lessonProgressDetails
+      });
     } catch (error) {
       console.error('Error fetching course progress:', error);
       res.status(500).json({ message: 'Failed to fetch course progress' });
@@ -630,97 +753,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post(
-    '/api/exam-attempts/:id/submit',
-    isAuthenticated,
-    async (req: any, res) => {
-      try {
-        const userId = (req.user as any)?.id;
-        const attemptId = parseInt(req.params.id);
-        const { answers } = req.body;
+  app.post('/api/exam-attempts/:id/submit', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const attemptId = parseInt(req.params.id);
+      const { answers } = req.body;
 
-        const attempt = await storage.getExamAttempt(attemptId);
-        if (!attempt || attempt.userId !== userId) {
-          return res.status(404).json({ message: 'Exam attempt not found' });
-        }
-
-        const exam = await storage.getExamByCourse(attempt.courseId);
-        if (!exam) {
-          return res.status(404).json({ message: 'Exam not found' });
-        }
-
-        const questions = await storage.getExamQuestions(exam.id);
-
-        // Calculate score
-        let correctAnswers = 0;
-        let totalPoints = 0;
-
-        questions.forEach((question) => {
-          totalPoints += Number(question.points);
-          if (answers[question.id] === question.correctAnswer) {
-            correctAnswers++;
-          }
-        });
-
-        const score = (correctAnswers / questions.length) * 100;
-        const passed = score >= Number(exam.passingGrade);
-
-        // Update exam attempt
-        const updatedAttempt = await storage.updateExamAttempt(attemptId, {
-          answers,
-          score: score.toString(),
-          correctAnswers,
-          passed,
-          completedAt: new Date(),
-          duration: attempt.startedAt
-            ? Math.floor((Date.now() - attempt.startedAt.getTime()) / 1000)
-            : 0,
-        });
-
-        // Create certificate if passed
-        if (passed) {
-          // Get user info for certificate
-          const user = await storage.getUserById(userId);
-          const course = await storage.getCourse(attempt.courseId);
-
-          const certificateNumber = `CERT-${Date.now()}-${userId.slice(-4)}`;
-          const studentName =
-            user && user.firstName && user.lastName
-              ? `${user.firstName} ${user.lastName}`
-              : user?.email?.split('@')[0] || 'الطالب';
-
-          // Determine honors based on score
-          let honors = '';
-          if (score >= 95) honors = 'امتياز مع مرتبة الشرف';
-          else if (score >= 85) honors = 'امتياز';
-          else if (score >= 75) honors = 'جيد جداً';
-          else if (score >= 70) honors = 'جيد';
-
-          await storage.createCertificate({
-            userId,
-            courseId: attempt.courseId,
-            examAttemptId: attemptId,
-            certificateNumber,
-            grade: score.toString(),
-            studentName,
-            specialization: course?.title || 'علوم الحديث',
-            honors,
-            completionDate: new Date(),
-          });
-        }
-
-        res.json({
-          ...updatedAttempt,
-          passed,
-          score,
-          correctAnswers,
-          totalQuestions: questions.length,
-        });
-      } catch (error) {
-        console.error('Error submitting exam:', error);
-        res.status(500).json({ message: 'Failed to submit exam' });
+      const attempt = await storage.getExamAttempt(attemptId);
+      if (!attempt || attempt.userId !== userId) {
+        return res.status(404).json({ message: 'Exam attempt not found' });
       }
+
+      const exam = await storage.getExamByCourse(attempt.courseId);
+      if (!exam) {
+        return res.status(404).json({ message: 'Exam not found' });
+      }
+
+      const questions = await storage.getExamQuestions(exam.id);
+
+      // Calculate score
+      let correctAnswers = 0;
+      let totalPoints = 0;
+
+      questions.forEach((question) => {
+        totalPoints += Number(question.points);
+        if (answers[question.id] === question.correctAnswer) {
+          correctAnswers++;
+        }
+      });
+
+      const score = (correctAnswers / questions.length) * 100;
+      const passed = score >= Number(exam.passingGrade);
+
+      // Update exam attempt
+      const updatedAttempt = await storage.updateExamAttempt(attemptId, {
+        answers,
+        score: score.toString(),
+        correctAnswers,
+        passed,
+        completedAt: new Date(),
+        duration: attempt.startedAt
+          ? Math.floor((Date.now() - attempt.startedAt.getTime()) / 1000)
+          : 0,
+      });
+
+      // Create certificate if passed
+      if (passed) {
+        // Get user info for certificate
+        const user = await storage.getUserById(userId);
+        const course = await storage.getCourse(attempt.courseId);
+
+        const certificateNumber = `CERT-${Date.now()}-${userId.slice(-4)}`;
+        const studentName =
+          user && user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user?.email?.split('@')[0] || 'الطالب';
+
+        // Determine honors based on score
+        let honors = '';
+        if (score >= 95) honors = 'امتياز مع مرتبة الشرف';
+        else if (score >= 85) honors = 'امتياز';
+        else if (score >= 75) honors = 'جيد جداً';
+        else if (score >= 70) honors = 'جيد';
+
+        await storage.createCertificate({
+          userId,
+          courseId: attempt.courseId,
+          examAttemptId: attemptId,
+          certificateNumber,
+          grade: score.toString(),
+          studentName,
+          specialization: course?.title || 'علوم الحديث',
+          honors,
+          completionDate: new Date(),
+        });
+      }
+
+      res.json({
+        ...updatedAttempt,
+        passed,
+        score,
+        correctAnswers,
+        totalQuestions: questions.length,
+      });
+    } catch (error) {
+      console.error('Error submitting exam:', error);
+      res.status(500).json({ message: 'Failed to submit exam' });
     }
+  }
   );
 
   // Certificate routes
@@ -870,103 +990,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  // Create lesson
-  app.post(
-    '/api/admin/courses/:id/lessons',
-    isAuthenticated,
-    isAdmin,
-    async (req: any, res) => {
-      try {
-        const courseId = parseInt(req.params.id);
-        const validationResult = createLessonSchema.safeParse({
-          ...req.body,
-          courseId,
-        });
 
-        if (!validationResult.success) {
-          return res.status(400).json({
-            message: 'بيانات غير صحيحة',
-            errors: validationResult.error.issues.map((issue) => ({
-              field: issue.path.join('.'),
-              message: issue.message,
-            })),
-          });
-        }
-
-        const lesson = await storage.createLesson(validationResult.data);
-
-        // Update course lesson count
-        await storage.updateCourseLessonCount(courseId);
-
-        res.status(201).json(lesson);
-      } catch (error) {
-        console.error('Error creating lesson:', error);
-        res.status(500).json({ message: 'Failed to create lesson' });
-      }
-    }
-  );
-
-  // Update lesson
-  app.patch(
-    '/api/admin/lessons/:id',
-    isAuthenticated,
-    isAdmin,
-    async (req: any, res) => {
-      try {
-        const lessonId = parseInt(req.params.id);
-        const validationResult = createLessonSchema
-          .partial()
-          .safeParse(req.body);
-        if (!validationResult.success) {
-          return res.status(400).json({
-            message: 'بيانات غير صحيحة',
-            errors: validationResult.error.issues.map((issue) => ({
-              field: issue.path.join('.'),
-              message: issue.message,
-            })),
-          });
-        }
-
-        const updatedLesson = await storage.updateLesson(
-          lessonId,
-          validationResult.data
-        );
-        if (!updatedLesson) {
-          return res.status(404).json({ message: 'Lesson not found' });
-        }
-        res.json(updatedLesson);
-      } catch (error) {
-        console.error('Error updating lesson:', error);
-        res.status(500).json({ message: 'Failed to update lesson' });
-      }
-    }
-  );
-
-  // Delete lesson
-  app.delete(
-    '/api/admin/lessons/:id',
-    isAuthenticated,
-    isAdmin,
-    async (req: any, res) => {
-      try {
-        const lessonId = parseInt(req.params.id);
-        const lesson = await storage.getLesson(lessonId);
-        if (!lesson) {
-          return res.status(404).json({ message: 'Lesson not found' });
-        }
-
-        await storage.deleteLesson(lessonId);
-
-        // Update course lesson count
-        await storage.updateCourseLessonCount(lesson.courseId);
-
-        res.status(204).send();
-      } catch (error) {
-        console.error('Error deleting lesson:', error);
-        res.status(500).json({ message: 'Failed to delete lesson' });
-      }
-    }
-  );
 
   // Create exam
   app.post(
