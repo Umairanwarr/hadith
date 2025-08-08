@@ -302,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/courses', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       console.log('🔍 Request body received:', req.body);
-      
+
       // Validate the request body using the schema
       const validationResult = createCourseSchema.safeParse(req.body);
       if (!validationResult.success) {
@@ -332,12 +332,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/courses/:id',
-    isAuthenticated,
-    isAdmin,
+  app.patch('/api/courses/:id', isAuthenticated, isAdmin,
     async (req: any, res) => {
       try {
-        const courseId = parseInt(req.params.id);
+        const courseId = req.params.id; // Pass UUID string directly
         const {
           title,
           description,
@@ -350,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           syllabusFileName,
         } = req.body;
 
-        const course = await storage.updateCourse(courseId, {
+        const updatedCourse = await storage.updateCourse(courseId, {
           title,
           description,
           instructor,
@@ -362,11 +360,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           syllabusFileName,
         });
 
-        if (!course) {
+        if (!updatedCourse) {
           return res.status(404).json({ message: 'Course not found' });
         }
 
-        res.json(course);
+        res.json(updatedCourse);
       } catch (error) {
         console.error('Error updating course:', error);
         res.status(500).json({ message: 'Failed to update course' });

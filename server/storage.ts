@@ -50,14 +50,14 @@ export interface IStorage {
 
   // Course operations
   getAllCourses(): Promise<Course[]>;
-  getCourse(id: number): Promise<Course | undefined>;
+  getCourse(id: string): Promise<Course | undefined>;
   createCourse(course: InsertCourse): Promise<Course>;
   updateCourse(
-    id: number,
+    id: string,
     updates: Partial<Course>
   ): Promise<Course | undefined>;
-  deleteCourse(id: number): Promise<void>;
-  updateCourseLessonCount(courseId: number): Promise<void>;
+  deleteCourse(id: string): Promise<void>;
+  updateCourseLessonCount(courseId: string): Promise<void>;
 
   // Live Sessions operations
   getAllLiveSessions(): Promise<any[]>;
@@ -228,7 +228,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(courses.createdAt);
   }
 
-  async getCourse(id: number): Promise<Course | undefined> {
+  async getCourse(id: string): Promise<Course | undefined> {
     const [course] = await db.select().from(courses).where(eq(courses.id, id));
     return course;
   }
@@ -239,7 +239,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCourse(
-    id: number,
+    id: string,
     updates: Partial<Course>
   ): Promise<Course | undefined> {
     const [updatedCourse] = await db
@@ -249,6 +249,8 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedCourse;
   }
+
+
 
   async deleteCourse(id: string): Promise<void> {
     await db.delete(courses).where(eq(courses.id, id));
