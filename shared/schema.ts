@@ -315,29 +315,17 @@ export const updateProfileSchema = insertUserSchema
   });
 
 // Admin course creation schema
-export const createCourseSchema = insertCourseSchema
-  .omit({ id: true, createdAt: true })
-  .extend({
-    title: z
-      .string()
-      .min(1, 'عنوان المادة مطلوب')
-      .max(200, 'العنوان يجب أن يكون أقل من 200 حرف'),
-    description: z
-      .string()
-      .min(1, 'وصف المادة مطلوب')
-      .max(1000, 'الوصف يجب أن يكون أقل من 1000 حرف'),
-    instructor: z
-      .string()
-      .min(1, 'اسم المدرس مطلوب')
-      .max(100, 'اسم المدرس يجب أن يكون أقل من 100 حرف'),
-    level: z.enum(['مبتدئ', 'متوسط', 'متقدم'], {
-      errorMap: () => ({ message: 'يجب اختيار مستوى صحيح' }),
-    }),
-    duration: z
-      .number()
-      .min(1, 'مدة المادة مطلوبة')
-      .max(10000, 'المدة يجب أن تكون أقل من 10000 دقيقة'),
-  });
+export const createCourseSchema = insertCourseSchema.pick({
+  title: true,
+  description: true,
+  instructor: true,
+  level: true,
+  duration: true,
+  thumbnailUrl: true,
+  imageUrl: true,
+  syllabusUrl: true,
+  syllabusFileName: true,
+});
 
 // Admin lesson creation schema
 export const createLessonSchema = insertLessonSchema

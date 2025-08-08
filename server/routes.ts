@@ -301,28 +301,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Course management (admin only)
   app.post('/api/courses', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const {
-        title,
-        description,
-        instructor,
-        level,
-        duration,
-        thumbnailUrl,
-        imageUrl,
-        syllabusUrl,
-        syllabusFileName,
-      } = req.body;
+      console.log('🔍 Request body received:', req.body);
+      
+      // Validate the request body using the schema
+      const validationResult = createCourseSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        console.error('❌ Validation failed:', validationResult.error);
+        return res.status(400).json({
+          message: 'بيانات غير صحيحة',
+          errors: validationResult.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+          })),
+        });
+      }
+
+      const courseData = validationResult.data;
+      console.log('✅ Validated course data:', courseData);
 
       const course = await storage.createCourse({
-        title,
-        description,
-        instructor,
-        level,
-        duration,
-        thumbnailUrl,
-        imageUrl,
-        syllabusUrl,
-        syllabusFileName,
+        ...courseData,
         totalLessons: 0,
         isActive: true,
       });
