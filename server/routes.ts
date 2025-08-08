@@ -499,6 +499,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create lesson
+  /**
+   * @swagger
+   * /api/admin/courses/{id}/lessons:
+   *   post:
+   *     summary: Create a new lesson for a course
+   *     description: Creates a new lesson in a specific course (Admin only)
+   *     tags: [Admin Lessons]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Course ID (UUID)
+   *     security:
+   *       - sessionAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - title
+   *               - order
+   *             properties:
+   *               title:
+   *                 type: string
+   *                 description: Lesson title
+   *                 example: "مقدمة في علوم الحديث"
+   *               description:
+   *                 type: string
+   *                 description: Lesson description
+   *                 example: "درس تمهيدي في أساسيات علوم الحديث الشريف"
+   *               order:
+   *                 type: integer
+   *                 description: Lesson sequence number
+   *                 example: 1
+   *               duration:
+   *                 type: integer
+   *                 description: Lesson duration in seconds
+   *                 example: 2700
+   *               videoUrl:
+   *                 type: string
+   *                 format: uri
+   *                 description: URL to the lesson video
+   *                 example: "https://example.com/videos/lesson1.mp4"
+   *               isActive:
+   *                 type: boolean
+   *                 description: Whether the lesson is active
+   *                 example: true
+   *     responses:
+   *       201:
+   *         description: Lesson created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 id:
+   *                   type: string
+   *                   description: Lesson ID
+   *                 title:
+   *                   type: string
+   *                   description: Lesson title
+   *                 order:
+   *                   type: integer
+   *                   description: Lesson order
+   *                 courseId:
+   *                   type: string
+   *                   description: Course ID
+   *       400:
+   *         description: Invalid request data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - User not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       403:
+   *         description: Forbidden - User not admin
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       404:
+   *         description: Course not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.post('/api/admin/courses/:id/lessons', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const courseId = req.params.id; // Pass UUID string directly
@@ -531,6 +633,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Update lesson
+  /**
+   * @swagger
+   * /api/admin/lessons/{id}:
+   *   patch:
+   *     summary: Update a lesson
+   *     description: Updates an existing lesson (Admin only)
+   *     tags: [Admin Lessons]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Lesson ID (UUID)
+   *     security:
+   *       - sessionAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               title:
+   *                 type: string
+   *                 description: Lesson title
+   *                 example: "مقدمة في علوم الحديث"
+   *               description:
+   *                 type: string
+   *                 description: Lesson description
+   *                 example: "درس تمهيدي في أساسيات علوم الحديث الشريف"
+   *               order:
+   *                 type: integer
+   *                 description: Lesson sequence number
+   *                 example: 1
+   *               duration:
+   *                 type: integer
+   *                 description: Lesson duration in seconds
+   *                 example: 2700
+   *               videoUrl:
+   *                 type: string
+   *                 format: uri
+   *                 description: URL to the lesson video
+   *                 example: "https://example.com/videos/lesson1.mp4"
+   *               isActive:
+   *                 type: boolean
+   *                 description: Whether the lesson is active
+   *                 example: true
+   *     responses:
+   *       200:
+   *         description: Lesson updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 id:
+   *                   type: string
+   *                   description: Lesson ID
+   *                 title:
+   *                   type: string
+   *                   description: Lesson title
+   *                 order:
+   *                   type: integer
+   *                   description: Lesson order
+   *                 courseId:
+   *                   type: string
+   *                   description: Course ID
+   *       400:
+   *         description: Invalid request data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - User not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       403:
+   *         description: Forbidden - User not admin
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       404:
+   *         description: Lesson not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.patch('/api/admin/lessons/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const lessonId = req.params.id; // Pass UUID string directly
@@ -563,6 +764,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Delete lesson
+  /**
+   * @swagger
+   * /api/admin/lessons/{id}:
+   *   delete:
+   *     summary: Delete a lesson
+   *     description: Deletes a lesson and all associated progress records (Admin only)
+   *     tags: [Admin Lessons]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Lesson ID (UUID)
+   *     security:
+   *       - sessionAuth: []
+   *     responses:
+   *       200:
+   *         description: Lesson deleted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: Success message
+   *                   example: "Lesson and all associated progress records deleted successfully"
+   *                 lessonId:
+   *                   type: string
+   *                   description: ID of the deleted lesson
+   *                 lessonTitle:
+   *                   type: string
+   *                   description: Title of the deleted lesson
+   *       401:
+   *         description: Unauthorized - User not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       403:
+   *         description: Forbidden - User not admin
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       404:
+   *         description: Lesson not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.delete('/api/admin/lessons/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const lessonId = req.params.id; // Pass UUID string directly
@@ -589,6 +849,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Lesson progress routes
+  /**
+   * @swagger
+   * /api/lessons/{id}/progress:
+   *   post:
+   *     summary: Update lesson progress
+   *     description: Updates the progress for a specific lesson for the authenticated user
+   *     tags: [Lesson Progress]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Lesson ID (UUID)
+   *     security:
+   *       - sessionAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - courseId
+   *             properties:
+   *               watchedDuration:
+   *                 type: integer
+   *                 description: Duration watched in seconds
+   *                 example: 1800
+   *               isCompleted:
+   *                 type: boolean
+   *                 description: Whether the lesson is completed
+   *                 example: true
+   *               courseId:
+   *                 type: string
+   *                 description: Course ID (UUID)
+   *                 example: "4700a861-2611-4965-8a92-554ea8257c05"
+   *     responses:
+   *       200:
+   *         description: Progress updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 id:
+   *                   type: string
+   *                   description: Progress record ID
+   *                 userId:
+   *                   type: string
+   *                   description: User ID
+   *                 lessonId:
+   *                   type: string
+   *                   description: Lesson ID
+   *                 courseId:
+   *                   type: string
+   *                   description: Course ID
+   *                 watchedDuration:
+   *                   type: integer
+   *                   description: Duration watched in seconds
+   *                 isCompleted:
+   *                   type: boolean
+   *                   description: Whether the lesson is completed
+   *                 completedAt:
+   *                   type: string
+   *                   format: date-time
+   *                   description: Completion date
+   *                 lastWatchedAt:
+   *                   type: string
+   *                   format: date-time
+   *                   description: Last watched date
+   *       401:
+   *         description: Unauthorized - User not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.post('/api/lessons/:id/progress', isAuthenticated, async (req: any, res) => {
     try {
       const userId = (req.user as any)?.id;
@@ -630,6 +974,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   );
 
+  /**
+   * @swagger
+   * /api/courses/{courseId}/progress:
+   *   get:
+   *     summary: Get course progress
+   *     description: Retrieves detailed progress information for a specific course for the authenticated user
+   *     tags: [Course Progress]
+   *     parameters:
+   *       - in: path
+   *         name: courseId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Course ID (UUID)
+   *     security:
+   *       - sessionAuth: []
+   *     responses:
+   *       200:
+   *         description: Course progress retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 courseId:
+   *                   type: string
+   *                   description: Course ID
+   *                 totalLessons:
+   *                   type: integer
+   *                   description: Total number of lessons in the course
+   *                   example: 2
+   *                 completedLessons:
+   *                   type: integer
+   *                   description: Number of completed lessons
+   *                   example: 1
+   *                 progressPercentage:
+   *                   type: number
+   *                   description: Overall progress percentage
+   *                   example: 50.0
+   *                 isCourseCompleted:
+   *                   type: boolean
+   *                   description: Whether the course is fully completed
+   *                   example: false
+   *                 lessonProgress:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       lessonId:
+   *                         type: string
+   *                         description: Lesson ID
+   *                       lessonTitle:
+   *                         type: string
+   *                         description: Lesson title
+   *                       lessonOrder:
+   *                         type: integer
+   *                         description: Lesson order
+   *                       isCompleted:
+   *                         type: boolean
+   *                         description: Whether the lesson is completed
+   *                       watchedDuration:
+   *                         type: integer
+   *                         description: Duration watched in seconds
+   *                       completedAt:
+   *                         type: string
+   *                         format: date-time
+   *                         description: Completion date
+   *                       lastWatchedAt:
+   *                         type: string
+   *                         format: date-time
+   *                         description: Last watched date
+   *       401:
+   *         description: Unauthorized - User not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get('/api/courses/:courseId/progress', isAuthenticated, async (req: any, res) => {
     try {
       const userId = (req.user as any)?.id;
