@@ -4,6 +4,7 @@ import { setupVite, serveStatic, log } from './vite';
 // import 'dotenv/config';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import { specs, swaggerUi } from './swagger';
 
 dotenv.config();
 
@@ -43,6 +44,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Swagger documentation route
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

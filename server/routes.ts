@@ -335,7 +335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: any, res) => {
       try {
         const courseId = req.params.id; // Pass UUID string directly
-        
+
         // Validate the request body using the schema
         const validationResult = updateCourseSchema.safeParse(req.body);
         if (!validationResult.success) {
@@ -389,33 +389,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Enrollment routes
-  app.post('/api/courses/:id/enroll',
-    isAuthenticated,
-    async (req: any, res) => {
-      try {
-        const userId = (req.user as any)?.id;
-        const courseId = parseInt(req.params.id);
+  /**
+   * @swagger
+   * /api/courses/{id}/enroll:
+   *   post:
+   *     summary: Enroll user in a course
+   *     description: Enrolls the authenticated user in a specific course
+   *     tags: [Enrollments]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Course ID (UUID)
+   *     security:
+   *       - sessionAuth: []
+   *     responses:
+   *       200:
+   *         description: Successfully enrolled in course
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Enrollment'
+   *       400:
+   *         description: Already enrolled in this course
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - User not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  app.post('/api/courses/:id/enroll', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const courseId = req.params.id; // Pass UUID string directly
 
-        // Check if already enrolled
-        const existing = await storage.getUserEnrollment(userId, courseId);
-        if (existing) {
-          return res
-            .status(400)
-            .json({ message: 'Already enrolled in this course' });
-        }
-
-        const enrollment = await storage.enrollUserInCourse({
-          userId,
-          courseId,
-        });
-        res.json(enrollment);
-      } catch (error) {
-        console.error('Error enrolling in course:', error);
-        res.status(500).json({ message: 'Failed to enroll in course' });
+      // Check if already enrolled
+      const existing = await storage.getUserEnrollment(userId, courseId);
+      if (existing) {
+        return res
+          .status(400)
+          .json({ message: 'Already enrolled in this course' });
       }
+
+      const enrollment = await storage.enrollUserInCourse({
+        userId,
+        courseId,
+      });
+      res.json(enrollment);
+    } catch (error) {
+      console.error('Error enrolling in course:', error);
+      res.status(500).json({ message: 'Failed to enroll in course' });
     }
+  }
   );
 
+  /**
+   * @swagger
+   * /api/my-enrollments:
+   *   get:
+   *     summary: Get user enrollments
+   *     description: Retrieves all enrollments for the authenticated user
+   *     tags: [Enrollments]
+   *     security:
+   *       - sessionAuth: []
+   *     responses:
+   *       200:
+   *         description: Successfully retrieved user enrollments
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Enrollment'
+   *       401:
+   *         description: Unauthorized - User not authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get('/api/my-enrollments', isAuthenticated, async (req: any, res) => {
     try {
       const userId = (req.user as any)?.id;
@@ -428,64 +499,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Lesson progress routes
-  app.post(
-    '/api/lessons/:id/progress',
-    isAuthenticated,
-    async (req: any, res) => {
-      try {
-        const userId = (req.user as any)?.id;
-        const lessonId = parseInt(req.params.id);
-        const { watchedDuration, isCompleted, courseId } = req.body;
+  app.post('/api/lessons/:id/progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const lessonId = req.params.id;
+      const { watchedDuration, isCompleted, courseId } = req.body;
 
-        const progress = await storage.updateLessonProgress({
+      const progress = await storage.updateLessonProgress({
+        userId,
+        lessonId,
+        courseId,
+        watchedDuration,
+        isCompleted,
+      });
+
+      // Update overall course progress
+      if (isCompleted) {
+        const allLessons = await storage.getLessonsByCourse(courseId);
+        const userProgress = await storage.getUserCourseProgress(
           userId,
-          lessonId,
+          courseId
+        );
+        const completedCount = userProgress.filter(
+          (p) => p.isCompleted
+        ).length;
+        const progressPercentage = (completedCount / allLessons.length) * 100;
+
+        await storage.updateEnrollmentProgress(
+          userId,
           courseId,
-          watchedDuration,
-          isCompleted,
-        });
-
-        // Update overall course progress
-        if (isCompleted) {
-          const allLessons = await storage.getLessonsByCourse(courseId);
-          const userProgress = await storage.getUserCourseProgress(
-            userId,
-            courseId
-          );
-          const completedCount = userProgress.filter(
-            (p) => p.isCompleted
-          ).length;
-          const progressPercentage = (completedCount / allLessons.length) * 100;
-
-          await storage.updateEnrollmentProgress(
-            userId,
-            courseId,
-            progressPercentage
-          );
-        }
-
-        res.json(progress);
-      } catch (error) {
-        console.error('Error updating lesson progress:', error);
-        res.status(500).json({ message: 'Failed to update lesson progress' });
+          progressPercentage
+        );
       }
+
+      res.json(progress);
+    } catch (error) {
+      console.error('Error updating lesson progress:', error);
+      res.status(500).json({ message: 'Failed to update lesson progress' });
     }
+  }
   );
 
-  app.get(
-    '/api/courses/:courseId/progress',
-    isAuthenticated,
-    async (req: any, res) => {
-      try {
-        const userId = (req.user as any)?.id;
-        const courseId = parseInt(req.params.courseId);
-        const progress = await storage.getUserCourseProgress(userId, courseId);
-        res.json(progress);
-      } catch (error) {
-        console.error('Error fetching course progress:', error);
-        res.status(500).json({ message: 'Failed to fetch course progress' });
-      }
+  app.get('/api/courses/:courseId/progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const courseId = parseInt(req.params.courseId);
+      const progress = await storage.getUserCourseProgress(userId, courseId);
+      res.json(progress);
+    } catch (error) {
+      console.error('Error fetching course progress:', error);
+      res.status(500).json({ message: 'Failed to fetch course progress' });
     }
+  }
   );
 
   // Exam routes

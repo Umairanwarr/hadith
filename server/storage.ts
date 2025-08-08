@@ -84,11 +84,11 @@ export interface IStorage {
   ): Promise<(Enrollment & { course: Course })[]>;
   getUserEnrollment(
     userId: string,
-    courseId: number
+    courseId: string
   ): Promise<Enrollment | undefined>;
   updateEnrollmentProgress(
     userId: string,
-    courseId: number,
+    courseId: string,
     progress: number
   ): Promise<void>;
 
@@ -333,7 +333,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserEnrollment(
     userId: string,
-    courseId: number
+    courseId: string
   ): Promise<Enrollment | undefined> {
     const [enrollment] = await db
       .select()
@@ -346,7 +346,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateEnrollmentProgress(
     userId: string,
-    courseId: number,
+    courseId: string,
     progress: number
   ): Promise<void> {
     await db
