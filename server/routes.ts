@@ -431,10 +431,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *             schema:
    *               $ref: '#/components/schemas/Error'
    */
-  app.post('/api/courses/:id/enroll', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = (req.user as any)?.id;
-      const courseId = req.params.id; // Pass UUID string directly
+  app.post('/api/courses/:id/enroll',
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const userId = (req.user as any)?.id;
+        const courseId = req.params.id as string;
 
       // Check if already enrolled
       const existing = await storage.getUserEnrollment(userId, courseId);
@@ -1107,7 +1109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Exam routes
   app.get('/api/courses/:id/exam', isAuthenticated, async (req: any, res) => {
     try {
-      const courseId = parseInt(req.params.id);
+      const courseId = req.params.id as string;
       const userId = (req.user as any)?.claims?.sub;
 
       // Check if user has completed all lessons

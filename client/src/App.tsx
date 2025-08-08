@@ -39,6 +39,7 @@ import { DiplomaManagementPage } from '@/pages/diploma-management';
 import { CertificateGeneratorPage } from '@/pages/certificate-generator';
 import { SampleCertificatesPage } from '@/pages/sample-certificates';
 import { CourseManagementPage } from '@/pages/course-management';
+import TeacherDashboard from '@/pages/teacher-dashboard';
 
 import AboutUniversity from '@/pages/about-university';
 import { TestCertificateGenerationPage } from '@/pages/test-certificate-generation';
@@ -47,7 +48,7 @@ import { AppContextProvider } from './contexts/AppContext';
 import { AuthProvider } from './contexts/AuthContext';
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   
   console.log('🔄 Router state changed:', {
     isAuthenticated,
@@ -76,8 +77,9 @@ function Router() {
         </>
       ) : (
         <>
-          <Route path='/' component={Dashboard} />
+          <Route path='/' component={user?.role === 'teacher' ? TeacherDashboard : Dashboard} />
           <Route path='/auth' component={Dashboard} />
+          <Route path='/teacher' component={TeacherDashboard} />
           <Route path='/course/:id' component={CourseDetails} />
           <Route
             path='/course/:courseId/lessons/:lessonId'
@@ -147,7 +149,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
-            <PWAInstallBanner />
+            {import.meta.env.PROD ? <PWAInstallBanner /> : null}
             <OfflineIndicator />
           </TooltipProvider>
         </AppContextProvider>

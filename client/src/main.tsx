@@ -3,13 +3,11 @@ import App from "./App";
 import "./index.css";
 import { registerServiceWorker, checkInstallPrompt, requestNotificationPermission } from "./utils/pwa";
 
-// تسجيل Service Worker
-registerServiceWorker();
-
-// التحقق من إمكانية التثبيت
-checkInstallPrompt();
-
-// طلب إذن الإشعارات
-requestNotificationPermission();
+// قم بتفعيل خصائص PWA فقط في وضع الإنتاج لتجنب إعادة التحميلات أثناء التطوير
+if (import.meta.env.PROD) {
+  registerServiceWorker();
+  checkInstallPrompt();
+  requestNotificationPermission();
+}
 
 createRoot(document.getElementById("root")!).render(<App />);

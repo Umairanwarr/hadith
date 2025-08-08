@@ -12,7 +12,10 @@ export const registerServiceWorker = async () => {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               // يوجد تحديث جديد
-              showUpdateAvailableNotification();
+              // لا نقوم بإجبار إعادة التحميل أثناء التطوير لتفادي إعادة تحميل المدخلات
+              if (import.meta.env.PROD) {
+                showUpdateAvailableNotification();
+              }
             }
           });
         }

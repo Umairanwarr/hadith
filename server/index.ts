@@ -11,7 +11,19 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3001',
+    'http://127.0.0.1:3001',
+    'http://localhost:5000',
+    'http://127.0.0.1:5000',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -74,10 +86,12 @@ app.use((req, res, next) => {
   server.listen(
     {
       port,
-      host: '127.0.0.1',
+      host: '0.0.0.0',
     },
     () => {
       log(`Server running on port ${port}`);
+      log(`Access your app at: http://localhost:${port}`);
+      log(`Or at: http://127.0.0.1:${port}`);
     }
   );
 })();

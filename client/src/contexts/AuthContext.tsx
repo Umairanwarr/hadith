@@ -11,7 +11,7 @@ interface User {
   city?: string;
   specialization?: string;
   level?: string;
-  role: 'student' | 'admin';
+  role: 'student' | 'admin' | 'teacher';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -33,7 +33,7 @@ interface AuthContextType extends AuthState {
 interface RegisterData {
   email: string;
   password: string;
-  role: 'student' | 'admin';
+  role: 'student' | 'admin' | 'teacher';
   firstName?: string;
   lastName?: string;
   city?: string;

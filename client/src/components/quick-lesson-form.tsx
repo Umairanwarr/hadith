@@ -35,18 +35,14 @@ export function QuickLessonForm({ courseId, onSuccess }: QuickLessonFormProps) {
 
   const createLessonMutation = useMutation({
     mutationFn: async (data: CreateLesson) => {
-      return await apiRequest("/api/admin/lessons", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
+      return await apiRequest("POST", "/api/admin/lessons", data);
     },
     onSuccess: () => {
       toast({
         title: "تم إضافة الدرس بنجاح",
         description: "تم إضافة الدرس الجديد للمادة",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
       form.reset();
       if (onSuccess) onSuccess();
     },

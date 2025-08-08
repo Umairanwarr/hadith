@@ -327,7 +327,7 @@ export const createCourseSchema = insertCourseSchema.pick({
   syllabusFileName: true,
 }).refine((data) => {
   // Validate level field
-  const validLevels = ['تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه'];
+  const validLevels = ['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه'];
   return validLevels.includes(data.level);
 }, {
   message: 'Invalid level. Must be one of: تمهيدي, متوسط, متقدم, بكالوريوس, ماجستير, دكتوراه',
@@ -363,7 +363,7 @@ export const updateCourseSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters').optional(),
   description: z.string().min(1, 'Description is required').max(2000, 'Description must be less than 2000 characters').optional(),
   instructor: z.string().min(1, 'Instructor name is required').max(100, 'Instructor name must be less than 100 characters').optional(),
-  level: z.enum(['تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه']).optional(),
+  level: z.enum(['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه']).optional(),
   duration: z.number().min(1, 'Duration is required').max(10080, 'Duration must be less than 10080 minutes').optional(),
   thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional(),
   imageUrl: z.string().url('Image URL must be valid').optional(),
