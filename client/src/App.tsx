@@ -39,13 +39,21 @@ import { DiplomaManagementPage } from '@/pages/diploma-management';
 import { CertificateGeneratorPage } from '@/pages/certificate-generator';
 import { SampleCertificatesPage } from '@/pages/sample-certificates';
 import { CourseManagementPage } from '@/pages/course-management';
+
 import AboutUniversity from '@/pages/about-university';
+import { TestCertificateGenerationPage } from '@/pages/test-certificate-generation';
 import Auth from './pages/auth';
 import { AppContextProvider } from './contexts/AppContext';
 import { AuthProvider } from './contexts/AuthContext';
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  
+  console.log('🔄 Router state changed:', {
+    isAuthenticated,
+    isLoading,
+    timestamp: new Date().toISOString()
+  });
 
   if (isLoading) {
     return (
@@ -77,6 +85,8 @@ function Router() {
           />
           <Route path='/course/:courseId/exam' component={Exam} />
           <Route path='/certificates' component={Certificates} />
+          <Route path='/certificate-generator' component={CertificateGeneratorPage} />
+          <Route path='/test-certificate-generation' component={TestCertificateGenerationPage} />
           <Route path='/levels' component={LevelsPage} />
           <Route path='/diplomas' component={DiplomasPage} />
           <Route path='/ijazas' component={IjazasPage} />
@@ -115,12 +125,12 @@ function Router() {
             component={ManageLiveSessionsPage}
           />
           <Route path='/diploma-management' component={DiplomaManagementPage} />
-          <Route path='/certificates' component={CertificateGeneratorPage} />
           <Route
             path='/sample-certificates'
             component={SampleCertificatesPage}
           />
           <Route path='/course-management' component={CourseManagementPage} />
+
           <Route path='/about-university' component={AboutUniversity} />
         </>
       )}

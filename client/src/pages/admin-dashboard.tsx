@@ -18,15 +18,15 @@ function InitializeCoursesButton() {
 
   const initializeMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("/api/admin/initialize-courses", { method: "POST" });
+      await apiRequest("/admin/initialize-courses", { method: "POST" });
     },
     onSuccess: () => {
       toast({
         title: "تم بنجاح",
         description: "تم تحديث المواد الدراسية وفقاً لبرنامج الجامعة الأصيل",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/courses"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
     },
     onError: (error: any) => {
       if (error.message?.includes("already exist")) {
@@ -120,32 +120,32 @@ export default function AdminDashboard() {
   }, [isAuthenticated, isLoading, user, toast, setLocation]);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ["/api/admin/dashboard"],
+    queryKey: ["admin", "dashboard"],
     retry: false,
   });
 
   const { data: courses, isLoading: coursesLoading } = useQuery({
-    queryKey: ["/api/courses"],
+    queryKey: ["courses"],
     retry: false,
   });
 
   const { data: exams, isLoading: examsLoading } = useQuery({
-    queryKey: ["/api/exams"],
+    queryKey: ["exams"],
     retry: false,
   });
 
   const deleteMutation = useMutation({
     mutationFn: async ({ type, id }: { type: "course" | "exam"; id: number }) => {
-      await apiRequest(`/api/admin/${type}s/${id}`, { method: "DELETE" });
+      await apiRequest(`/admin/${type}s/${id}`, { method: "DELETE" });
     },
     onSuccess: (_, { type }) => {
       toast({
         title: "تم الحذف بنجاح",
         description: type === "course" ? "تم حذف المادة بنجاح" : "تم حذف الاختبار بنجاح",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/exams"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: ["exams"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -273,8 +273,14 @@ export default function AdminDashboard() {
                   </Button>
                 </Link>
                 <InitializeCoursesButton />
-                <Link href="/admin/create-course">
+                <Link href="/course-management">
                   <Button>
+                    <i className="fas fa-cogs ml-2"></i>
+                    إدارة المواد
+                  </Button>
+                </Link>
+                <Link href="/admin/create-course">
+                  <Button variant="outline">
                     <PlusCircle className="ml-2 h-4 w-4" />
                     إضافة مادة جديدة
                   </Button>

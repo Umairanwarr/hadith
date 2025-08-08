@@ -47,12 +47,12 @@ export default function AdminCourseDetails() {
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
 
   const { data: course, isLoading: courseLoading } = useQuery({
-    queryKey: ["/api/courses", courseId],
+    queryKey: ["/courses", courseId],
     retry: false,
   });
 
   const { data: lessons, isLoading: lessonsLoading } = useQuery({
-    queryKey: ["/api/courses", courseId, "lessons"],
+    queryKey: ["/courses", courseId, "lessons"],
     retry: false,
   });
 
@@ -80,7 +80,7 @@ export default function AdminCourseDetails() {
         title: "تم إضافة الدرس بنجاح",
         description: "تم إضافة الدرس الجديد إلى المادة",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/courses", courseId, "lessons"] });
+      queryClient.invalidateQueries({ queryKey: ["/courses", courseId, "lessons"] });
       setIsAddLessonOpen(false);
       lessonForm.reset();
     },
@@ -113,7 +113,7 @@ export default function AdminCourseDetails() {
         title: "تم حذف الدرس بنجاح",
         description: "تم حذف الدرس من المادة",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/courses", courseId, "lessons"] });
+      queryClient.invalidateQueries({ queryKey: ["/courses", courseId, "lessons"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -259,7 +259,7 @@ export default function AdminCourseDetails() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={lessonForm.control}
                         name="description"
@@ -273,7 +273,7 @@ export default function AdminCourseDetails() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={lessonForm.control}
                         name="videoUrl"
@@ -281,16 +281,16 @@ export default function AdminCourseDetails() {
                           <FormItem>
                             <FormLabel>رابط الفيديو *</FormLabel>
                             <FormControl>
-                              <Input 
-                                placeholder="https://youtube.com/watch?v=..." 
-                                {...field} 
+                              <Input
+                                placeholder="https://youtube.com/watch?v=..."
+                                {...field}
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={lessonForm.control}
                         name="duration"
@@ -298,9 +298,9 @@ export default function AdminCourseDetails() {
                           <FormItem>
                             <FormLabel>مدة الدرس (بالدقائق) *</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="30" 
+                              <Input
+                                type="number"
+                                placeholder="30"
                                 {...field}
                                 onChange={(e) => field.onChange(Number(e.target.value))}
                               />
@@ -309,17 +309,17 @@ export default function AdminCourseDetails() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <div className="flex justify-end gap-2">
-                        <Button 
-                          type="button" 
+                        <Button
+                          type="button"
                           variant="outline"
                           onClick={() => setIsAddLessonOpen(false)}
                         >
                           إلغاء
                         </Button>
-                        <Button 
-                          type="submit" 
+                        <Button
+                          type="submit"
                           disabled={createLessonMutation.isPending}
                           className="bg-green-600 hover:bg-green-700"
                         >
@@ -376,7 +376,7 @@ export default function AdminCourseDetails() {
                             فيديو
                           </span>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           <Button size="sm" variant="outline" asChild>
                             <a href={lesson.videoUrl} target="_blank" rel="noopener noreferrer">
@@ -427,7 +427,7 @@ export default function AdminCourseDetails() {
                 </Button>
               </Link>
             </div>
-            
+
             <div className="text-center py-12">
               <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <p className="text-gray-600 mb-4">لا توجد اختبارات لهذه المادة حتى الآن</p>

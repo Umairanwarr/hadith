@@ -452,6 +452,22 @@ export const diplomaTemplates = pgTable('diploma_templates', {
 
 export type DiplomaTemplate = typeof diplomaTemplates.$inferSelect;
 export type InsertDiplomaTemplate = typeof diplomaTemplates.$inferInsert;
+
+// Certificate Images table for storing generated certificate images
+export const certificateImages = pgTable('certificate_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  certificateId: uuid('certificate_id').notNull().references(() => certificates.id, { onDelete: 'cascade' }),
+  templateId: uuid('template_id').notNull().references(() => diplomaTemplates.id, { onDelete: 'cascade' }),
+  imageUrl: varchar('image_url', { length: 500 }).notNull(),
+  generatedAt: timestamp('generated_at').defaultNow(),
+  generatedBy: varchar('generated_by').notNull(), // user ID who generated the image
+  metadata: jsonb('metadata'), // Additional data about the generation
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export type CertificateImage = typeof certificateImages.$inferSelect;
+export type InsertCertificateImage = typeof certificateImages.$inferInsert;
+
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
 export type CreateCourse = z.infer<typeof createCourseSchema>;
 export type CreateLesson = z.infer<typeof createLessonSchema>;

@@ -10,6 +10,7 @@ import {
   certificates,
   liveSessions,
   diplomaTemplates,
+  certificateImages,
   type User,
   type UpsertUser,
   type Course,
@@ -32,6 +33,8 @@ import {
   type InsertLiveSession,
   type DiplomaTemplate,
   type InsertDiplomaTemplate,
+  type CertificateImage,
+  type InsertCertificateImage,
   UserRole,
 } from '@shared/schema';
 import { db } from './db';
@@ -129,6 +132,20 @@ export interface IStorage {
     userId: string
   ): Promise<(Certificate & { course: Course })[]>;
   getCertificate(id: number): Promise<Certificate | undefined>;
+  getCertificateById(id: number): Promise<Certificate | undefined>;
+
+  // Certificate Image operations
+  createCertificateImage(data: {
+    certificateId: number;
+    templateId: number;
+    imageUrl: string;
+    generatedAt: Date;
+    generatedBy: string;
+    metadata?: any;
+  }): Promise<any>;
+  getCertificateImage(id: number): Promise<any | undefined>;
+  getCertificateImages(certificateId: number): Promise<any[]>;
+  deleteCertificateImage(id: number): Promise<void>;
 
   // Dashboard statistics
   getUserStats(userId: string): Promise<{
@@ -233,11 +250,11 @@ export class DatabaseStorage implements IStorage {
     return updatedCourse;
   }
 
-  async deleteCourse(id: number): Promise<void> {
+  async deleteCourse(id: string): Promise<void> {
     await db.delete(courses).where(eq(courses.id, id));
   }
 
-  async updateCourseLessonCount(courseId: number): Promise<void> {
+  async updateCourseLessonCount(courseId: string): Promise<void> {
     const lessonsCount = await db
       .select({ count: sql<number>`count(*)` })
       .from(lessons)
@@ -250,7 +267,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Lesson operations
-  async getLessonsByCourse(courseId: number): Promise<Lesson[]> {
+  async getLessonsByCourse(courseId: string): Promise<Lesson[]> {
     return db
       .select()
       .from(lessons)
@@ -663,6 +680,57 @@ export class DatabaseStorage implements IStorage {
       .from(certificates)
       .where(eq(certificates.id, id));
     return certificate;
+  }
+
+  async getCertificateById(id: number): Promise<Certificate | undefined> {
+    const [certificate] = await db
+      .select()
+      .from(certificates)
+      .where(eq(certificates.id, id.toString()));
+    return certificate;
+  }
+
+  // Certificate Image operations
+  async createCertificateImage(data: {
+    certificateId: number;
+    templateId: number;
+    imageUrl: string;
+    generatedAt: Date;
+    generatedBy: string;
+    metadata?: any;
+  }): Promise<any> {
+    const [certificateImage] = await db
+      .insert(certificateImages)
+      .values({
+        certificateId: data.certificateId.toString(),
+        templateId: data.templateId.toString(),
+        imageUrl: data.imageUrl,
+        generatedAt: data.generatedAt,
+        generatedBy: data.generatedBy,
+        metadata: data.metadata,
+      })
+      .returning();
+    return certificateImage;
+  }
+
+  async getCertificateImage(id: number): Promise<any | undefined> {
+    const [certificateImage] = await db
+      .select()
+      .from(certificateImages)
+      .where(eq(certificateImages.id, id.toString()));
+    return certificateImage;
+  }
+
+  async getCertificateImages(certificateId: number): Promise<any[]> {
+    return await db
+      .select()
+      .from(certificateImages)
+      .where(eq(certificateImages.certificateId, certificateId.toString()))
+      .orderBy(desc(certificateImages.generatedAt));
+  }
+
+  async deleteCertificateImage(id: number): Promise<void> {
+    await db.delete(certificateImages).where(eq(certificateImages.id, id.toString()));
   }
 
   // Admin statistics

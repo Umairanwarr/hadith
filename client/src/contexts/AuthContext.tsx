@@ -112,18 +112,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+      console.log('AuthContext: checkAuth called, token exists:', !!token);
 
       if (token) {
         try {
           dispatch({ type: 'AUTH_START' });
           const user = await apiService.get<User>('/auth/user');
+          console.log('AuthContext: User data fetched successfully:', user);
           dispatch({ type: 'AUTH_SUCCESS', payload: user });
         } catch (error) {
+          console.log('AuthContext: Authentication failed, clearing token');
           // Clear invalid token
           localStorage.removeItem('authToken');
           sessionStorage.removeItem('authToken');
           dispatch({ type: 'AUTH_FAILURE', payload: 'Session expired' });
         }
+      } else {
+        console.log('AuthContext: No token found, user not authenticated');
       }
     };
 

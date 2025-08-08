@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 // Create axios instance with default configuration
 const api: AxiosInstance = axios.create({
-  baseURL: (import.meta.env.VITE_API_URL || 'http://localhost:5000'),
+  baseURL: (import.meta.env.VITE_API_URL || 'http://localhost:5000/api'),
   timeout: 10000,
   withCredentials: true,
   headers: {
@@ -23,9 +23,19 @@ api.interceptors.request.use(
       };
     }
 
+    console.log('🔧 Axios request interceptor:', {
+      method: config.method,
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: config.baseURL + config.url,
+      hasToken: !!token,
+      timestamp: new Date().toISOString()
+    });
+
     return config;
   },
   (error) => {
+    console.log('❌ Axios request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -59,7 +69,14 @@ api.interceptors.response.use(
 export const apiService = {
   // GET request
   get: <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
-    return api.get(url, config).then(response => response.data);
+    console.log('🌐 apiService.get called with URL:', url, 'at:', new Date().toISOString());
+    return api.get(url, config).then(response => {
+      console.log('✅ apiService.get success for URL:', url, 'data length:', Array.isArray(response.data) ? response.data.length : 'not array');
+      return response.data;
+    }).catch(error => {
+      console.log('❌ apiService.get error for URL:', url, 'error:', error.message);
+      throw error;
+    });
   },
 
   // POST request

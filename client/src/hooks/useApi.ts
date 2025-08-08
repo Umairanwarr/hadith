@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { apiService } from '../lib/axios';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useLoading } from '../contexts/LoadingContext';
@@ -8,6 +8,8 @@ interface UseApiOptions {
   showNotifications?: boolean;
   onSuccess?: (data: any) => void;
   onError?: (error: any) => void;
+  autoFetch?: boolean;
+  autoFetchDeps?: any[];
 }
 
 interface ApiResponse<T> {
@@ -34,10 +36,17 @@ export const useApi = <T = any>(
     showNotifications = true,
     onSuccess,
     onError,
+    autoFetch = false,
+    autoFetchDeps = [],
   } = options;
 
   const execute = useCallback(
     async (...args: any[]): Promise<T | null> => {
+      console.log('🎯 useApi execute called:', {
+        args,
+        timestamp: new Date().toISOString()
+      });
+      
       try {
         setLoading(true);
         setError(null);
@@ -47,6 +56,10 @@ export const useApi = <T = any>(
         }
 
         const result = await apiCall(...args);
+        console.log('✅ useApi success:', {
+          result: Array.isArray(result) ? `Array(${result.length})` : typeof result,
+          timestamp: new Date().toISOString()
+        });
         setData(result);
 
         if (showNotifications && onSuccess) {
@@ -57,6 +70,10 @@ export const useApi = <T = any>(
         return result;
       } catch (err: any) {
         const errorMessage = err.response?.data?.message || err.message || 'An error occurred';
+        console.log('❌ useApi error:', {
+          error: errorMessage,
+          timestamp: new Date().toISOString()
+        });
         setError(errorMessage);
 
         if (showNotifications) {
@@ -72,7 +89,7 @@ export const useApi = <T = any>(
         }
       }
     },
-    [apiCall, showLoading, showNotifications, onSuccess, onError, success, showError, startLoading, stopLoading]
+    [showLoading, showNotifications, onSuccess, onError, success, showError, startLoading, stopLoading]
   );
 
   const reset = useCallback(() => {

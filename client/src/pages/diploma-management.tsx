@@ -216,9 +216,9 @@ export function DiplomaManagementPage() {
 
   // Certificate Preview Component
   const CertificatePreview = ({ template }: { template: DiplomaTemplate }) => (
-    <div 
+    <div
       className="mx-auto p-12 border-8 rounded-lg shadow-xl bg-white"
-      style={{ 
+      style={{
         backgroundColor: template.backgroundColor,
         color: template.textColor,
         borderColor: template.borderColor,
@@ -262,7 +262,7 @@ export function DiplomaManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -281,7 +281,7 @@ export function DiplomaManagementPage() {
                   </p>
                 </div>
               </div>
-              
+
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button
@@ -295,7 +295,7 @@ export function DiplomaManagementPage() {
                     إضافة قالب جديد
                   </Button>
                 </DialogTrigger>
-                
+
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
@@ -526,7 +526,7 @@ export function DiplomaManagementPage() {
                     <div>
                       <h3 className="text-lg font-semibold mb-4">معاينة مباشرة</h3>
                       <div className="border rounded-lg p-4 bg-gray-50 overflow-auto">
-                        <CertificatePreview 
+                        <CertificatePreview
                           template={{
                             id: 0,
                             title: form.watch('title') || 'عنوان الديبلوم',
@@ -597,8 +597,8 @@ export function DiplomaManagementPage() {
                         <TableCell>{template.institutionName}</TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {template.templateStyle === 'classic' ? 'كلاسيكي' : 
-                             template.templateStyle === 'modern' ? 'عصري' : 'أنيق'}
+                            {template.templateStyle === 'classic' ? 'كلاسيكي' :
+                              template.templateStyle === 'modern' ? 'عصري' : 'أنيق'}
                           </Badge>
                         </TableCell>
                         <TableCell>

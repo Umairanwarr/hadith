@@ -38,9 +38,17 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
+  console.log('🚀 Dashboard component rendered at:', new Date().toISOString());
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  
+  console.log('👤 Dashboard user state:', {
+    user: user ? { id: user.id, email: user.email, role: user.role } : null,
+    token: localStorage.getItem('authToken') ? 'exists' : 'missing',
+    timestamp: new Date().toISOString()
+  });
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
@@ -53,13 +61,13 @@ export default function Dashboard() {
   });
 
   const { data: courses, isLoading: coursesLoading } = useQuery<Course[]>({
-    queryKey: ["/api/courses"],
+    queryKey: ["/courses"],
     retry: false,
   });
 
   const enrollMutation = useMutation({
     mutationFn: async (courseId: number) => {
-      await apiRequest('POST', `/api/courses/${courseId}/enroll`);
+      await apiRequest('POST', `/courses/${courseId}/enroll`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/my-enrollments"] });

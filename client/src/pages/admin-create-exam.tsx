@@ -30,7 +30,7 @@ export default function AdminCreateExam() {
   const queryClient = useQueryClient();
 
   const { data: courses, isLoading: coursesLoading } = useQuery({
-    queryKey: ["/api/courses"],
+    queryKey: ["courses"],
     retry: false,
   });
 
@@ -51,7 +51,7 @@ export default function AdminCreateExam() {
       const examData = { ...data };
       delete (examData as any).courseId; // Remove courseId from body as it goes in URL
       
-      return await apiRequest(`/api/admin/courses/${courseId}/exams`, {
+      return await apiRequest(`/admin/courses/${courseId}/exams`, {
         method: "POST",
         body: JSON.stringify(examData),
         headers: { "Content-Type": "application/json" },
@@ -62,9 +62,9 @@ export default function AdminCreateExam() {
         title: "تم إنشاء الاختبار بنجاح",
         description: "تم إضافة الاختبار الجديد إلى النظام",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/exams"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard"] });
+          queryClient.invalidateQueries({ queryKey: ["courses"] });
+    queryClient.invalidateQueries({ queryKey: ["exams"] });
+    queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
       setLocation("/admin");
     },
     onError: (error) => {

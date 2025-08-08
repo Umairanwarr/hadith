@@ -24,7 +24,7 @@ const courseSchema = z.object({
   title: z.string().min(5, "عنوان الكورس يجب أن يكون 5 أحرف على الأقل"),
   description: z.string().min(10, "وصف الكورس يجب أن يكون 10 أحرف على الأقل"),
   instructor: z.string().min(3, "اسم المدرس مطلوب"),
-  level: z.enum(["مبتدئ", "متوسط", "متقدم"]),
+  level: z.enum(["مبتدئ", "متوسط", "متقدم", "تمهيدي", "بكالوريوس", "ماجستير", "دكتوراه"]),
   duration: z.number().min(1, "مدة الكورس مطلوبة").optional(),
   thumbnailUrl: z.string().optional(),
   imageUrl: z.string().optional(),
@@ -56,6 +56,7 @@ export function CourseManagementPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [syllabusFile, setSyllabusFile] = useState<File | null>(null);
   const [isUploadingSyllabus, setIsUploadingSyllabus] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<string>("all");
   const { toast } = useToast();
 
   const form = useForm<CourseFormData>({
@@ -191,13 +192,13 @@ export function CourseManagementPage() {
       }
 
       const result = await response.json();
-      
+
       // Update form values
       form.setValue('syllabusUrl', result.url);
       form.setValue('syllabusFileName', result.fileName);
-      
+
       setSyllabusFile(file);
-      
+
       toast({
         title: "نجح رفع الملف",
         description: `تم رفع ملف "${result.fileName}" بنجاح`,
@@ -229,11 +230,11 @@ export function CourseManagementPage() {
             </div>
             <p className="text-sm text-gray-600 line-clamp-2">{course.description}</p>
           </div>
-          
+
           {(course.thumbnailUrl || course.imageUrl) && (
             <div className="mr-4">
-              <img 
-                src={course.imageUrl || course.thumbnailUrl} 
+              <img
+                src={course.imageUrl || course.thumbnailUrl}
                 alt={course.title}
                 className="w-16 h-16 object-cover rounded-lg"
               />
@@ -246,7 +247,7 @@ export function CourseManagementPage() {
           <span>المدرس: {course.instructor}</span>
           <span>{course.totalLessons} درس</span>
         </div>
-        
+
         {/* Syllabus file info */}
         {course.syllabusFileName && (
           <div className="mb-3 p-2 bg-blue-50 rounded-md">
@@ -255,9 +256,9 @@ export function CourseManagementPage() {
               <span className="text-blue-700 font-medium">مقرر المادة:</span>
               <span className="text-blue-600">{course.syllabusFileName}</span>
               {course.syllabusUrl && (
-                <a 
-                  href={course.syllabusUrl} 
-                  target="_blank" 
+                <a
+                  href={course.syllabusUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:text-blue-700"
                 >
@@ -268,18 +269,18 @@ export function CourseManagementPage() {
             </div>
           </div>
         )}
-        
+
         <div className="flex gap-2">
-          <Button 
+          <Button
             onClick={() => handleEdit(course)}
-            variant="outline" 
+            variant="outline"
             size="sm"
             className="flex-1"
           >
             <i className="fas fa-edit ml-1"></i>
             تعديل
           </Button>
-          
+
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm">
@@ -296,7 +297,7 @@ export function CourseManagementPage() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                <AlertDialogAction 
+                <AlertDialogAction
                   onClick={() => handleDelete(course.id)}
                   className="bg-red-600 hover:bg-red-700"
                 >
@@ -310,13 +311,13 @@ export function CourseManagementPage() {
     </Card>
   );
 
-  const CourseFormDialog = ({ 
-    open, 
-    onOpenChange, 
-    title, 
-    description 
-  }: { 
-    open: boolean; 
+  const CourseFormDialog = ({
+    open,
+    onOpenChange,
+    title,
+    description
+  }: {
+    open: boolean;
     onOpenChange: (open: boolean) => void;
     title: string;
     description: string;
@@ -389,6 +390,10 @@ export function CourseManagementPage() {
                         <SelectItem value="مبتدئ">مبتدئ</SelectItem>
                         <SelectItem value="متوسط">متوسط</SelectItem>
                         <SelectItem value="متقدم">متقدم</SelectItem>
+                        <SelectItem value="تمهيدي">تمهيدي</SelectItem>
+                        <SelectItem value="بكالوريوس">بكالوريوس</SelectItem>
+                        <SelectItem value="ماجستير">ماجستير</SelectItem>
+                        <SelectItem value="دكتوراه">دكتوراه</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -404,8 +409,8 @@ export function CourseManagementPage() {
                 <FormItem>
                   <FormLabel>مدة الكورس (بالدقائق)</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
+                    <Input
+                      type="number"
                       placeholder="120"
                       {...field}
                       onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
@@ -471,9 +476,9 @@ export function CourseManagementPage() {
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => {
                   onOpenChange(false);
                   setSelectedCourse(null);
@@ -482,8 +487,8 @@ export function CourseManagementPage() {
               >
                 إلغاء
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={createCourseMutation.isPending || updateCourseMutation.isPending}
               >
                 {createCourseMutation.isPending || updateCourseMutation.isPending ? (
@@ -505,7 +510,7 @@ export function CourseManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
       <Header />
-      
+
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -524,7 +529,7 @@ export function CourseManagementPage() {
                   </p>
                 </div>
               </div>
-              
+
               <Button
                 onClick={() => {
                   setSelectedCourse(null);
@@ -540,20 +545,42 @@ export function CourseManagementPage() {
           </div>
         </div>
 
+        {/* Level Filter */}
+        <div className="mb-6">
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium text-gray-700">تصفية حسب المستوى:</label>
+            <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="جميع المستويات" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع المستويات</SelectItem>
+                <SelectItem value="مبتدئ">مبتدئ</SelectItem>
+                <SelectItem value="متوسط">متوسط</SelectItem>
+                <SelectItem value="متقدم">متقدم</SelectItem>
+                <SelectItem value="تمهيدي">تمهيدي</SelectItem>
+                <SelectItem value="بكالوريوس">بكالوريوس</SelectItem>
+                <SelectItem value="ماجستير">ماجستير</SelectItem>
+                <SelectItem value="دكتوراه">دكتوراه</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         {/* Courses List */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <i className="fas fa-spinner fa-spin text-2xl text-gray-400 ml-3"></i>
             <span>جاري تحميل الكورسات...</span>
           </div>
-        ) : (courses as Course[]).length === 0 ? (
+        ) : (courses as Course[]).filter(course => selectedLevel === "all" || course.level === selectedLevel).length === 0 ? (
           <div className="text-center py-12">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <i className="fas fa-book-open text-3xl text-gray-400"></i>
             </div>
             <h3 className="text-lg font-semibold text-gray-600 mb-2">لا توجد كورسات بعد</h3>
             <p className="text-gray-500 mb-4">ابدأ بإنشاء أول كورس</p>
-            <Button 
+            <Button
               onClick={() => {
                 setSelectedCourse(null);
                 form.reset();
@@ -566,7 +593,7 @@ export function CourseManagementPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(courses as Course[]).map((course: Course) => (
+            {(courses as Course[]).filter(course => selectedLevel === "all" || course.level === selectedLevel).map((course: Course) => (
               <CourseCard key={course.id} course={course} />
             ))}
           </div>

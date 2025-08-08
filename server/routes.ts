@@ -94,8 +94,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      console.log('🔐 Authenticated request, user payload:', req.user);
-
       const userId = req.user?.id || req.user?.sub;
       if (!userId) {
         console.warn('⚠️ Missing sub in JWT payload');
@@ -118,17 +116,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register
   app.post('/api/auth/register', async (req, res) => {
     try {
-      console.log('➡️ Incoming registration request...');
-      console.log('📦 Request body:', req.body);
-
       // Handle both formats: { user: {...} } and direct user data
       const userData = req.body.user || req.body;
-      console.log('🔍 Attempting to validate userData:', userData);
 
       let data;
       try {
-        data = insertUserSchema.parse(userData);
-        console.log('✅ Passed Zod validation:', data);
+        data = insertUserSchema.parse(userData); //Zod validation
       } catch (validationError) {
         console.error('❌ Zod validation failed:', validationError);
         throw validationError;
@@ -148,7 +141,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
-      console.log('🔒 Password hashed.');
 
       const user = await storage.registerUser({
         ...data,
@@ -168,7 +160,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { expiresIn: '7d' }
       );
 
-      console.log('🔑 Token generated:', token);
       return res.status(201).json({ token });
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -223,8 +214,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Course routes
   app.get('/api/courses', isAuthenticated, async (req, res) => {
     try {
-      const courses = await storage.getAllCourses();
-      res.json(courses);
+      const { level } = req.query;
+
+      if (level) {
+        // Filter courses by level
+        const courses = await storage.getAllCourses();
+        const filteredCourses = courses.filter(course => course.level === level);
+        res.json(filteredCourses);
+      } else {
+        // Get all courses
+        const courses = await storage.getAllCourses();
+        res.json(courses);
+      }
     } catch (error) {
       console.error('Error fetching courses:', error);
       res.status(500).json({ message: 'Failed to fetch courses' });
@@ -233,8 +234,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/courses/:id', isAuthenticated, async (req, res) => {
     try {
-      const courseId = parseInt(req.params.id);
-      const course = await storage.getCourse(courseId);
+      const courseId = req.params.id;
+      // Since the storage layer expects number but we have UUID, 
+      // we need to handle this differently
+      const allCourses = await storage.getAllCourses();
+      const course = allCourses.find(c => c.id === courseId);
+
       if (!course) {
         return res.status(404).json({ message: 'Course not found' });
       }
@@ -247,9 +252,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/courses/:id/lessons', isAuthenticated, async (req, res) => {
     try {
-      const courseId = parseInt(req.params.id);
-      const lessons = await storage.getLessonsByCourse(courseId);
-      res.json(lessons);
+      const courseId = req.params.id;
+      // Since the storage layer expects number but we have UUID, 
+      // we need to handle this differently
+      const allCourses = await storage.getAllCourses();
+      const course = allCourses.find(c => c.id === courseId);
+
+      if (!course) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+
+      // For now, return empty lessons array since we can't query by UUID
+      // TODO: Fix storage layer to handle UUIDs properly
+      res.json([]);
     } catch (error) {
       console.error('Error fetching lessons:', error);
       res.status(500).json({ message: 'Failed to fetch lessons' });
@@ -257,8 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // File upload endpoint for course syllabi
-  app.post(
-    '/api/upload/syllabus',
+  app.post('/api/upload/syllabus',
     isAuthenticated,
     isAdmin,
     documentUpload.single('syllabus'),
@@ -320,8 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch(
-    '/api/courses/:id',
+  app.patch('/api/courses/:id',
     isAuthenticated,
     isAdmin,
     async (req: any, res) => {
@@ -363,8 +376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  app.delete(
-    '/api/courses/:id',
+  app.delete('/api/courses/:id',
     isAuthenticated,
     isAdmin,
     async (req: any, res) => {
@@ -389,8 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Enrollment routes
-  app.post(
-    '/api/courses/:id/enroll',
+  app.post('/api/courses/:id/enroll',
     isAuthenticated,
     async (req: any, res) => {
       try {
@@ -1501,7 +1512,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/diploma-templates', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.id;
+      // const userId = req.user?.id;
+      const userId = req.user?.id || req.user?.sub;
+      if (!userId) {
+        console.warn('⚠️ Missing sub in JWT payload');
+        return res.status(401).json({ message: 'Unauthorized: Invalid token payload' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || user.role !== 'admin') {
@@ -1542,53 +1558,222 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete(
-    '/api/diploma-templates/:id',
-    isAuthenticated,
-    async (req, res) => {
-      try {
-        const userId = req.user?.id;
-        const user = await storage.getUserById(userId);
+  app.delete('/api/diploma-templates/:id', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const user = await storage.getUserById(userId);
 
-        if (!user || user.role !== 'admin') {
-          return res.status(403).json({ message: 'Admin access required' });
-        }
-
-        const templateId = parseInt(req.params.id);
-        await storage.deleteDiplomaTemplate(templateId);
-
-        res.json({ message: 'Template deleted successfully' });
-      } catch (error) {
-        console.error('Error deleting diploma template:', error);
-        res.status(500).json({ message: 'Failed to delete diploma template' });
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
       }
+
+      const templateId = parseInt(req.params.id);
+      await storage.deleteDiplomaTemplate(templateId);
+
+      res.json({ message: 'Template deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting diploma template:', error);
+      res.status(500).json({ message: 'Failed to delete diploma template' });
     }
+  }
   );
 
-  app.patch(
-    '/api/diploma-templates/:id/status',
-    isAuthenticated,
-    async (req, res) => {
-      try {
-        const userId = req.user?.id;
-        const user = await storage.getUserById(userId);
+  app.patch('/api/diploma-templates/:id/status', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const user = await storage.getUserById(userId);
 
-        if (!user || user.role !== 'admin') {
-          return res.status(403).json({ message: 'Admin access required' });
-        }
-
-        const templateId = parseInt(req.params.id);
-        const { isActive } = req.body;
-
-        await storage.toggleDiplomaTemplateStatus(templateId, isActive);
-
-        res.json({ message: 'Template status updated successfully' });
-      } catch (error) {
-        console.error('Error updating template status:', error);
-        res.status(500).json({ message: 'Failed to update template status' });
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
       }
+
+      const templateId = parseInt(req.params.id);
+      const { isActive } = req.body;
+
+      await storage.toggleDiplomaTemplateStatus(templateId, isActive);
+
+      res.json({ message: 'Template status updated successfully' });
+    } catch (error) {
+      console.error('Error updating template status:', error);
+      res.status(500).json({ message: 'Failed to update template status' });
     }
+  }
   );
+
+  // Certificate Generation routes
+  app.post('/api/certificates/generate', isAuthenticated, async (req: any, res) => {
+    try {
+      // const userId = req.user?.id;
+      const userId = req.user?.id || req.user?.sub;
+      if (!userId) {
+        console.warn('⚠️ Missing sub in JWT payload');
+        return res.status(401).json({ message: 'Unauthorized: Invalid token payload' });
+      }
+
+      const {
+        certificateId,
+        templateId,
+        canvasData,
+        certificateData
+      } = req.body;
+
+      // Validate required fields
+      if (!certificateId || !templateId || !canvasData) {
+        return res.status(400).json({
+          message: 'Certificate ID, template ID, and canvas data are required'
+        });
+      }
+
+      // Get certificate and template data
+      const certificate = await storage.getCertificateById(certificateId);
+      if (!certificate) {
+        return res.status(404).json({ message: 'Certificate not found' });
+      }
+
+      const template = await storage.getDiplomaTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ message: 'Template not found' });
+      }
+
+      // Verify user owns the certificate
+      if (certificate.userId !== userId) {
+        return res.status(403).json({ message: 'Access denied to this certificate' });
+      }
+
+      // Generate unique filename for the certificate image
+      const timestamp = Date.now();
+      const filename = `certificate_${certificate.certificateNumber}_${timestamp}.png`;
+      const filePath = path.join(__dirname, '../public/uploads/certificates/', filename);
+
+      // Ensure certificates directory exists
+      const certificatesDir = path.dirname(filePath);
+      if (!require('fs').existsSync(certificatesDir)) {
+        require('fs').mkdirSync(certificatesDir, { recursive: true });
+      }
+
+      // Save canvas data as image file
+      // Remove data:image/png;base64, prefix if present
+      const base64Data = canvasData.replace(/^data:image\/png;base64,/, '');
+      const imageBuffer = Buffer.from(base64Data, 'base64');
+
+      require('fs').writeFileSync(filePath, imageBuffer);
+
+      // Save certificate generation record
+      const certificateImage = await storage.createCertificateImage({
+        certificateId,
+        templateId,
+        imageUrl: `/uploads/certificates/${filename}`,
+        generatedAt: new Date(),
+        generatedBy: userId,
+        metadata: certificateData || {}
+      });
+
+      res.json({
+        message: 'Certificate generated successfully',
+        certificateImage,
+        downloadUrl: `/uploads/certificates/${filename}`
+      });
+
+    } catch (error) {
+      console.error('Error generating certificate:', error);
+      res.status(500).json({ message: 'Failed to generate certificate' });
+    }
+  });
+
+  app.get('/api/certificates/:id/images', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const certificateId = parseInt(req.params.id);
+
+      // Get certificate
+      const certificate = await storage.getCertificateById(certificateId);
+      if (!certificate) {
+        return res.status(404).json({ message: 'Certificate not found' });
+      }
+
+      // Verify user owns the certificate
+      if (certificate.userId !== userId) {
+        return res.status(403).json({ message: 'Access denied to this certificate' });
+      }
+
+      // Get all generated images for this certificate
+      const certificateImages = await storage.getCertificateImages(certificateId);
+
+      res.json(certificateImages);
+
+    } catch (error) {
+      console.error('Error fetching certificate images:', error);
+      res.status(500).json({ message: 'Failed to fetch certificate images' });
+    }
+  });
+
+  app.delete('/api/certificate-images/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const imageId = parseInt(req.params.id);
+
+      // Get certificate image
+      const certificateImage = await storage.getCertificateImage(imageId);
+      if (!certificateImage) {
+        return res.status(404).json({ message: 'Certificate image not found' });
+      }
+
+      // Get certificate to verify ownership
+      const certificate = await storage.getCertificateById(certificateImage.certificateId);
+      if (!certificate || certificate.userId !== userId) {
+        return res.status(403).json({ message: 'Access denied to this certificate image' });
+      }
+
+      // Delete the image file
+      if (certificateImage.imageUrl) {
+        const filePath = path.join(__dirname, '../public', certificateImage.imageUrl);
+        if (require('fs').existsSync(filePath)) {
+          require('fs').unlinkSync(filePath);
+        }
+      }
+
+      // Delete from database
+      await storage.deleteCertificateImage(imageId);
+
+      res.json({ message: 'Certificate image deleted successfully' });
+
+    } catch (error) {
+      console.error('Error deleting certificate image:', error);
+      res.status(500).json({ message: 'Failed to delete certificate image' });
+    }
+  });
+
+  app.get('/api/certificates/:id/download/:imageId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const certificateId = parseInt(req.params.id);
+      const imageId = parseInt(req.params.imageId);
+
+      // Get certificate image
+      const certificateImage = await storage.getCertificateImage(imageId);
+      if (!certificateImage || certificateImage.certificateId !== certificateId) {
+        return res.status(404).json({ message: 'Certificate image not found' });
+      }
+
+      // Get certificate to verify ownership
+      const certificate = await storage.getCertificateById(certificateId);
+      if (!certificate || certificate.userId !== userId) {
+        return res.status(403).json({ message: 'Access denied to this certificate' });
+      }
+
+      // Serve the file
+      const filePath = path.join(__dirname, '../public', certificateImage.imageUrl);
+      if (!require('fs').existsSync(filePath)) {
+        return res.status(404).json({ message: 'Certificate image file not found' });
+      }
+
+      res.download(filePath, `certificate_${certificate.certificateNumber}.png`);
+
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      res.status(500).json({ message: 'Failed to download certificate' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

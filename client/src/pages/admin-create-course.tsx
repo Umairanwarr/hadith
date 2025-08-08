@@ -34,7 +34,7 @@ export default function AdminCreateCourse() {
 
   const createMutation = useMutation({
     mutationFn: async (data: CreateCourse) => {
-      return await apiRequest("/api/admin/courses", {
+      return await apiRequest("/admin/courses", {
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
@@ -45,8 +45,8 @@ export default function AdminCreateCourse() {
         title: "تم إنشاء المادة بنجاح",
         description: "تم إضافة المادة الجديدة إلى النظام",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard"] });
+          queryClient.invalidateQueries({ queryKey: ["courses"] });
+    queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
       setLocation("/admin");
     },
     onError: (error) => {

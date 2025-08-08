@@ -8,6 +8,8 @@ interface CertificateProps {
   grade: number;
   date: string;
   certificateNumber: string;
+  certificateId?: number;
+  templateId?: number;
 }
 
 export default function CertificateGenerator({ 
@@ -15,7 +17,9 @@ export default function CertificateGenerator({
   courseName, 
   grade, 
   date, 
-  certificateNumber 
+  certificateNumber,
+  certificateId,
+  templateId
 }: CertificateProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -122,6 +126,66 @@ export default function CertificateGenerator({
     link.click();
   };
 
+  // New function to send canvas data to backend
+  const generateCertificateOnServer = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !certificateId || !templateId) {
+      console.error('Canvas, certificateId, or templateId not available');
+      return;
+    }
+
+    try {
+      // Generate the certificate on canvas first
+      downloadCertificate(); // This will draw on canvas
+
+      // Get canvas data as base64
+      const canvasData = canvas.toDataURL('image/png');
+
+      // Prepare certificate data
+      const certificateData = {
+        studentName,
+        courseName,
+        grade,
+        date,
+        certificateNumber,
+        generatedAt: new Date().toISOString()
+      };
+
+      // Send to backend
+      const response = await fetch('/api/certificates/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` // Assuming you store JWT token
+        },
+        body: JSON.stringify({
+          certificateId,
+          templateId,
+          canvasData,
+          certificateData
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate certificate on server');
+      }
+
+      const result = await response.json();
+      console.log('Certificate generated on server:', result);
+
+      // Optionally download the server-generated version
+      if (result.downloadUrl) {
+        const downloadLink = document.createElement('a');
+        downloadLink.href = result.downloadUrl;
+        downloadLink.download = `certificate_${certificateNumber}_server.png`;
+        downloadLink.click();
+      }
+
+    } catch (error) {
+      console.error('Error generating certificate on server:', error);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <canvas 
@@ -130,10 +194,18 @@ export default function CertificateGenerator({
         width={1200} 
         height={800}
       />
-      <Button onClick={downloadCertificate} className="btn-secondary">
-        <i className="fas fa-download ml-1"></i>
-        تحميل الشهادة
-      </Button>
+      <div className="flex gap-2">
+        <Button onClick={downloadCertificate} className="btn-secondary">
+          <i className="fas fa-download ml-1"></i>
+          تحميل الشهادة
+        </Button>
+        {certificateId && templateId && (
+          <Button onClick={generateCertificateOnServer} className="btn-primary">
+            <i className="fas fa-server ml-1"></i>
+            إنشاء على الخادم
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

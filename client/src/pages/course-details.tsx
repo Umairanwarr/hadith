@@ -36,17 +36,17 @@ export default function CourseDetails() {
   const courseId = parseInt(id!);
 
   const { data: course, isLoading: courseLoading } = useQuery<Course>({
-    queryKey: ["/api/courses", courseId],
+    queryKey: ["/courses", courseId],
     retry: false,
   });
 
   const { data: lessons, isLoading: lessonsLoading } = useQuery<Lesson[]>({
-    queryKey: ["/api/courses", courseId, "lessons"],
+    queryKey: ["/courses", courseId, "lessons"],
     retry: false,
   });
 
   const { data: progress, isLoading: progressLoading } = useQuery<LessonProgress[]>({
-    queryKey: ["/api/courses", courseId, "progress"],
+    queryKey: ["/courses", courseId, "progress"],
     retry: false,
   });
 
