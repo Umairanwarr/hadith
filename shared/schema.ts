@@ -384,49 +384,49 @@ export const createLessonSchema = insertLessonSchema.pick({
 });
 
 // Admin exam creation schema
-export const createExamSchema = insertExamSchema
-  .omit({ id: true, createdAt: true })
-  .extend({
-    title: z
-      .string()
-      .min(1, 'عنوان الاختبار مطلوب')
-      .max(200, 'العنوان يجب أن يكون أقل من 200 حرف'),
-    description: z
-      .string()
-      .min(1, 'وصف الاختبار مطلوب')
-      .max(1000, 'الوصف يجب أن يكون أقل من 1000 حرف'),
-    duration: z
-      .number()
-      .min(1, 'مدة الاختبار مطلوبة')
-      .max(300, 'المدة يجب أن تكون أقل من 300 دقيقة'),
-    passingGrade: z
-      .number()
-      .min(1, 'الدرجة المطلوبة للنجاح مطلوبة')
-      .max(100, 'الدرجة يجب أن تكون بين 1 و 100')
-      .transform(String),
-  });
+export const createExamSchema = z.object({
+  courseId: z.string().uuid('معرف المادة يجب أن يكون صحيحاً'),
+  title: z
+    .string()
+    .min(1, 'عنوان الاختبار مطلوب')
+    .max(200, 'العنوان يجب أن يكون أقل من 200 حرف'),
+  description: z
+    .string()
+    .min(1, 'وصف الاختبار مطلوب')
+    .max(1000, 'الوصف يجب أن يكون أقل من 1000 حرف'),
+  duration: z
+    .number()
+    .min(1, 'مدة الاختبار مطلوبة')
+    .max(300, 'المدة يجب أن تكون أقل من 300 دقيقة'),
+  passingGrade: z
+    .number()
+    .min(1, 'الدرجة المطلوبة للنجاح مطلوبة')
+    .max(100, 'الدرجة يجب أن تكون بين 1 و 100')
+    .transform(String),
+  totalQuestions: z.number().default(0),
+  isActive: z.boolean().default(true),
+});
 
 // Admin exam question creation schema
-export const createExamQuestionSchema = insertExamQuestionSchema
-  .omit({ id: true })
-  .extend({
-    question: z
-      .string()
-      .min(1, 'نص السؤال مطلوب')
-      .max(500, 'السؤال يجب أن يكون أقل من 500 حرف'),
-    options: z
-      .array(z.string().min(1, 'الخيار لا يمكن أن يكون فارغ'))
-      .min(2, 'يجب أن يكون هناك خياران على الأقل')
-      .max(6, 'لا يمكن أن يكون هناك أكثر من 6 خيارات'),
-    correctAnswer: z.string().min(1, 'الإجابة الصحيحة مطلوبة'),
-    order: z.number().min(1, 'ترتيب السؤال مطلوب'),
-    points: z
-      .number()
-      .min(0.1, 'النقاط يجب أن تكون أكبر من 0')
-      .max(10, 'النقاط يجب أن تكون أقل من أو تساوي 10')
-      .default(1)
-      .transform(String),
-  });
+export const createExamQuestionSchema = z.object({
+  examId: z.string().uuid('معرف الاختبار يجب أن يكون صحيحاً'),
+  question: z
+    .string()
+    .min(1, 'نص السؤال مطلوب')
+    .max(500, 'السؤال يجب أن يكون أقل من 500 حرف'),
+  options: z
+    .array(z.string().min(1, 'الخيار لا يمكن أن يكون فارغ'))
+    .min(2, 'يجب أن يكون هناك خياران على الأقل')
+    .max(6, 'لا يمكن أن يكون هناك أكثر من 6 خيارات'),
+  correctAnswer: z.string().min(1, 'الإجابة الصحيحة مطلوبة'),
+  order: z.number().min(1, 'ترتيب السؤال مطلوب'),
+  points: z
+    .number()
+    .min(0.1, 'النقاط يجب أن تكون أكبر من 0')
+    .max(10, 'النقاط يجب أن تكون أقل من أو تساوي 10')
+    .default(1)
+    .transform(String),
+});
 
 // Types
 export type UpsertUser = typeof users.$inferInsert;

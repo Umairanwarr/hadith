@@ -28,6 +28,50 @@ const options = {
         }
       },
       schemas: {
+        Exam: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique exam ID'
+            },
+            courseId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Course ID'
+            },
+            title: {
+              type: 'string',
+              description: 'Exam title'
+            },
+            description: {
+              type: 'string',
+              description: 'Exam description'
+            },
+            duration: {
+              type: 'number',
+              description: 'Exam duration in minutes'
+            },
+            passingGrade: {
+              type: 'string',
+              description: 'Minimum grade required to pass (stored as string)'
+            },
+            totalQuestions: {
+              type: 'number',
+              description: 'Total number of questions'
+            },
+            isActive: {
+              type: 'boolean',
+              description: 'Whether the exam is active'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Exam creation date'
+            }
+          }
+        },
         Enrollment: {
           type: 'object',
           properties: {
