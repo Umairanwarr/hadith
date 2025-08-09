@@ -1104,7 +1104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   );
 
-  // Exam routes
+  // Exam routes for users
   app.get('/api/courses/:id/exam', isAuthenticated, async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
@@ -1338,7 +1338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes
-  // Create course
+  // dupliacte Create course
   app.post(
     '/api/admin/courses',
     isAuthenticated,
@@ -1700,10 +1700,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/admin/exams/{id}/questions:
+   *   post:
+   *     summary: Create a new question for an exam
+   *     tags: [Exam Questions]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Exam ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - question
+   *               - options
+   *               - correctAnswer
+   *               - order
+   *             properties:
+   *               question: { type: string, minLength: 1, maxLength: 500, description: 'Question text' }
+   *               options: { type: array, minItems: 2, maxItems: 6, items: { type: string, minLength: 1 }, description: 'Array of answer choices' }
+   *               correctAnswer: { type: string, minLength: 1, description: 'The correct answer from the options array' }
+   *               order: { type: number, minimum: 1, description: 'Question order/sequence number' }
+   *               points: { type: number, minimum: 0.1, maximum: 10, default: 1, description: 'Points awarded for this question' }
+   *     responses:
+   *       201: { description: 'Question created successfully', content: { application/json: { schema: { $ref: '#/components/schemas/ExamQuestion' } } } }
+   *       400: { description: 'Invalid input data', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+   *       401: { description: 'Unauthorized' }
+   *       403: { description: 'Forbidden - Admin access required' }
+   *       500: { description: 'Internal server error', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+   */
   // Create exam question
   app.post('/api/admin/exams/:id/questions', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const examId = parseInt(req.params.id);
+      const examId = req.params.id;
       const validationResult = createExamQuestionSchema.safeParse({
         ...req.body,
         examId,
@@ -1719,9 +1759,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const question = await storage.createExamQuestion(
-        validationResult.data
-      );
+      const question = await storage.createExamQuestion({
+        ...validationResult.data,
+        examId
+      });
 
       // Update exam question count
       await storage.updateExamQuestionCount(examId);
@@ -1734,10 +1775,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   );
 
+  /**
+   * @swagger
+   * /api/admin/questions/{id}:
+   *   patch:
+   *     summary: Update an existing exam question
+   *     tags: [Exam Questions]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Question ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               question: { type: string, minLength: 1, maxLength: 500, description: 'Question text' }
+   *               options: { type: array, minItems: 2, maxItems: 6, items: { type: string, minLength: 1 }, description: 'Array of answer choices' }
+   *               correctAnswer: { type: string, minLength: 1, description: 'The correct answer from the options array' }
+   *               order: { type: number, minimum: 1, description: 'Question order/sequence number' }
+   *               points: { type: number, minimum: 0.1, maximum: 10, description: 'Points awarded for this question' }
+   *     responses:
+   *       200: { description: 'Question updated successfully', content: { application/json: { schema: { $ref: '#/components/schemas/ExamQuestion' } } } }
+   *       400: { description: 'Invalid input data', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+   *       401: { description: 'Unauthorized' }
+   *       403: { description: 'Forbidden - Admin access required' }
+   *       404: { description: 'Question not found', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+   *       500: { description: 'Internal server error', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+   */
   // Update exam question
   app.patch('/api/admin/questions/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const questionId = parseInt(req.params.id);
+      const questionId = req.params.id;
       const validationResult = createExamQuestionSchema
         .partial()
         .safeParse(req.body);
@@ -1766,10 +1843,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   );
 
+  /**
+   * @swagger
+   * /api/admin/questions/{id}:
+   *   delete:
+   *     summary: Delete an exam question
+   *     tags: [Exam Questions]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Question ID
+   *     responses:
+   *       200: { description: 'Question deleted successfully', content: { application/json: { schema: { type: object, properties: { message: { type: string, example: 'تم حذف السؤال بنجاح' } } } } } }
+   *       401: { description: 'Unauthorized' }
+   *       403: { description: 'Forbidden - Admin access required' }
+   *       404: { description: 'Question not found', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+   *       500: { description: 'Internal server error', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+   */
   // Delete exam question
   app.delete('/api/admin/questions/:id', isAuthenticated, isAdmin, async (req: any, res) => {
     try {
-      const questionId = parseInt(req.params.id);
+      const questionId = req.params.id;
       const question = await storage.getExamQuestion(questionId);
       if (!question) {
         return res.status(404).json({ message: 'Question not found' });
@@ -1780,7 +1880,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update exam question count
       await storage.updateExamQuestionCount(question.examId);
 
-      res.status(204).send();
+      res.status(200).json({ message: 'Exam question deleted successfully' });
     } catch (error) {
       console.error('Error deleting exam question:', error);
       res.status(500).json({ message: 'Failed to delete exam question' });
@@ -1828,7 +1928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAdmin,
     async (req: any, res) => {
       try {
-        const lessonId = parseInt(req.params.id);
+        const lessonId = req.params.id;
         const lesson = await storage.getLesson(lessonId);
         if (!lesson) {
           return res.status(404).json({ message: 'Lesson not found' });

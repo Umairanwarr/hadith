@@ -104,25 +104,25 @@ export interface IStorage {
   ): Promise<LessonProgress[]>;
 
   // Exam operations
-  getExamByCourse(courseId: number): Promise<Exam | undefined>;
+  getExamByCourse(courseId: string): Promise<Exam | undefined>;
   getExams(): Promise<Exam[]>;
-  getExamQuestions(examId: number): Promise<ExamQuestion[]>;
+  getExamQuestions(examId: string): Promise<ExamQuestion[]>;
   createExam(exam: InsertExam): Promise<Exam>;
-  updateExam(id: number, updates: Partial<Exam>): Promise<Exam | undefined>;
-  deleteExam(id: number): Promise<void>;
-  updateExamQuestionCount(examId: number): Promise<void>;
+  updateExam(id: string, updates: Partial<Exam>): Promise<Exam | undefined>;
+  deleteExam(id: string): Promise<void>;
+  updateExamQuestionCount(examId: string): Promise<void>;
   createExamQuestion(question: InsertExamQuestion): Promise<ExamQuestion>;
   updateExamQuestion(
-    id: number,
+    id: string,
     updates: Partial<ExamQuestion>
   ): Promise<ExamQuestion | undefined>;
-  deleteExamQuestion(id: number): Promise<void>;
-  getExamQuestion(id: number): Promise<ExamQuestion | undefined>;
+  deleteExamQuestion(id: string): Promise<void>;
+  getExamQuestion(id: string): Promise<ExamQuestion | undefined>;
   createExamAttempt(attempt: InsertExamAttempt): Promise<ExamAttempt>;
-  getUserExamAttempts(userId: string, examId: number): Promise<ExamAttempt[]>;
-  getExamAttempt(id: number): Promise<ExamAttempt | undefined>;
+  getUserExamAttempts(userId: string, examId: string): Promise<ExamAttempt[]>;
+  getExamAttempt(id: string): Promise<ExamAttempt | undefined>;
   updateExamAttempt(
-    id: number,
+    id: string,
     updates: Partial<ExamAttempt>
   ): Promise<ExamAttempt>;
 
@@ -430,7 +430,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Exam operations
-  async getExamByCourse(courseId: number): Promise<Exam | undefined> {
+  async getExamByCourse(courseId: string): Promise<Exam | undefined> {
     const [exam] = await db
       .select()
       .from(exams)
@@ -442,7 +442,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(exams).orderBy(desc(exams.createdAt));
   }
 
-  async getExamQuestions(examId: number): Promise<ExamQuestion[]> {
+  async getExamQuestions(examId: string): Promise<ExamQuestion[]> {
     return db
       .select()
       .from(examQuestions)
@@ -456,7 +456,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateExam(
-    id: number,
+    id: string,
     updates: Partial<Exam>
   ): Promise<Exam | undefined> {
     const [updatedExam] = await db
@@ -467,11 +467,11 @@ export class DatabaseStorage implements IStorage {
     return updatedExam;
   }
 
-  async deleteExam(id: number): Promise<void> {
+  async deleteExam(id: string): Promise<void> {
     await db.delete(exams).where(eq(exams.id, id));
   }
 
-  async updateExamQuestionCount(examId: number): Promise<void> {
+  async updateExamQuestionCount(examId: string): Promise<void> {
     const questionsCount = await db
       .select({ count: sql<number>`count(*)` })
       .from(examQuestions)
@@ -494,7 +494,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateExamQuestion(
-    id: number,
+    id: string,
     updates: Partial<ExamQuestion>
   ): Promise<ExamQuestion | undefined> {
     const [updatedQuestion] = await db
