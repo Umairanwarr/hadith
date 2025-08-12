@@ -2463,7 +2463,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   );
 
-  // Certificate Generation routes
+  /**
+   * @swagger
+   * /api/certificates/generate:
+   *   post:
+   *     summary: Generate a certificate image
+   *     description: Generate a certificate image using canvas data and save it to the server
+   *     tags: [Certificates]
+   *     security:
+   *       - sessionAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CertificateGenerationRequest'
+   *     responses:
+   *       200:
+   *         description: Certificate generated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Certificate generated successfully"
+   *                 certificateImage:
+   *                   $ref: '#/components/schemas/CertificateImage'
+   *                 downloadUrl:
+   *                   type: string
+   *                   description: URL to download the generated certificate
+   *       400:
+   *         description: Bad request - missing required fields or invalid UUID format
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - invalid or missing authentication
+   *       403:
+   *         description: Forbidden - user doesn't own the certificate
+   *       404:
+   *         description: Certificate or template not found
+   *       500:
+   *         description: Internal server error
+   */
   app.post('/api/certificates/generate', isAuthenticated, async (req: any, res) => {
     try {
       // const userId = req.user?.id;
@@ -2555,6 +2600,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/certificates/{id}/images:
+   *   get:
+   *     summary: Get all images for a certificate
+   *     description: Retrieve all generated images for a specific certificate
+   *     tags: [Certificates]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Certificate ID
+   *     responses:
+   *       200:
+   *         description: List of certificate images
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/CertificateImage'
+   *       400:
+   *         description: Bad request - invalid UUID format
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - invalid or missing authentication
+   *       403:
+   *         description: Forbidden - user doesn't own the certificate
+   *       404:
+   *         description: Certificate not found
+   *       500:
+   *         description: Internal server error
+   */
   app.get('/api/certificates/:id/images', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
@@ -2589,6 +2675,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/certificate-images/{id}:
+   *   delete:
+   *     summary: Delete a certificate image
+   *     description: Delete a specific certificate image and its associated file
+   *     tags: [Certificates]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Certificate image ID to delete
+   *     responses:
+   *       200:
+   *         description: Certificate image deleted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Certificate image deleted successfully"
+   *       400:
+   *         description: Bad request - invalid UUID format
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - invalid or missing authentication
+   *       403:
+   *         description: Forbidden - user doesn't own the certificate
+   *       404:
+   *         description: Certificate image not found
+   *       500:
+   *         description: Internal server error
+   */
   app.delete('/api/certificate-images/:id', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
@@ -2632,6 +2761,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/certificates/{id}/download/{imageId}:
+   *   get:
+   *     summary: Download a certificate image
+   *     description: Download a specific certificate image file
+   *     tags: [Certificates]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Certificate ID
+   *       - in: path
+   *         name: imageId
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Certificate image ID to download
+   *     responses:
+   *       200:
+   *         description: Certificate image file
+   *         content:
+   *           image/png:
+   *             schema:
+   *               type: string
+   *               format: binary
+   *       400:
+   *         description: Bad request - invalid UUID format
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - invalid or missing authentication
+   *       403:
+   *         description: Forbidden - user doesn't own the certificate
+   *       404:
+   *         description: Certificate or image not found
+   *       500:
+   *         description: Internal server error
+   */
   app.get('/api/certificates/:id/download/:imageId', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;

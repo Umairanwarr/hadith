@@ -28,6 +28,124 @@ const options = {
         }
       },
       schemas: {
+        Certificate: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique certificate ID'
+            },
+            userId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'User ID who owns the certificate'
+            },
+            courseId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Course ID associated with the certificate'
+            },
+            certificateNumber: {
+              type: 'string',
+              description: 'Unique certificate number'
+            },
+            issuedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Certificate issue date'
+            },
+            diplomaTemplateId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Template ID used for the certificate'
+            }
+          }
+        },
+        CertificateImage: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique certificate image ID'
+            },
+            certificateId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Certificate ID this image belongs to'
+            },
+            templateId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Template ID used for this image'
+            },
+            imageUrl: {
+              type: 'string',
+              description: 'URL path to the generated image'
+            },
+            generatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'When the image was generated'
+            },
+            generatedBy: {
+              type: 'string',
+              format: 'uuid',
+              description: 'User ID who generated the image'
+            },
+            metadata: {
+              type: 'object',
+              description: 'Additional metadata for the certificate'
+            }
+          }
+        },
+        DiplomaTemplate: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique template ID'
+            },
+            name: {
+              type: 'string',
+              description: 'Template name'
+            },
+            description: {
+              type: 'string',
+              description: 'Template description'
+            },
+            templateData: {
+              type: 'object',
+              description: 'Template configuration data'
+            }
+          }
+        },
+        CertificateGenerationRequest: {
+          type: 'object',
+          required: ['certificateId', 'templateId', 'canvasData'],
+          properties: {
+            certificateId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Certificate ID to generate image for'
+            },
+            templateId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Template ID to use for generation'
+            },
+            canvasData: {
+              type: 'string',
+              description: 'Base64 encoded canvas data for the certificate image'
+            },
+            certificateData: {
+              type: 'object',
+              description: 'Optional additional certificate data'
+            }
+          }
+        },
         Exam: {
           type: 'object',
           properties: {
