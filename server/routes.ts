@@ -1863,7 +1863,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to fetch exam questions' });
     }
   });
-
   /**
    * @swagger
    * /api/admin/questions/{id}:
