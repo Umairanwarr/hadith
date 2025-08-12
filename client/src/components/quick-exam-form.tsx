@@ -11,16 +11,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { createExamSchema, type CreateExam } from "@shared/schema";
+import { useGetCourses } from "@/hooks/useCourses";
 
 interface QuickExamFormProps {
-  courseId?: number;
+  courseId?: string;
   onSuccess?: () => void;
 }
 
 export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedCourse, setSelectedCourse] = useState<number | undefined>(courseId);
+  const [selectedCourse, setSelectedCourse] = useState<string | undefined>(courseId);
+  const { data: courses, loading: coursesLoading } = useGetCourses();
 
   const form = useForm<CreateExam>({
     resolver: zodResolver(createExamSchema),
@@ -29,17 +31,20 @@ export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
       description: "",
       duration: 30,
       passingGrade: "70",
-      courseId: courseId || 0,
+      courseId: courseId || "",
     },
   });
 
   const createExamMutation = useMutation({
     mutationFn: async (data: CreateExam) => {
-      return await apiRequest("/api/admin/exams", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
+      // Ensure we have a course id and send payload as the route expects
+      const targetCourseId = selectedCourse || data.courseId;
+      const { courseId: _omitCourseId, ...body } = data as any;
+      return await apiRequest(
+        "POST",
+        `/api/admin/courses/${targetCourseId}/exams`,
+        body,
+      );
     },
     onSuccess: () => {
       toast({
@@ -61,7 +66,13 @@ export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
   });
 
   const onSubmit = (data: CreateExam) => {
-    const finalData = { ...data, courseId: selectedCourse || data.courseId };
+    const finalData = {
+      ...data,
+      courseId: selectedCourse || data.courseId,
+      // Ensure correct numeric types before validation/submit
+      duration: Number(data.duration),
+      passingGrade: Number((data as any).passingGrade) as unknown as any,
+    } as CreateExam;
     createExamMutation.mutate(finalData);
   };
 
@@ -86,10 +97,10 @@ export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
                   <FormItem>
                     <FormLabel>اختر المادة الدراسية</FormLabel>
                     <Select 
-                      value={String(selectedCourse || "")} 
+                      value={selectedCourse || ""} 
                       onValueChange={(value) => {
-                        setSelectedCourse(Number(value));
-                        field.onChange(Number(value));
+                        setSelectedCourse(value);
+                        field.onChange(value);
                       }}
                     >
                       <FormControl>
@@ -98,12 +109,22 @@ export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="1">أصول علم الحديث</SelectItem>
-                        <SelectItem value="2">علم الرجال والأسانيد</SelectItem>
-                        <SelectItem value="3">فقه الحديث</SelectItem>
-                        <SelectItem value="4">تخريج الأحاديث</SelectItem>
-                        <SelectItem value="5">شرح الأربعين النووية</SelectItem>
-                        <SelectItem value="6">التفسير وعلوم القرآن</SelectItem>
+                        {coursesLoading && (
+                          <SelectItem value="__loading__" disabled>
+                            جاري التحميل...
+                          </SelectItem>
+                        )}
+                        {Array.isArray(courses) && courses.length > 0 ? (
+                          courses.map((course) => (
+                            <SelectItem key={course.id} value={course.id}>
+                              {course.title}
+                            </SelectItem>
+                          ))
+                        ) : !coursesLoading ? (
+                          <SelectItem value="__no_courses__" disabled>
+                            لا توجد مواد متاحة
+                          </SelectItem>
+                        ) : null}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -161,7 +182,10 @@ export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>درجة النجاح المطلوبة (%)</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select
+                    value={String(field.value ?? "70")}
+                    onValueChange={(value) => field.onChange(Number(value))}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="اختر درجة النجاح" />
@@ -180,13 +204,13 @@ export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
               )}
             />
 
-            {/* Description */}
+            {/* Description (required by API) */}
             <FormField
               control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>وصف الامتحان (اختياري)</FormLabel>
+                  <FormLabel>وصف الامتحان</FormLabel>
                   <FormControl>
                     <Textarea 
                       placeholder="وصف للامتحان وموضوعاته المشمولة..."

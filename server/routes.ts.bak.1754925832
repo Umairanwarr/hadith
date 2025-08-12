@@ -829,7 +829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update course lesson count
       await storage.updateCourseLessonCount(lesson.courseId);
 
-      res.status(200).json({
+      res.status(200).json({ 
         message: 'Lesson and all associated progress records deleted successfully',
         lessonId: lessonId,
         lessonTitle: lesson.title
@@ -1055,19 +1055,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.user as any)?.id;
       const courseId = req.params.courseId; // Pass UUID string directly
-
+      
       // Get all lessons in the course
       const allLessons = await storage.getLessonsByCourse(courseId);
-
+      
       // Get user's progress for this course
       const userProgress = await storage.getUserCourseProgress(userId, courseId);
-
+      
       // Calculate completion statistics
       const completedLessons = userProgress.filter((p) => p.isCompleted).length;
       const totalLessons = allLessons.length;
       const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
       const isCourseCompleted = completedLessons === totalLessons && totalLessons > 0;
-
+      
       // Create detailed progress response
       const lessonProgressDetails = allLessons.map(lesson => {
         const userLessonProgress = userProgress.find(p => p.lessonId === lesson.id);
@@ -1081,7 +1081,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastWatchedAt: userLessonProgress?.lastWatchedAt || null
         };
       });
-
+      
       res.json({
         courseId: courseId,
         totalLessons: totalLessons,
@@ -1097,39 +1097,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   );
 
-  // Exam routes for users
+  // Exam routes
   app.get('/api/courses/:id/exam', isAuthenticated, async (req: any, res) => {
     try {
       const courseId = req.params.id as string;
-      const userId = (req.user as any)?.id;
+      const userId = (req.user as any)?.claims?.sub;
+
+      // Check if user has completed all lessons
+      const allLessons = await storage.getLessonsByCourse(courseId);
+      const userProgress = await storage.getUserCourseProgress(
+        userId,
+        courseId
+      );
+      const completedLessons = userProgress.filter((p) => p.isCompleted).length;
+
+      if (completedLessons < allLessons.length) {
+        return res.status(403).json({
+          message: 'You must complete all lessons before taking the exam',
+          required: allLessons.length,
+          completed: completedLessons,
+        });
+      }
 
       const exam = await storage.getExamByCourse(courseId);
       if (!exam) {
         return res
           .status(404)
           .json({ message: 'Exam not found for this course' });
-      }
-
-      // Check if user has already attempted this exam
-      const existingAttempts = await storage.getUserExamAttempts(userId, exam.id);
-      const completedAttempt = existingAttempts.find(attempt => attempt.completedAt);
-
-      console.log(`🔍 Exam access check for user ${userId}, exam ${exam.id}:`, {
-        existingAttempts: existingAttempts.length,
-        completedAttempt: !!completedAttempt,
-        examTitle: exam.title
-      });
-
-      if (completedAttempt) {
-        return res.status(403).json({
-          message: 'You have already completed this exam',
-          attempt: {
-            id: completedAttempt.id,
-            score: completedAttempt.score,
-            passed: completedAttempt.passed,
-            completedAt: completedAttempt.completedAt,
-          }
-        });
       }
 
       const questions = await storage.getExamQuestions(exam.id);
@@ -1155,11 +1149,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/exams/:id/start', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = (req.user as any)?.id;
-      const examId = req.params.id;
+      const userId = (req.user as any)?.claims?.sub;
+      const examId = parseInt(req.params.id);
 
-      // Find exam by ID directly instead of by course
-      const exam = await storage.getExam(examId);
+      const exam = await storage.getExamByCourse(examId);
       if (!exam) {
         return res.status(404).json({ message: 'Exam not found' });
       }
@@ -1184,7 +1177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/exam-attempts/:id/submit', isAuthenticated, async (req: any, res) => {
     try {
       const userId = (req.user as any)?.id;
-      const attemptId = req.params.id;
+      const attemptId = parseInt(req.params.id);
       const { answers } = req.body;
 
       const attempt = await storage.getExamAttempt(attemptId);
@@ -1257,23 +1250,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Include correct answers in response for review
-      const questionsWithCorrectAnswers = questions.map(q => ({
-        id: q.id,
-        question: q.question,
-        options: q.options,
-        correctAnswer: q.correctAnswer,
-        order: q.order,
-        points: q.points,
-      }));
-
       res.json({
         ...updatedAttempt,
         passed,
         score,
         correctAnswers,
         totalQuestions: questions.length,
-        questionsWithAnswers: questionsWithCorrectAnswers,
       });
     } catch (error) {
       console.error('Error submitting exam:', error);
@@ -1291,72 +1273,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching certificates:', error);
       res.status(500).json({ message: 'Failed to fetch certificates' });
-    }
-  });
-
-  // Get user's exam attempts
-  app.get('/api/user/exam-attempts', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = (req.user as any)?.id;
-      const attempts = await storage.getAllUserExamAttempts(userId);
-      res.json(attempts);
-    } catch (error) {
-      console.error('Error fetching user exam attempts:', error);
-      res.status(500).json({ message: 'Failed to fetch exam attempts' });
-    }
-  });
-
-  // Get specific exam details with questions
-  app.get('/api/exams/:id/details', isAuthenticated, async (req: any, res) => {
-    try {
-      const examId = req.params.id as string;
-      const userId = (req.user as any)?.id;
-
-      const exam = await storage.getExam(examId);
-      if (!exam) {
-        return res.status(404).json({ message: 'Exam not found' });
-      }
-
-      // Check if user has already attempted this exam
-      const existingAttempts = await storage.getUserExamAttempts(userId, exam.id);
-      const completedAttempt = existingAttempts.find(attempt => attempt.completedAt);
-
-      console.log(`🔍 Exam access check for user ${userId}, exam ${exam.id}:`, {
-        existingAttempts: existingAttempts.length,
-        completedAttempt: !!completedAttempt,
-        examTitle: exam.title
-      });
-
-      if (completedAttempt) {
-        return res.status(403).json({
-          message: 'You have already completed this exam',
-          attempt: {
-            id: completedAttempt.id,
-            score: completedAttempt.score,
-            passed: completedAttempt.passed,
-            completedAt: completedAttempt.completedAt,
-          }
-        });
-      }
-
-      const questions = await storage.getExamQuestions(exam.id);
-
-      // Remove correct answers from response
-      const questionsWithoutAnswers = questions.map((q) => ({
-        id: q.id,
-        question: q.question,
-        options: q.options,
-        order: q.order,
-        points: q.points,
-      }));
-
-      res.json({
-        exam,
-        questions: questionsWithoutAnswers,
-      });
-    } catch (error) {
-      console.error('Error fetching exam details:', error);
-      res.status(500).json({ message: 'Failed to fetch exam details' });
     }
   });
 
@@ -1415,7 +1331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes
-  // dupliacte Create course
+  // Create course
   app.post(
     '/api/admin/courses',
     isAuthenticated,
@@ -1497,272 +1413,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  /**
-   * @swagger
-   * /api/admin/courses/{id}/exams:
-   *   post:
-   *     summary: Create a new exam for a course
-   *     tags: [Exams]
-   *     security:
-   *       - sessionAuth: []
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *           format: uuid
-   *         description: Course ID
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - title
-   *               - description
-   *               - duration
-   *               - passingGrade
-   *             properties:
-   *               title:
-   *                 type: string
-   *                 minLength: 1
-   *                 maxLength: 200
-   *                 description: Exam title
-   *               description:
-   *                 type: string
-   *                 minLength: 1
-   *                 maxLength: 1000
-   *                 description: Exam description
-   *               duration:
-   *                 type: number
-   *                 minimum: 1
-   *                 maximum: 300
-   *                 description: Exam duration in minutes
-   *               passingGrade:
-   *                 type: number
-   *                 minimum: 1
-   *                 maximum: 100
-   *                 description: Minimum grade required to pass
-   *               totalQuestions:
-   *                 type: number
-   *                 default: 0
-   *                 description: Total number of questions
-   *               isActive:
-   *                 type: boolean
-   *                 default: true
-   *                 description: Whether the exam is active
-   *     responses:
-   *       201:
-   *         description: Exam created successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Exam'
-   *       400:
-   *         description: Invalid input data
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Error'
-   *       401:
-   *         description: Unauthorized
-   *       403:
-   *         description: Forbidden - Admin access required
-   *       500:
-   *         description: Internal server error
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Error'
-   */
   // Create exam
-  app.post('/api/admin/courses/:id/exams', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const courseId = req.params.id;
-      const validationResult = createExamSchema.safeParse({
-        ...req.body,
-        courseId,
-      });
-
-      if (!validationResult.success) {
-        return res.status(400).json({
-          message: 'بيانات غير صحيحة',
-          errors: validationResult.error.issues.map((issue) => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-          })),
+  app.post(
+    '/api/admin/courses/:id/exams',
+    isAuthenticated,
+    isAdmin,
+    async (req: any, res) => {
+      try {
+        const courseId = parseInt(req.params.id);
+        const validationResult = createExamSchema.safeParse({
+          ...req.body,
+          courseId,
         });
-      }
 
-      const exam = await storage.createExam(validationResult.data);
-      res.status(201).json(exam);
-    } catch (error) {
-      console.error('Error creating exam:', error);
-      res.status(500).json({ message: 'Failed to create exam' });
+        if (!validationResult.success) {
+          return res.status(400).json({
+            message: 'بيانات غير صحيحة',
+            errors: validationResult.error.issues.map((issue) => ({
+              field: issue.path.join('.'),
+              message: issue.message,
+            })),
+          });
+        }
+
+        const exam = await storage.createExam(validationResult.data);
+        res.status(201).json(exam);
+      } catch (error) {
+        console.error('Error creating exam:', error);
+        res.status(500).json({ message: 'Failed to create exam' });
+      }
     }
-  }
   );
 
-  /**
-   * @swagger
-   * /api/admin/exams/{id}:
-   *   patch:
-   *     summary: Update an existing exam
-   *     tags: [Exams]
-   *     security:
-   *       - sessionAuth: []
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *           format: uuid
-   *         description: Exam ID
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               title:
-   *                 type: string
-   *                 minLength: 1
-   *                 maxLength: 200
-   *                 description: Exam title
-   *               description:
-   *                 type: string
-   *                 minLength: 1
-   *                 maxLength: 1000
-   *                 description: Exam description
-   *               duration:
-   *                 type: number
-   *                 minimum: 1
-   *                 maximum: 300
-   *                 description: Exam duration in minutes
-   *               passingGrade:
-   *                 type: number
-   *                 minimum: 1
-   *                 maximum: 100
-   *                 description: Minimum grade required to pass
-   *               totalQuestions:
-   *                 type: number
-   *                 description: Total number of questions
-   *               isActive:
-   *                 type: boolean
-   *                 description: Whether the exam is active
-   *     responses:
-   *       200:
-   *         description: Exam updated successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Exam'
-   *       400:
-   *         description: Invalid input data
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Error'
-   *       401:
-   *         description: Unauthorized
-   *       403:
-   *         description: Forbidden - Admin access required
-   *       404:
-   *         description: Exam not found
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Error'
-   *       500:
-   *         description: Internal server error
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Error'
-   */
   // Update exam
-  app.patch('/api/admin/exams/:id', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const examId = req.params.id;
-      const validationResult = createExamSchema.partial().safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({
-          message: 'بيانات غير صحيحة',
-          errors: validationResult.error.issues.map((issue) => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-          })),
-        });
-      }
+  app.patch(
+    '/api/admin/exams/:id',
+    isAuthenticated,
+    isAdmin,
+    async (req: any, res) => {
+      try {
+        const examId = parseInt(req.params.id);
+        const validationResult = createExamSchema.partial().safeParse(req.body);
+        if (!validationResult.success) {
+          return res.status(400).json({
+            message: 'بيانات غير صحيحة',
+            errors: validationResult.error.issues.map((issue) => ({
+              field: issue.path.join('.'),
+              message: issue.message,
+            })),
+          });
+        }
 
-      const updatedExam = await storage.updateExam(
-        examId,
-        validationResult.data
-      );
-      if (!updatedExam) {
-        return res.status(404).json({ message: 'Exam not found' });
+        const updatedExam = await storage.updateExam(
+          examId,
+          validationResult.data
+        );
+        if (!updatedExam) {
+          return res.status(404).json({ message: 'Exam not found' });
+        }
+        res.json(updatedExam);
+      } catch (error) {
+        console.error('Error updating exam:', error);
+        res.status(500).json({ message: 'Failed to update exam' });
       }
-      res.json(updatedExam);
-    } catch (error) {
-      console.error('Error updating exam:', error);
-      res.status(500).json({ message: 'Failed to update exam' });
     }
-  }
   );
 
-  /**
-   * @swagger
-   * /api/admin/exams/{id}:
-   *   delete:
-   *     summary: Delete an exam
-   *     tags: [Exams]
-   *     security:
-   *       - sessionAuth: []
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *           format: uuid
-   *         description: Exam ID
-   *     responses:
-   *       200:
-   *         description: Exam deleted successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 message:
-   *                   type: string
-   *                   example: "تم حذف الاختبار بنجاح"
-   *       401:
-   *         description: Unauthorized
-   *       403:
-   *         description: Forbidden - Admin access required
-   *       500:
-   *         description: Internal server error
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Error'
-   */
   // Delete exam
-  app.delete('/api/admin/exams/:id', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const examId = req.params.id;
-      await storage.deleteExam(examId);
-      res.status(200).json({ message: 'Exam deleted successfully' });
-    } catch (error) {
-      console.error('Error deleting exam:', error);
-      res.status(500).json({ message: 'Failed to delete exam' });
+  app.delete(
+    '/api/admin/exams/:id',
+    isAuthenticated,
+    isAdmin,
+    async (req: any, res) => {
+      try {
+        const examId = parseInt(req.params.id);
+        await storage.deleteExam(examId);
+        res.status(204).send();
+      } catch (error) {
+        console.error('Error deleting exam:', error);
+        res.status(500).json({ message: 'Failed to delete exam' });
+      }
     }
-  }
   );
 
   // Get course lessons for admin
@@ -1777,207 +1508,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  /**
-   * @swagger
-   * /api/admin/exams/{id}/questions:
-   *   post:
-   *     summary: Create a new question for an exam
-   *     tags: [Exam Questions]
-   *     security:
-   *       - sessionAuth: []
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *           format: uuid
-   *         description: Exam ID
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - question
-   *               - options
-   *               - correctAnswer
-   *               - order
-   *             properties:
-   *               question: { type: string, minLength: 1, maxLength: 500, description: 'Question text' }
-   *               options: { type: array, minItems: 2, maxItems: 6, items: { type: string, minLength: 1 }, description: 'Array of answer choices' }
-   *               correctAnswer: { type: string, minLength: 1, description: 'The correct answer from the options array' }
-   *               order: { type: number, minimum: 1, description: 'Question order/sequence number' }
-   *               points: { type: number, minimum: 0.1, maximum: 10, default: 1, description: 'Points awarded for this question' }
-   *     responses:
-   *       201: { description: 'Question created successfully', content: { application/json: { schema: { $ref: '#/components/schemas/ExamQuestion' } } } }
-   *       400: { description: 'Invalid input data', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
-   *       401: { description: 'Unauthorized' }
-   *       403: { description: 'Forbidden - Admin access required' }
-   *       500: { description: 'Internal server error', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
-   */
-  // Create exam question
-  app.post('/api/admin/exams/:id/questions', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const examId = req.params.id;
-      const validationResult = createExamQuestionSchema.safeParse({
-        ...req.body,
-        examId,
-      });
-
-      if (!validationResult.success) {
-        return res.status(400).json({
-          message: 'بيانات غير صحيحة',
-          errors: validationResult.error.issues.map((issue) => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-          })),
-        });
-      }
-
-      const question = await storage.createExamQuestion({
-        ...validationResult.data,
-        examId
-      });
-
-      // Update exam question count
-      await storage.updateExamQuestionCount(examId);
-
-      res.status(201).json(question);
-    } catch (error) {
-      console.error('Error creating exam question:', error);
-      res.status(500).json({ message: 'Failed to create exam question' });
-    }
-  }
-  );
-
-  // Get exam questions (admin)
-  app.get('/api/admin/exams/:id/questions', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const examId = req.params.id;
-      const questions = await storage.getExamQuestions(examId);
-      res.json(questions);
-    } catch (error) {
-      console.error('Error fetching exam questions:', error);
-      res.status(500).json({ message: 'Failed to fetch exam questions' });
-    }
-  });
-
-  /**
-   * @swagger
-   * /api/admin/questions/{id}:
-   *   patch:
-   *     summary: Update an existing exam question
-   *     tags: [Exam Questions]
-   *     security:
-   *       - sessionAuth: []
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *           format: uuid
-   *         description: Question ID
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             properties:
-   *               question: { type: string, minLength: 1, maxLength: 500, description: 'Question text' }
-   *               options: { type: array, minItems: 2, maxItems: 6, items: { type: string, minLength: 1 }, description: 'Array of answer choices' }
-   *               correctAnswer: { type: string, minLength: 1, description: 'The correct answer from the options array' }
-   *               order: { type: number, minimum: 1, description: 'Question order/sequence number' }
-   *               points: { type: number, minimum: 0.1, maximum: 10, description: 'Points awarded for this question' }
-   *     responses:
-   *       200: { description: 'Question updated successfully', content: { application/json: { schema: { $ref: '#/components/schemas/ExamQuestion' } } } }
-   *       400: { description: 'Invalid input data', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
-   *       401: { description: 'Unauthorized' }
-   *       403: { description: 'Forbidden - Admin access required' }
-   *       404: { description: 'Question not found', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
-   *       500: { description: 'Internal server error', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
-   */
-  // Update exam question
-  app.patch('/api/admin/questions/:id', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const questionId = req.params.id;
-      const validationResult = createExamQuestionSchema
-        .partial()
-        .safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({
-          message: 'بيانات غير صحيحة',
-          errors: validationResult.error.issues.map((issue) => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-          })),
-        });
-      }
-
-      const updatedQuestion = await storage.updateExamQuestion(
-        questionId,
-        validationResult.data
-      );
-      if (!updatedQuestion) {
-        return res.status(404).json({ message: 'Question not found' });
-      }
-      res.json(updatedQuestion);
-    } catch (error) {
-      console.error('Error updating exam question:', error);
-      res.status(500).json({ message: 'Failed to update exam question' });
-    }
-  }
-  );
-
-  /**
-   * @swagger
-   * /api/admin/questions/{id}:
-   *   delete:
-   *     summary: Delete an exam question
-   *     tags: [Exam Questions]
-   *     security:
-   *       - sessionAuth: []
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *           format: uuid
-   *         description: Question ID
-   *     responses:
-   *       200: { description: 'Question deleted successfully', content: { application/json: { schema: { type: object, properties: { message: { type: string, example: 'تم حذف السؤال بنجاح' } } } } } }
-   *       401: { description: 'Unauthorized' }
-   *       403: { description: 'Forbidden - Admin access required' }
-   *       404: { description: 'Question not found', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
-   *       500: { description: 'Internal server error', content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
-   */
-  // Delete exam question
-  app.delete('/api/admin/questions/:id', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const questionId = req.params.id;
-      const question = await storage.getExamQuestion(questionId);
-      if (!question) {
-        return res.status(404).json({ message: 'Question not found' });
-      }
-
-      await storage.deleteExamQuestion(questionId);
-
-      // Update exam question count
-      await storage.updateExamQuestionCount(question.examId);
-
-      res.status(200).json({ message: 'Exam question deleted successfully' });
-    } catch (error) {
-      console.error('Error deleting exam question:', error);
-      res.status(500).json({ message: 'Failed to delete exam question' });
-    }
-  }
-  );
-
-  
   // Create lesson
   app.post(
     '/api/admin/lessons',
@@ -2017,7 +1547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAdmin,
     async (req: any, res) => {
       try {
-        const lessonId = req.params.id;
+        const lessonId = parseInt(req.params.id);
         const lesson = await storage.getLesson(lessonId);
         if (!lesson) {
           return res.status(404).json({ message: 'Lesson not found' });
@@ -2172,19 +1702,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create exam question
+  app.post(
+    '/api/admin/exams/:id/questions',
+    isAuthenticated,
+    isAdmin,
+    async (req: any, res) => {
+      try {
+        const examId = parseInt(req.params.id);
+        const validationResult = createExamQuestionSchema.safeParse({
+          ...req.body,
+          examId,
+        });
+
+        if (!validationResult.success) {
+          return res.status(400).json({
+            message: 'بيانات غير صحيحة',
+            errors: validationResult.error.issues.map((issue) => ({
+              field: issue.path.join('.'),
+              message: issue.message,
+            })),
+          });
+        }
+
+        const question = await storage.createExamQuestion(
+          validationResult.data
+        );
+
+        // Update exam question count
+        await storage.updateExamQuestionCount(examId);
+
+        res.status(201).json(question);
+      } catch (error) {
+        console.error('Error creating exam question:', error);
+        res.status(500).json({ message: 'Failed to create exam question' });
+      }
+    }
+  );
+
+  // Update exam question
+  app.patch(
+    '/api/admin/questions/:id',
+    isAuthenticated,
+    isAdmin,
+    async (req: any, res) => {
+      try {
+        const questionId = parseInt(req.params.id);
+        const validationResult = createExamQuestionSchema
+          .partial()
+          .safeParse(req.body);
+        if (!validationResult.success) {
+          return res.status(400).json({
+            message: 'بيانات غير صحيحة',
+            errors: validationResult.error.issues.map((issue) => ({
+              field: issue.path.join('.'),
+              message: issue.message,
+            })),
+          });
+        }
+
+        const updatedQuestion = await storage.updateExamQuestion(
+          questionId,
+          validationResult.data
+        );
+        if (!updatedQuestion) {
+          return res.status(404).json({ message: 'Question not found' });
+        }
+        res.json(updatedQuestion);
+      } catch (error) {
+        console.error('Error updating exam question:', error);
+        res.status(500).json({ message: 'Failed to update exam question' });
+      }
+    }
+  );
+
+  // Delete exam question
+  app.delete(
+    '/api/admin/questions/:id',
+    isAuthenticated,
+    isAdmin,
+    async (req: any, res) => {
+      try {
+        const questionId = parseInt(req.params.id);
+        const question = await storage.getExamQuestion(questionId);
+        if (!question) {
+          return res.status(404).json({ message: 'Question not found' });
+        }
+
+        await storage.deleteExamQuestion(questionId);
+
+        // Update exam question count
+        await storage.updateExamQuestionCount(question.examId);
+
+        res.status(204).send();
+      } catch (error) {
+        console.error('Error deleting exam question:', error);
+        res.status(500).json({ message: 'Failed to delete exam question' });
+      }
+    }
+  );
 
   // Get admin dashboard data
-  app.get('/api/admin/dashboard', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const stats = await storage.getAdminStats();
-      res.json(stats);
-    } catch (error) {
-      console.error('Error fetching admin dashboard stats:', error);
-      res
-        .status(500)
-        .json({ message: 'Failed to fetch admin dashboard stats' });
+  app.get(
+    '/api/admin/dashboard',
+    isAuthenticated,
+    isAdmin,
+    async (req: any, res) => {
+      try {
+        const stats = await storage.getAdminStats();
+        res.json(stats);
+      } catch (error) {
+        console.error('Error fetching admin dashboard stats:', error);
+        res
+          .status(500)
+          .json({ message: 'Failed to fetch admin dashboard stats' });
+      }
     }
-  }
   );
 
   // Temporary route to promote user to admin (for development only)

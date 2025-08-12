@@ -7,9 +7,9 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 
 interface Course {
-  id: number;
+  id: string;
   title: string;
-  description: string;
+  description: string | null;
   instructor: string;
   level: string;
   duration: number;
@@ -17,36 +17,48 @@ interface Course {
 }
 
 interface Lesson {
-  id: number;
+  id: string;
   title: string;
-  description: string;
+  description: string | null;
   duration: number;
   order: number;
 }
 
-interface LessonProgress {
-  id: number;
-  lessonId: number;
+interface LessonProgressItem {
+  lessonId: string;
+  lessonTitle: string;
+  lessonOrder: number;
   isCompleted: boolean;
   watchedDuration: number;
+  completedAt: string | null;
+  lastWatchedAt: string | null;
+}
+
+interface CourseProgress {
+  courseId: string;
+  totalLessons: number;
+  completedLessons: number;
+  progressPercentage: number;
+  isCourseCompleted: boolean;
+  lessonProgress: LessonProgressItem[];
 }
 
 export default function CourseDetails() {
   const { id } = useParams<{ id: string }>();
-  const courseId = parseInt(id!);
+  const courseId = id!;
 
   const { data: course, isLoading: courseLoading } = useQuery<Course>({
-    queryKey: ["/courses", courseId],
+    queryKey: ["api", "courses", courseId],
     retry: false,
   });
 
   const { data: lessons, isLoading: lessonsLoading } = useQuery<Lesson[]>({
-    queryKey: ["/courses", courseId, "lessons"],
+    queryKey: ["api", "courses", courseId, "lessons"],
     retry: false,
   });
 
-  const { data: progress, isLoading: progressLoading } = useQuery<LessonProgress[]>({
-    queryKey: ["/courses", courseId, "progress"],
+  const { data: courseProgress, isLoading: progressLoading } = useQuery<CourseProgress>({
+    queryKey: ["api", "courses", courseId, "progress"],
     retry: false,
   });
 
@@ -69,19 +81,22 @@ export default function CourseDetails() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const getProgressPercentage = (lessonId: number, duration: number) => {
-    const lessonProgress = progress?.find(p => p.lessonId === lessonId);
+  // Some legacy lessons may have duration stored in minutes instead of seconds
+  const toMinutes = (value: number) => (value >= 60 ? Math.round(value / 60) : value);
+
+  const getProgressPercentage = (lessonId: string, duration: number) => {
+    const lessonProgress = courseProgress?.lessonProgress.find(p => p.lessonId === lessonId);
     if (!lessonProgress) return 0;
     return Math.min((lessonProgress.watchedDuration / duration) * 100, 100);
   };
 
-  const isLessonCompleted = (lessonId: number) => {
-    return progress?.find(p => p.lessonId === lessonId)?.isCompleted || false;
+  const isLessonCompleted = (lessonId: string) => {
+    return courseProgress?.lessonProgress.find(p => p.lessonId === lessonId)?.isCompleted || false;
   };
 
   const canAccessExam = () => {
-    if (!lessons || !progress) return false;
-    const completedLessons = progress.filter(p => p.isCompleted).length;
+    if (!lessons || !courseProgress) return false;
+    const completedLessons = courseProgress.completedLessons;
     return completedLessons === lessons.length;
   };
 
@@ -126,141 +141,112 @@ export default function CourseDetails() {
     );
   }
 
+  // Pre-compute total minutes from lessons (normalize each item: some rows may be stored in minutes, others in seconds)
+  const totalMinutes = (lessons || []).reduce((sum, l) => {
+    const value = l.duration || 0;
+    const minutes = value >= 60 ? Math.round(value / 60) : value; // seconds -> minutes, else already minutes
+    return sum + minutes;
+  }, 0);
+  const totalHours = Math.floor(totalMinutes / 60);
+  const remainingMinutes = totalMinutes % 60;
+
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        {/* Course Header */}
-        <Card className="mb-8">
-          <CardContent className="p-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
+        {/* Course Header - compact like the screenshot */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <h1 className="text-3xl font-amiri font-bold text-green-700">
-                    {course.title}
-                  </h1>
-                  <Badge className={getLevelColor(course.level)}>
-                    {course.level}
-                  </Badge>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-amiri font-bold text-gray-900">{course.title}</h1>
+                  <Badge className={getLevelColor(course.level)}>{course.level}</Badge>
                 </div>
-                <p className="text-xl text-gray-600 mb-4">{course.instructor}</p>
-                <p className="text-gray-700 leading-relaxed mb-6">{course.description}</p>
-                
-                <div className="flex gap-6 text-sm text-gray-600 mb-6">
-                  <span>
-                    <i className="fas fa-clock ml-1"></i>
-                    {Math.round(course.duration / 60)} ساعة
-                  </span>
-                  <span>
-                    <i className="fas fa-video ml-1"></i>
-                    {course.totalLessons} محاضرة
-                  </span>
+                <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
+                  <span><i className="fas fa-user ml-1"></i>{course.instructor}</span>
+                  <span><i className="fas fa-video ml-1"></i>{course.totalLessons} درس</span>
+                  <span><i className="fas fa-clock ml-1"></i>{totalMinutes} دقيقة</span>
                 </div>
-
-                {canAccessExam() && (
-                  <Link href={`/courses/${courseId}/exam`}>
-                    <Button className="btn-secondary">
-                      <i className="fas fa-clipboard-list ml-2"></i>
-                      الانتقال للاختبار
-                    </Button>
-                  </Link>
-                )}
               </div>
-              
-              <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-8 text-white text-center">
-                <i className="fas fa-quran text-6xl mb-4 opacity-50"></i>
-                <h3 className="font-amiri text-xl font-bold">علم الحديث النبوي الشريف</h3>
-              </div>
+              <Link href="/">
+                <Button variant="outline" className="text-xs">
+                  العودة للوحة التحكم
+                  <i className="fas fa-arrow-left mr-2"></i>
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
 
         {/* Course Content */}
         <div className="grid md:grid-cols-4 gap-8">
-          {/* Lessons List */}
+          {/* Lessons List - match requested design */}
           <div className="md:col-span-3">
-            <h2 className="text-2xl font-amiri font-bold text-green-700 mb-6">
-              محتويات المادة
-            </h2>
-            
+            <h2 className="text-2xl font-amiri font-bold text-gray-900 mb-4">عناوين المادة</h2>
             {!lessons || lessons.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">
                   <i className="fas fa-video text-4xl text-gray-400 mb-4"></i>
-                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                    لا توجد محاضرات متاحة
-                  </h3>
-                  <p className="text-gray-500">
-                    لم يتم رفع محاضرات لهذه المادة بعد
-                  </p>
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">لا توجد محاضرات متاحة</h3>
+                  <p className="text-gray-500">لم يتم رفع محاضرات لهذه المادة بعد</p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
-                {lessons.map((lesson, index) => {
-                  const completed = isLessonCompleted(lesson.id);
-                  const progressPercent = getProgressPercentage(lesson.id, lesson.duration);
-                  
-                  return (
-                    <Card key={lesson.id} className="hover-scale">
-                      <CardContent className="p-6">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white ${
-                            completed ? 'bg-green-600' : 'bg-gray-400'
-                          }`}>
-                            <span className="font-bold">{index + 1}</span>
-                          </div>
-                          
-                          <div className="flex-1">
-                            <h3 className="font-amiri font-bold text-lg mb-1">
-                              {lesson.title}
-                            </h3>
-                            <p className="text-gray-600 text-sm mb-2">
-                              {lesson.description}
-                            </p>
-                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                              <span>
-                                <i className="fas fa-clock ml-1"></i>
-                                {formatDuration(lesson.duration)}
-                              </span>
-                              {progressPercent > 0 && (
-                                <span>
-                                  التقدم: {Math.round(progressPercent)}%
-                                </span>
-                              )}
+              <div className="space-y-3">
+                {lessons
+                  .slice()
+                  .sort((a, b) => a.order - b.order)
+                  .map((lesson, idx) => {
+                    const completed = isLessonCompleted(lesson.id);
+                    return (
+                      <Link key={lesson.id} href={`/course/${courseId}/lessons/${lesson.id}`}>
+                        <div className={`flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50 cursor-pointer ${completed ? 'border-green-300' : 'border-gray-200'}`}>
+                          <i className="fas fa-chevron-left text-gray-400"></i>
+                          <div className="flex-1 mx-4">
+                            <div className="font-amiri font-bold text-gray-800">{lesson.title}</div>
+                            <div className="text-xs text-gray-500 mt-1 flex items-center gap-4">
+                              <span><i className="fas fa-video ml-1"></i>فيديو</span>
+                              <span><i className="fas fa-clock ml-1"></i>{toMinutes(lesson.duration)} دقيقة</span>
+                              {completed && <span className="text-green-600"><i className="fas fa-check ml-1"></i>مكتمل</span>}
                             </div>
-                            
-                            {progressPercent > 0 && progressPercent < 100 && (
-                              <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-                                <div 
-                                  className="bg-green-600 h-1 rounded-full transition-all duration-300" 
-                                  style={{ width: `${progressPercent}%` }}
-                                ></div>
-                              </div>
-                            )}
                           </div>
-                          
-                          <div className="flex items-center gap-2">
-                            {completed && (
-                              <i className="fas fa-check-circle text-green-600 text-xl"></i>
-                            )}
-                            <Link href={`/courses/${courseId}/lessons/${lesson.id}`}>
-                              <Button 
-                                variant={completed ? "outline" : "default"}
-                                className={completed ? "border-green-600 text-green-600 hover:bg-green-50" : "bg-green-600 hover:bg-green-700 text-white"}
-                              >
-                                {completed ? "مراجعة" : "مشاهدة"}
-                              </Button>
-                            </Link>
-                          </div>
+                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 text-sm">{idx + 1}</div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                      </Link>
+                    );
+                  })}
               </div>
             )}
+
+            {/* Exams Section */}
+            <div className="mt-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">اختبارات المادة</h2>
+                <Link href={`/course/${courseId}/exams`}>
+                  <Button className="bg-emerald-600 hover:bg-emerald-700">
+                    <i className="fas fa-list ml-2"></i>
+                    عرض جميع الاختبارات
+                  </Button>
+                </Link>
+              </div>
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <i className="fas fa-clipboard-check text-4xl text-emerald-600 mb-4"></i>
+                  <h3 className="font-bold text-lg mb-2">اختبارات المادة</h3>
+                  <p className="text-gray-600 mb-4">
+                    اعرض جميع الاختبارات المتاحة لهذه المادة ونتائجك السابقة
+                  </p>
+                  <Link href={`/course/${courseId}/exams`}>
+                    <Button className="bg-emerald-600 hover:bg-emerald-700">
+                      <i className="fas fa-clipboard-list ml-2"></i>
+                      دخول لوحة الاختبارات
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* Course Info Sidebar */}
@@ -279,7 +265,7 @@ export default function CourseDetails() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">المدة الإجمالية:</span>
-                    <span>{Math.round(course.duration / 60)} ساعة</span>
+                    <span>{totalHours} ساعة {remainingMinutes} دقيقة</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">عدد المحاضرات:</span>
@@ -288,7 +274,7 @@ export default function CourseDetails() {
                   <div className="flex justify-between">
                     <span className="text-gray-600">التقدم:</span>
                     <span>
-                      {progress?.filter(p => p.isCompleted).length || 0} / {lessons?.length || 0}
+                      {courseProgress?.completedLessons || 0} / {lessons?.length || 0}
                     </span>
                   </div>
                 </div>

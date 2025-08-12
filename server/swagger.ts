@@ -28,6 +28,93 @@ const options = {
         }
       },
       schemas: {
+        Exam: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique exam ID'
+            },
+            courseId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Course ID'
+            },
+            title: {
+              type: 'string',
+              description: 'Exam title'
+            },
+            description: {
+              type: 'string',
+              description: 'Exam description'
+            },
+            duration: {
+              type: 'number',
+              description: 'Exam duration in minutes'
+            },
+            passingGrade: {
+              type: 'string',
+              description: 'Minimum grade required to pass (stored as string)'
+            },
+            totalQuestions: {
+              type: 'number',
+              description: 'Total number of questions'
+            },
+            isActive: {
+              type: 'boolean',
+              description: 'Whether the exam is active'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Exam creation date'
+            }
+          }
+        },
+        ExamQuestion: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique question ID'
+            },
+            examId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Exam ID'
+            },
+            question: {
+              type: 'string',
+              description: 'Question text'
+            },
+            options: {
+              type: 'array',
+              items: {
+                type: 'string'
+              },
+              description: 'Array of answer choices'
+            },
+            correctAnswer: {
+              type: 'string',
+              description: 'The correct answer'
+            },
+            order: {
+              type: 'number',
+              description: 'Question order/sequence number'
+            },
+            points: {
+              type: 'string',
+              description: 'Points awarded for this question (stored as string)'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Question creation date'
+            }
+          }
+        },
         Enrollment: {
           type: 'object',
           properties: {

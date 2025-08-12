@@ -12,6 +12,7 @@ import Dashboard from '@/pages/dashboard';
 import CourseDetails from '@/pages/course-details';
 import VideoPlayer from '@/pages/video-player';
 import Exam from '@/pages/exam';
+import CourseExams from '@/pages/course-exams';
 import Certificates from '@/pages/certificates';
 import LevelsPage from '@/pages/levels';
 import DiplomasPage from '@/pages/diplomas';
@@ -22,6 +23,7 @@ import Profile from '@/pages/profile';
 import AdminDashboard from '@/pages/admin-dashboard';
 import AdminCreateCourse from '@/pages/admin-create-course';
 import AdminCreateExam from '@/pages/admin-create-exam';
+import AdminEditExam from '@/pages/admin-edit-exam';
 import AdminCourseDetails from '@/pages/admin-course-details';
 import { DiplomaPreparatoryPage } from '@/pages/diploma-preparatory';
 import { DiplomaIntermediatePage } from '@/pages/diploma-intermediate';
@@ -86,6 +88,7 @@ function Router() {
             component={VideoPlayer}
           />
           <Route path='/course/:courseId/exam' component={Exam} />
+          <Route path='/course/:courseId/exams' component={CourseExams} />
           <Route path='/certificates' component={Certificates} />
           <Route path='/certificate-generator' component={CertificateGeneratorPage} />
           <Route path='/test-certificate-generation' component={TestCertificateGenerationPage} />
@@ -113,6 +116,7 @@ function Router() {
           <Route path='/admin' component={AdminDashboard} />
           <Route path='/admin/create-course' component={AdminCreateCourse} />
           <Route path='/admin/create-exam' component={AdminCreateExam} />
+          <Route path='/admin/edit-exam/:id' component={AdminEditExam} />
           <Route path='/admin/courses/:id' component={AdminCourseDetails} />
           <Route path='/teacher-guide' component={TeacherGuidePage} />
           <Route path='/quick-add' component={QuickAddPage} />

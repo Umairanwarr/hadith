@@ -103,6 +103,8 @@ export default function Dashboard() {
     enrollMutation.mutate(courseId);
   };
 
+  // No inline lessons preview on dashboard cards per request
+
   const promoteToAdminMutation = useMutation({
     mutationFn: async () => {
       await apiRequest('POST', '/api/promote-to-admin');
@@ -413,14 +415,9 @@ export default function Dashboard() {
                           متابعة
                         </Button>
                       </Link>
-                      {Number(enrollment.progress) >= 100 && (
-                        <Link href={`/course/${enrollment.courseId}/exam`}>
-                          <Button variant="outline" size="sm" className="bg-white text-green-700 hover:bg-gray-50 border border-green-700 px-2">
-                            <i className="fas fa-clipboard-list text-xs"></i>
-                          </Button>
-                        </Link>
-                      )}
                     </div>
+
+                    {/* Lessons preview removed */}
                   </CardContent>
                 </Card>
               ))}

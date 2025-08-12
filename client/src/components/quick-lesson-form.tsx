@@ -11,16 +11,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { createLessonSchema, type CreateLesson } from "@shared/schema";
+import { useGetCourses } from "@/hooks/useCourses";
 
 interface QuickLessonFormProps {
-  courseId?: number;
+  courseId?: string;
   onSuccess?: () => void;
 }
 
 export function QuickLessonForm({ courseId, onSuccess }: QuickLessonFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedCourse, setSelectedCourse] = useState<number | undefined>(courseId);
+  const [selectedCourse, setSelectedCourse] = useState<string | undefined>(courseId);
+  const { data: courses, loading: coursesLoading } = useGetCourses();
 
   const form = useForm<CreateLesson>({
     resolver: zodResolver(createLessonSchema),
@@ -29,7 +31,10 @@ export function QuickLessonForm({ courseId, onSuccess }: QuickLessonFormProps) {
       description: "",
       videoUrl: "",
       duration: 0,
-      courseId: courseId || 0,
+      // required by schema but not exposed in UI; default to 1 for new lessons
+      order: 1,
+      isActive: true,
+      courseId: courseId || "",
     },
   });
 
@@ -56,7 +61,15 @@ export function QuickLessonForm({ courseId, onSuccess }: QuickLessonFormProps) {
   });
 
   const onSubmit = (data: CreateLesson) => {
-    const finalData = { ...data, courseId: selectedCourse || data.courseId };
+    // Convert minutes entered in the form to seconds for storage
+    const minutes = Number(data.duration) || 0;
+    const finalData: CreateLesson = {
+      ...data,
+      duration: minutes * 60,
+      courseId: selectedCourse || data.courseId,
+      order: data.order || 1,
+      isActive: data.isActive ?? true,
+    } as CreateLesson;
     createLessonMutation.mutate(finalData);
   };
 
@@ -95,10 +108,10 @@ export function QuickLessonForm({ courseId, onSuccess }: QuickLessonFormProps) {
                   <FormItem>
                     <FormLabel>اختر المادة الدراسية</FormLabel>
                     <Select 
-                      value={String(selectedCourse || "")} 
+                      value={selectedCourse || ""} 
                       onValueChange={(value) => {
-                        setSelectedCourse(Number(value));
-                        field.onChange(Number(value));
+                        setSelectedCourse(value);
+                        field.onChange(value);
                       }}
                     >
                       <FormControl>
@@ -107,12 +120,22 @@ export function QuickLessonForm({ courseId, onSuccess }: QuickLessonFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="1">أصول علم الحديث</SelectItem>
-                        <SelectItem value="2">علم الرجال والأسانيد</SelectItem>
-                        <SelectItem value="3">فقه الحديث</SelectItem>
-                        <SelectItem value="4">تخريج الأحاديث</SelectItem>
-                        <SelectItem value="5">شرح الأربعين النووية</SelectItem>
-                        <SelectItem value="6">التفسير وعلوم القرآن</SelectItem>
+                        {coursesLoading && (
+                          <SelectItem value="__loading__" disabled>
+                            جاري التحميل...
+                          </SelectItem>
+                        )}
+                        {Array.isArray(courses) && courses.length > 0 ? (
+                          courses.map((course) => (
+                            <SelectItem key={course.id} value={course.id}>
+                              {course.title}
+                            </SelectItem>
+                          ))
+                        ) : !coursesLoading ? (
+                          <SelectItem value="__no_courses__" disabled>
+                            لا توجد مواد متاحة
+                          </SelectItem>
+                        ) : null}
                       </SelectContent>
                     </Select>
                     <FormMessage />
