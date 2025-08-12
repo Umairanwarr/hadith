@@ -642,7 +642,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(diplomaTemplates.createdAt));
   }
 
-  async getDiplomaTemplate(id: number): Promise<any | undefined> {
+  async getDiplomaTemplate(id: string): Promise<any | undefined> {
     const [template] = await db
       .select()
       .from(diplomaTemplates)
@@ -687,18 +687,18 @@ export class DatabaseStorage implements IStorage {
     return certificate;
   }
 
-  async getCertificateById(id: number): Promise<Certificate | undefined> {
+  async getCertificateById(id: string): Promise<Certificate | undefined> {
     const [certificate] = await db
       .select()
       .from(certificates)
-      .where(eq(certificates.id, id.toString()));
+      .where(eq(certificates.id, id));
     return certificate;
   }
 
   // Certificate Image operations
   async createCertificateImage(data: {
-    certificateId: number;
-    templateId: number;
+    certificateId: string;
+    templateId: string;
     imageUrl: string;
     generatedAt: Date;
     generatedBy: string;
@@ -707,8 +707,8 @@ export class DatabaseStorage implements IStorage {
     const [certificateImage] = await db
       .insert(certificateImages)
       .values({
-        certificateId: data.certificateId.toString(),
-        templateId: data.templateId.toString(),
+        certificateId: data.certificateId,
+        templateId: data.templateId,
         imageUrl: data.imageUrl,
         generatedAt: data.generatedAt,
         generatedBy: data.generatedBy,
@@ -718,24 +718,24 @@ export class DatabaseStorage implements IStorage {
     return certificateImage;
   }
 
-  async getCertificateImage(id: number): Promise<any | undefined> {
+  async getCertificateImage(id: string): Promise<any | undefined> {
     const [certificateImage] = await db
       .select()
       .from(certificateImages)
-      .where(eq(certificateImages.id, id.toString()));
+      .where(eq(certificateImages.id, id));
     return certificateImage;
   }
 
-  async getCertificateImages(certificateId: number): Promise<any[]> {
+  async getCertificateImages(certificateId: string): Promise<any[]> {
     return await db
       .select()
       .from(certificateImages)
-      .where(eq(certificateImages.certificateId, certificateId.toString()))
+      .where(eq(certificateImages.certificateId, certificateId))
       .orderBy(desc(certificateImages.generatedAt));
   }
 
-  async deleteCertificateImage(id: number): Promise<void> {
-    await db.delete(certificateImages).where(eq(certificateImages.id, id.toString()));
+  async deleteCertificateImage(id: string): Promise<void> {
+    await db.delete(certificateImages).where(eq(certificateImages.id, id));
   }
 
   // Admin statistics

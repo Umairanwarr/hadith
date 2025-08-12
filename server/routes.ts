@@ -31,6 +31,12 @@ import {
 } from '@shared/schema';
 import { z } from 'zod';
 
+// UUID validation utility function
+const isValidUUID = (uuid: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   // await setupAuth(app);
@@ -1888,7 +1894,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   );
 
-  
+
   // Create lesson
   app.post(
     '/api/admin/lessons',
@@ -2229,50 +2235,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch(
-    '/api/live-sessions/:id/live-status',
-    isAuthenticated,
-    async (req, res) => {
-      try {
-        const userId = req.user?.id;
-        const user = await storage.getUserById(userId);
+  app.patch('/api/live-sessions/:id/live-status', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const user = await storage.getUserById(userId);
 
-        if (!user || user.role !== 'admin') {
-          return res.status(403).json({ message: 'Admin access required' });
-        }
-
-        const sessionId = parseInt(req.params.id);
-        const { isLive } = req.body;
-
-        await storage.setSessionLive(sessionId, isLive);
-
-        res.json({ message: 'Live status updated successfully' });
-      } catch (error) {
-        console.error('Error updating live status:', error);
-        res.status(500).json({ message: 'Failed to update live status' });
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
       }
+
+      const sessionId = parseInt(req.params.id);
+      const { isLive } = req.body;
+
+      await storage.setSessionLive(sessionId, isLive);
+
+      res.json({ message: 'Live status updated successfully' });
+    } catch (error) {
+      console.error('Error updating live status:', error);
+      res.status(500).json({ message: 'Failed to update live status' });
     }
+  }
   );
 
   // Image upload route
-  app.post(
-    '/api/upload-image',
-    isAuthenticated,
-    upload.single('image'),
-    (req, res) => {
-      try {
-        if (!req.file) {
-          return res.status(400).json({ message: 'No image file provided' });
-        }
-
-        // Return the URL to access the uploaded image
-        const imageUrl = `/uploads/${req.file.filename}`;
-        res.json({ url: imageUrl });
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        res.status(500).json({ message: 'Failed to upload image' });
+  app.post('/api/upload-image', isAuthenticated, upload.single('image'), (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No image file provided' });
       }
+
+      // Return the URL to access the uploaded image
+      const imageUrl = `/uploads/${req.file.filename}`;
+      res.json({ url: imageUrl });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      res.status(500).json({ message: 'Failed to upload image' });
     }
+  }
   );
 
   // Diploma Templates routes
@@ -2400,6 +2399,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Validate UUID format for certificateId and templateId
+      if (!isValidUUID(certificateId)) {
+        return res.status(400).json({
+          message: 'Invalid certificate ID format. Must be a valid UUID.'
+        });
+      }
+      if (!isValidUUID(templateId)) {
+        return res.status(400).json({
+          message: 'Invalid template ID format. Must be a valid UUID.'
+        });
+      }
+
       // Get certificate and template data
       const certificate = await storage.getCertificateById(certificateId);
       if (!certificate) {
@@ -2459,7 +2470,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/certificates/:id/images', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      const certificateId = parseInt(req.params.id);
+      const certificateId = req.params.id;
+
+      // Validate UUID format
+      if (!isValidUUID(certificateId)) {
+        return res.status(400).json({
+          message: 'Invalid certificate ID format. Must be a valid UUID.'
+        });
+      }
 
       // Get certificate
       const certificate = await storage.getCertificateById(certificateId);
@@ -2486,7 +2504,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/certificate-images/:id', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      const imageId = parseInt(req.params.id);
+      const imageId = req.params.id;
+
+      // Validate UUID format
+      if (!isValidUUID(imageId)) {
+        return res.status(400).json({
+          message: 'Invalid image ID format. Must be a valid UUID.'
+        });
+      }
 
       // Get certificate image
       const certificateImage = await storage.getCertificateImage(imageId);
@@ -2522,8 +2547,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/certificates/:id/download/:imageId', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      const certificateId = parseInt(req.params.id);
-      const imageId = parseInt(req.params.imageId);
+      const certificateId = req.params.id;
+      const imageId = req.params.imageId;
+
+      // Validate UUID format for both IDs
+      if (!isValidUUID(certificateId)) {
+        return res.status(400).json({
+          message: 'Invalid certificate ID format. Must be a valid UUID.'
+        });
+      }
+      if (!isValidUUID(imageId)) {
+        return res.status(400).json({
+          message: 'Invalid image ID format. Must be a valid UUID.'
+        });
+      }
 
       // Get certificate image
       const certificateImage = await storage.getCertificateImage(imageId);
