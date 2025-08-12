@@ -12,5 +12,29 @@
   "toast": {
     "loginSuccess": "تم تسجيل الدخول بنجاح",
     "loginError": "خطأ في تسجيل الدخول"
+  },
+  "courseForm": {
+    "title": "عنوان الكورس",
+    "titlePlaceholder": "اسم الكورس",
+    "description": "وصف الكورس",
+    "descriptionPlaceholder": "وصف مفصل للكورس",
+    "instructor": "اسم المدرس",
+    "instructorPlaceholder": "اسم المدرس",
+    "level": "المستوى",
+    "levelPlaceholder": "اختر المستوى",
+    "duration": "مدة الكورس (بالدقائق)",
+    "thumbnail": "صورة مصغرة للكورس",
+    "image": "صورة إضافية للكورس",
+    "syllabus": "مقرر المادة (ملف PDF/Word)",
+    "uploadSyllabus": "رفع مقرر المادة"
+  },
+  "levels": {
+    "beginner": "مبتدئ",
+    "intermediate": "متوسط",
+    "advanced": "متقدم",
+    "preparatory": "تمهيدي",
+    "bachelor": "بكالوريوس",
+    "master": "ماجستير",
+    "doctorate": "دكتوراه"
   }
 }

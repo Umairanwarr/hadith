@@ -12,5 +12,29 @@
   "toast": {
     "loginSuccess": "Login successful",
     "loginError": "Login error"
+  },
+  "courseForm": {
+    "title": "Course title",
+    "titlePlaceholder": "Course name",
+    "description": "Course description",
+    "descriptionPlaceholder": "Detailed course description",
+    "instructor": "Teacher's name",
+    "instructorPlaceholder": "Teacher's name",
+    "level": "Level",
+    "levelPlaceholder": "Select level",
+    "duration": "Course duration (in minutes)",
+    "thumbnail": "Course thumbnail",
+    "image": "Additional image of the course",
+    "syllabus": "Course Syllabus (PDF/Word File)",
+    "uploadSyllabus": "Upload the course curriculum"
+  },
+  "levels": {
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "preparatory": "Preparatory",
+    "bachelor": "Bachelor",
+    "master": "Master",
+    "doctorate": "Doctorate"
   }
 }

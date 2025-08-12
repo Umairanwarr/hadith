@@ -13,7 +13,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormReturn } from "react-hook-form";
+import { useI18n } from "@/contexts/I18nContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ImageUpload } from "@/components/image-upload";
@@ -35,7 +36,7 @@ const courseSchema = z.object({
 type CourseFormData = z.infer<typeof courseSchema>;
 
 interface Course {
-  id: number;
+  id: string;
   title: string;
   description: string;
   instructor: string;
@@ -50,278 +51,34 @@ interface Course {
   createdAt: string;
 }
 
-export function CourseManagementPage() {
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [syllabusFile, setSyllabusFile] = useState<File | null>(null);
-  const [isUploadingSyllabus, setIsUploadingSyllabus] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState<string>("all");
-  const { toast } = useToast();
-
-  const form = useForm<CourseFormData>({
-    resolver: zodResolver(courseSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      instructor: "",
-      level: "مبتدئ",
-      duration: 120,
-      thumbnailUrl: "",
-      imageUrl: "",
-      syllabusUrl: "",
-      syllabusFileName: "",
-    },
-  });
-
-  // Fetch courses
-  const { data: courses = [], isLoading, refetch } = useQuery({
-    queryKey: ["/api/courses"],
-  });
-
-  // Create course mutation
-  const createCourseMutation = useMutation({
-    mutationFn: async (data: CourseFormData) => {
-      return await apiRequest("/api/courses", "POST", data);
-    },
-    onSuccess: () => {
-      toast({
-        title: "نجح إنشاء الكورس",
-        description: "تم إنشاء الكورس بنجاح",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
-      setIsCreateDialogOpen(false);
-      form.reset();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "خطأ في إنشاء الكورس",
-        description: error.message || "حدث خطأ أثناء إنشاء الكورس",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Update course mutation
-  const updateCourseMutation = useMutation({
-    mutationFn: async (data: CourseFormData & { id: number }) => {
-      return await apiRequest(`/api/courses/${data.id}`, "PATCH", data);
-    },
-    onSuccess: () => {
-      toast({
-        title: "نجح تحديث الكورس",
-        description: "تم تحديث الكورس بنجاح",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
-      setIsEditDialogOpen(false);
-      setSelectedCourse(null);
-      form.reset();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "خطأ في تحديث الكورس",
-        description: error.message || "حدث خطأ أثناء تحديث الكورس",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Delete course mutation
-  const deleteCourseMutation = useMutation({
-    mutationFn: async (courseId: number) => {
-      return await apiRequest(`/api/courses/${courseId}`, "DELETE");
-    },
-    onSuccess: () => {
-      toast({
-        title: "نجح حذف الكورس",
-        description: "تم حذف الكورس بنجاح",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/courses"] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "خطأ في حذف الكورس",
-        description: error.message || "حدث خطأ أثناء حذف الكورس",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = (data: CourseFormData) => {
-    if (selectedCourse) {
-      updateCourseMutation.mutate({ ...data, id: selectedCourse.id });
-    } else {
-      createCourseMutation.mutate(data);
-    }
-  };
-
-  const handleEdit = (course: Course) => {
-    setSelectedCourse(course);
-    form.reset({
-      title: course.title,
-      description: course.description,
-      instructor: course.instructor,
-      level: course.level as any,
-      duration: course.duration,
-      thumbnailUrl: course.thumbnailUrl || "",
-      imageUrl: course.imageUrl || "",
-      syllabusUrl: course.syllabusUrl || "",
-      syllabusFileName: course.syllabusFileName || "",
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  const handleDelete = (courseId: number) => {
-    deleteCourseMutation.mutate(courseId);
-  };
-
-  // Handle syllabus file upload
-  const handleSyllabusUpload = async (file: File) => {
-    setIsUploadingSyllabus(true);
-    try {
-      const formData = new FormData();
-      formData.append('syllabus', file);
-
-      const response = await fetch('/api/upload/syllabus', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const result = await response.json();
-
-      // Update form values
-      form.setValue('syllabusUrl', result.url);
-      form.setValue('syllabusFileName', result.fileName);
-
-      setSyllabusFile(file);
-
-      toast({
-        title: "نجح رفع الملف",
-        description: `تم رفع ملف "${result.fileName}" بنجاح`,
-      });
-    } catch (error) {
-      toast({
-        title: "خطأ في رفع الملف",
-        description: "حدث خطأ أثناء رفع مقرر المادة",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploadingSyllabus(false);
-    }
-  };
-
-  const CourseCard = ({ course }: { course: Course }) => (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <CardTitle className="text-lg mb-2">{course.title}</CardTitle>
-            <div className="flex items-center gap-2 mb-2">
-              <Badge variant={course.level === "مبتدئ" ? "default" : course.level === "متوسط" ? "secondary" : "outline"}>
-                {course.level}
-              </Badge>
-              <span className="text-sm text-gray-500">
-                {course.duration && `${course.duration} دقيقة`}
-              </span>
-            </div>
-            <p className="text-sm text-gray-600 line-clamp-2">{course.description}</p>
-          </div>
-
-          {(course.thumbnailUrl || course.imageUrl) && (
-            <div className="mr-4">
-              <img
-                src={course.imageUrl || course.thumbnailUrl}
-                alt={course.title}
-                className="w-16 h-16 object-cover rounded-lg"
-              />
-            </div>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
-          <span>المدرس: {course.instructor}</span>
-          <span>{course.totalLessons} درس</span>
-        </div>
-
-        {/* Syllabus file info */}
-        {course.syllabusFileName && (
-          <div className="mb-3 p-2 bg-blue-50 rounded-md">
-            <div className="flex items-center gap-2 text-sm">
-              <i className="fas fa-file-alt text-blue-500"></i>
-              <span className="text-blue-700 font-medium">مقرر المادة:</span>
-              <span className="text-blue-600">{course.syllabusFileName}</span>
-              {course.syllabusUrl && (
-                <a
-                  href={course.syllabusUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-700"
-                >
-                  <i className="fas fa-download ml-1"></i>
-                  تحميل
-                </a>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="flex gap-2">
-          <Button
-            onClick={() => handleEdit(course)}
-            variant="outline"
-            size="sm"
-            className="flex-1"
-          >
-            <i className="fas fa-edit ml-1"></i>
-            تعديل
-          </Button>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm">
-                <i className="fas fa-trash ml-1"></i>
-                حذف
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent dir="rtl">
-              <AlertDialogHeader>
-                <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-                <AlertDialogDescription>
-                  سيتم حذف الكورس "{course.title}" نهائياً. لا يمكن التراجع عن هذا الإجراء.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => handleDelete(course.id)}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  حذف
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  const CourseFormDialog = ({
-    open,
-    onOpenChange,
-    title,
-    description
-  }: {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    title: string;
-    description: string;
-  }) => (
+// Extracted out of parent to avoid re-mounts on each keystroke which cause blinking
+function CourseFormDialogComponent({
+  open,
+  onOpenChange,
+  title,
+  description,
+  form,
+  onSubmit,
+  isUploadingSyllabus,
+  handleSyllabusUpload,
+  selectedCourse,
+  setSelectedCourse,
+  isSaving,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  form: UseFormReturn<CourseFormData>;
+  onSubmit: (data: CourseFormData) => void;
+  isUploadingSyllabus: boolean;
+  handleSyllabusUpload: (file: File) => void | Promise<void>;
+  selectedCourse: Course | null;
+  setSelectedCourse: (c: Course | null) => void;
+  isSaving: boolean;
+}) {
+  const { t } = useI18n();
+  return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader>
@@ -336,9 +93,9 @@ export function CourseManagementPage() {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>عنوان الكورس</FormLabel>
+                  <FormLabel>{t('courseForm.title')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="اسم الكورس" {...field} />
+                    <Input placeholder={t('courseForm.titlePlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -350,24 +107,24 @@ export function CourseManagementPage() {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>وصف الكورس</FormLabel>
+                  <FormLabel>{t('courseForm.description')}</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="وصف مفصل للكورس" rows={3} {...field} />
+                    <Textarea placeholder={t('courseForm.descriptionPlaceholder')} rows={3} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 notranslate" translate="no" data-no-translate>
               <FormField
                 control={form.control}
                 name="instructor"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>اسم المدرس</FormLabel>
-                    <FormControl>
-                      <Input placeholder="اسم المدرس" {...field} />
+                <FormItem>
+                  <FormLabel>{t('courseForm.instructor')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={t('courseForm.instructorPlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -378,22 +135,22 @@ export function CourseManagementPage() {
                 control={form.control}
                 name="level"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>المستوى</FormLabel>
+                <FormItem>
+                  <FormLabel>{t('courseForm.level')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="اختر المستوى" />
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('courseForm.levelPlaceholder')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="مبتدئ">مبتدئ</SelectItem>
-                        <SelectItem value="متوسط">متوسط</SelectItem>
-                        <SelectItem value="متقدم">متقدم</SelectItem>
-                        <SelectItem value="تمهيدي">تمهيدي</SelectItem>
-                        <SelectItem value="بكالوريوس">بكالوريوس</SelectItem>
-                        <SelectItem value="ماجستير">ماجستير</SelectItem>
-                        <SelectItem value="دكتوراه">دكتوراه</SelectItem>
+                      <SelectItem value="مبتدئ">{t('levels.beginner')}</SelectItem>
+                      <SelectItem value="متوسط">{t('levels.intermediate')}</SelectItem>
+                      <SelectItem value="متقدم">{t('levels.advanced')}</SelectItem>
+                      <SelectItem value="تمهيدي">{t('levels.preparatory')}</SelectItem>
+                      <SelectItem value="بكالوريوس">{t('levels.bachelor')}</SelectItem>
+                      <SelectItem value="ماجستير">{t('levels.master')}</SelectItem>
+                      <SelectItem value="دكتوراه">{t('levels.doctorate')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -413,7 +170,7 @@ export function CourseManagementPage() {
                       type="number"
                       placeholder="120"
                       {...field}
-                      onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -487,11 +244,8 @@ export function CourseManagementPage() {
               >
                 إلغاء
               </Button>
-              <Button
-                type="submit"
-                disabled={createCourseMutation.isPending || updateCourseMutation.isPending}
-              >
-                {createCourseMutation.isPending || updateCourseMutation.isPending ? (
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? (
                   <>
                     <i className="fas fa-spinner fa-spin ml-2"></i>
                     جاري الحفظ...
@@ -506,7 +260,301 @@ export function CourseManagementPage() {
       </DialogContent>
     </Dialog>
   );
+}
 
+export function CourseManagementPage() {
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [syllabusFile, setSyllabusFile] = useState<File | null>(null);
+  const [isUploadingSyllabus, setIsUploadingSyllabus] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<string>("all");
+  const { toast } = useToast();
+
+  const form = useForm<CourseFormData>({
+    resolver: zodResolver(courseSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      instructor: "",
+      level: "مبتدئ",
+      duration: 120,
+      thumbnailUrl: "",
+      imageUrl: "",
+      syllabusUrl: "",
+      syllabusFileName: "",
+    },
+  });
+
+  // Fetch courses
+  const { data: courses = [], isLoading, refetch } = useQuery({
+    queryKey: ["courses"],
+  });
+
+  // Remove empty strings from URL fields so server validation (which requires valid URL when present) passes
+  const sanitizeCourseData = (data: CourseFormData) => {
+    const payload: any = { ...data };
+    const urlFields: Array<keyof CourseFormData> = [
+      'thumbnailUrl',
+      'imageUrl',
+      'syllabusUrl',
+    ];
+    urlFields.forEach((key) => {
+      const value = payload[key];
+      // Remove empty-like values
+      if (value === '' || value === null || value === undefined) {
+        delete payload[key];
+        return;
+      }
+      // Remove invalid URL values defensively
+      try {
+        // Accept only http/https URLs
+        const u = new URL(value as string);
+        if (!/^https?:$/.test(u.protocol)) {
+          delete payload[key];
+        }
+      } catch {
+        delete payload[key];
+      }
+    });
+    // Also drop empty syllabusFileName
+    if (!payload.syllabusFileName) delete payload.syllabusFileName;
+    return payload as CourseFormData;
+  };
+
+  // Create course mutation
+  const createCourseMutation = useMutation({
+    mutationFn: async (data: CourseFormData) => {
+      const payload = sanitizeCourseData(data);
+      return await apiRequest("POST", "/api/courses", payload);
+    },
+    onSuccess: () => {
+      toast({
+        title: "نجح إنشاء الكورس",
+        description: "تم إنشاء الكورس بنجاح",
+      });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      setIsCreateDialogOpen(false);
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ في إنشاء الكورس",
+        description: error.message || "حدث خطأ أثناء إنشاء الكورس",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update course mutation
+  const updateCourseMutation = useMutation({
+    mutationFn: async (data: CourseFormData & { id: string }) => {
+      const { id, ...rest } = data;
+      const payload = sanitizeCourseData(rest as CourseFormData);
+      return await apiRequest("PATCH", `/api/courses/${id}`, payload);
+    },
+    onSuccess: () => {
+      toast({
+        title: "نجح تحديث الكورس",
+        description: "تم تحديث الكورس بنجاح",
+      });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      setIsEditDialogOpen(false);
+      setSelectedCourse(null);
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ في تحديث الكورس",
+        description: error.message || "حدث خطأ أثناء تحديث الكورس",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete course mutation
+  const deleteCourseMutation = useMutation({
+    mutationFn: async (courseId: string) => {
+      return await apiRequest("DELETE", `/api/courses/${courseId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "نجح حذف الكورس",
+        description: "تم حذف الكورس بنجاح",
+      });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ في حذف الكورس",
+        description: error.message || "حدث خطأ أثناء حذف الكورس",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: CourseFormData) => {
+    if (selectedCourse) {
+      updateCourseMutation.mutate({ ...(sanitizeCourseData(data) as CourseFormData), id: selectedCourse.id });
+    } else {
+      createCourseMutation.mutate(sanitizeCourseData(data));
+    }
+  };
+
+  const handleEdit = (course: Course) => {
+    setSelectedCourse(course);
+    form.reset({
+      title: course.title,
+      description: course.description,
+      instructor: course.instructor,
+      level: course.level as any,
+      duration: course.duration,
+      thumbnailUrl: course.thumbnailUrl || "",
+      imageUrl: course.imageUrl || "",
+      syllabusUrl: course.syllabusUrl || "",
+      syllabusFileName: course.syllabusFileName || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (courseId: string) => {
+    deleteCourseMutation.mutate(courseId);
+  };
+
+  // Handle syllabus file upload
+  const handleSyllabusUpload = async (file: File) => {
+    setIsUploadingSyllabus(true);
+    try {
+      const formData = new FormData();
+      formData.append('syllabus', file);
+
+      // Include Authorization header and use configured API base URL
+      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${baseURL}/upload/syllabus`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+
+      // Update form values
+      form.setValue('syllabusUrl', result.url);
+      form.setValue('syllabusFileName', result.fileName);
+
+      setSyllabusFile(file);
+
+      toast({
+        title: "نجح رفع الملف",
+        description: `تم رفع ملف "${result.fileName}" بنجاح`,
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ في رفع الملف",
+        description: "حدث خطأ أثناء رفع مقرر المادة",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingSyllabus(false);
+    }
+  };
+
+  const CourseCard = ({ course }: { course: Course }) => (
+    <Card className="hover:shadow-lg transition-shadow">
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <CardTitle className="text-lg mb-2">{course.title}</CardTitle>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant={course.level === "مبتدئ" ? "default" : course.level === "متوسط" ? "secondary" : "outline"}>
+                {course.level}
+              </Badge>
+              <span className="text-sm text-gray-500">
+                {course.duration && `${course.duration} دقيقة`}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 line-clamp-2">{course.description}</p>
+          </div>
+
+          {/* Thumbnail removed from list display as requested */}
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="flex justify-between items-center text-sm text-gray-500 mb-3">
+          <span>المدرس: {course.instructor}</span>
+          <span>{course.totalLessons} درس</span>
+        </div>
+
+        {/* Syllabus file info */}
+        {course.syllabusFileName && (
+          <div className="mb-3 p-2 bg-blue-50 rounded-md">
+            <div className="flex items-center gap-2 text-sm">
+              <i className="fas fa-file-alt text-blue-500"></i>
+              <span className="text-blue-700 font-medium">مقرر المادة:</span>
+              <span className="text-blue-600">{course.syllabusFileName}</span>
+              {course.syllabusUrl && (
+                <a
+                  href={course.syllabusUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  <i className="fas fa-download ml-1"></i>
+                  تحميل
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <Button
+            onClick={() => handleEdit(course)}
+            variant="outline"
+            size="sm"
+            className="flex-1"
+          >
+            <i className="fas fa-edit ml-1"></i>
+            تعديل
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <i className="fas fa-trash ml-1"></i>
+                حذف
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent dir="rtl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                <AlertDialogDescription>
+                  سيتم حذف الكورس "{course.title}" نهائياً. لا يمكن التراجع عن هذا الإجراء.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => handleDelete(course.id)}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  حذف
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // Removed inline CourseFormDialog component to prevent re-renders
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
       <Header />
@@ -600,19 +648,33 @@ export function CourseManagementPage() {
         )}
 
         {/* Create Course Dialog */}
-        <CourseFormDialog
+        <CourseFormDialogComponent
           open={isCreateDialogOpen}
           onOpenChange={setIsCreateDialogOpen}
           title="إنشاء كورس جديد"
           description="أضف كورس جديد مع الصور والتفاصيل"
+          form={form}
+          onSubmit={onSubmit}
+          isUploadingSyllabus={isUploadingSyllabus}
+          handleSyllabusUpload={handleSyllabusUpload}
+          selectedCourse={selectedCourse}
+          setSelectedCourse={setSelectedCourse}
+          isSaving={createCourseMutation.isPending || updateCourseMutation.isPending}
         />
 
         {/* Edit Course Dialog */}
-        <CourseFormDialog
+        <CourseFormDialogComponent
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           title="تعديل الكورس"
           description="تحديث بيانات الكورس والصور"
+          form={form}
+          onSubmit={onSubmit}
+          isUploadingSyllabus={isUploadingSyllabus}
+          handleSyllabusUpload={handleSyllabusUpload}
+          selectedCourse={selectedCourse}
+          setSelectedCourse={setSelectedCourse}
+          isSaving={createCourseMutation.isPending || updateCourseMutation.isPending}
         />
       </main>
 

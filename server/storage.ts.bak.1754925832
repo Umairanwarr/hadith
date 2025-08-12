@@ -104,27 +104,25 @@ export interface IStorage {
   ): Promise<LessonProgress[]>;
 
   // Exam operations
-  getExamByCourse(courseId: string): Promise<Exam | undefined>;
-  getExam(id: string): Promise<Exam | undefined>;
+  getExamByCourse(courseId: number): Promise<Exam | undefined>;
   getExams(): Promise<Exam[]>;
-  getExamQuestions(examId: string): Promise<ExamQuestion[]>;
+  getExamQuestions(examId: number): Promise<ExamQuestion[]>;
   createExam(exam: InsertExam): Promise<Exam>;
-  updateExam(id: string, updates: Partial<Exam>): Promise<Exam | undefined>;
-  deleteExam(id: string): Promise<void>;
-  updateExamQuestionCount(examId: string): Promise<void>;
+  updateExam(id: number, updates: Partial<Exam>): Promise<Exam | undefined>;
+  deleteExam(id: number): Promise<void>;
+  updateExamQuestionCount(examId: number): Promise<void>;
   createExamQuestion(question: InsertExamQuestion): Promise<ExamQuestion>;
   updateExamQuestion(
-    id: string,
+    id: number,
     updates: Partial<ExamQuestion>
   ): Promise<ExamQuestion | undefined>;
-  deleteExamQuestion(id: string): Promise<void>;
-  getExamQuestion(id: string): Promise<ExamQuestion | undefined>;
+  deleteExamQuestion(id: number): Promise<void>;
+  getExamQuestion(id: number): Promise<ExamQuestion | undefined>;
   createExamAttempt(attempt: InsertExamAttempt): Promise<ExamAttempt>;
-  getUserExamAttempts(userId: string, examId: string): Promise<ExamAttempt[]>;
-  getAllUserExamAttempts(userId: string): Promise<ExamAttempt[]>;
-  getExamAttempt(id: string): Promise<ExamAttempt | undefined>;
+  getUserExamAttempts(userId: string, examId: number): Promise<ExamAttempt[]>;
+  getExamAttempt(id: number): Promise<ExamAttempt | undefined>;
   updateExamAttempt(
-    id: string,
+    id: number,
     updates: Partial<ExamAttempt>
   ): Promise<ExamAttempt>;
 
@@ -439,7 +437,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Exam operations
-  async getExamByCourse(courseId: string): Promise<Exam | undefined> {
+  async getExamByCourse(courseId: number): Promise<Exam | undefined> {
     const [exam] = await db
       .select()
       .from(exams)
@@ -447,19 +445,11 @@ export class DatabaseStorage implements IStorage {
     return exam;
   }
 
-  async getExam(id: string): Promise<Exam | undefined> {
-    const [exam] = await db
-      .select()
-      .from(exams)
-      .where(eq(exams.id, id));
-    return exam;
-  }
-
   async getExams(): Promise<Exam[]> {
     return db.select().from(exams).orderBy(desc(exams.createdAt));
   }
 
-  async getExamQuestions(examId: string): Promise<ExamQuestion[]> {
+  async getExamQuestions(examId: number): Promise<ExamQuestion[]> {
     return db
       .select()
       .from(examQuestions)
@@ -473,7 +463,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateExam(
-    id: string,
+    id: number,
     updates: Partial<Exam>
   ): Promise<Exam | undefined> {
     const [updatedExam] = await db
@@ -484,11 +474,11 @@ export class DatabaseStorage implements IStorage {
     return updatedExam;
   }
 
-  async deleteExam(id: string): Promise<void> {
+  async deleteExam(id: number): Promise<void> {
     await db.delete(exams).where(eq(exams.id, id));
   }
 
-  async updateExamQuestionCount(examId: string): Promise<void> {
+  async updateExamQuestionCount(examId: number): Promise<void> {
     const questionsCount = await db
       .select({ count: sql<number>`count(*)` })
       .from(examQuestions)
@@ -511,7 +501,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateExamQuestion(
-    id: string,
+    id: number,
     updates: Partial<ExamQuestion>
   ): Promise<ExamQuestion | undefined> {
     const [updatedQuestion] = await db
@@ -544,7 +534,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserExamAttempts(
     userId: string,
-    examId: string
+    examId: number
   ): Promise<ExamAttempt[]> {
     return db
       .select()
@@ -555,15 +545,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(examAttempts.startedAt));
   }
 
-  async getAllUserExamAttempts(userId: string): Promise<ExamAttempt[]> {
-    return db
-      .select()
-      .from(examAttempts)
-      .where(eq(examAttempts.userId, userId))
-      .orderBy(desc(examAttempts.startedAt));
-  }
-
-  async getExamAttempt(id: string): Promise<ExamAttempt | undefined> {
+  async getExamAttempt(id: number): Promise<ExamAttempt | undefined> {
     const [attempt] = await db
       .select()
       .from(examAttempts)
@@ -572,7 +554,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateExamAttempt(
-    id: string,
+    id: number,
     updates: Partial<ExamAttempt>
   ): Promise<ExamAttempt> {
     const [updated] = await db
@@ -667,7 +649,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(diplomaTemplates.createdAt));
   }
 
-  async getDiplomaTemplate(id: string): Promise<any | undefined> {
+  async getDiplomaTemplate(id: number): Promise<any | undefined> {
     const [template] = await db
       .select()
       .from(diplomaTemplates)
@@ -712,18 +694,18 @@ export class DatabaseStorage implements IStorage {
     return certificate;
   }
 
-  async getCertificateById(id: string): Promise<Certificate | undefined> {
+  async getCertificateById(id: number): Promise<Certificate | undefined> {
     const [certificate] = await db
       .select()
       .from(certificates)
-      .where(eq(certificates.id, id));
+      .where(eq(certificates.id, id.toString()));
     return certificate;
   }
 
   // Certificate Image operations
   async createCertificateImage(data: {
-    certificateId: string;
-    templateId: string;
+    certificateId: number;
+    templateId: number;
     imageUrl: string;
     generatedAt: Date;
     generatedBy: string;
@@ -732,8 +714,8 @@ export class DatabaseStorage implements IStorage {
     const [certificateImage] = await db
       .insert(certificateImages)
       .values({
-        certificateId: data.certificateId,
-        templateId: data.templateId,
+        certificateId: data.certificateId.toString(),
+        templateId: data.templateId.toString(),
         imageUrl: data.imageUrl,
         generatedAt: data.generatedAt,
         generatedBy: data.generatedBy,
@@ -743,24 +725,24 @@ export class DatabaseStorage implements IStorage {
     return certificateImage;
   }
 
-  async getCertificateImage(id: string): Promise<any | undefined> {
+  async getCertificateImage(id: number): Promise<any | undefined> {
     const [certificateImage] = await db
       .select()
       .from(certificateImages)
-      .where(eq(certificateImages.id, id));
+      .where(eq(certificateImages.id, id.toString()));
     return certificateImage;
   }
 
-  async getCertificateImages(certificateId: string): Promise<any[]> {
+  async getCertificateImages(certificateId: number): Promise<any[]> {
     return await db
       .select()
       .from(certificateImages)
-      .where(eq(certificateImages.certificateId, certificateId))
+      .where(eq(certificateImages.certificateId, certificateId.toString()))
       .orderBy(desc(certificateImages.generatedAt));
   }
 
-  async deleteCertificateImage(id: string): Promise<void> {
-    await db.delete(certificateImages).where(eq(certificateImages.id, id));
+  async deleteCertificateImage(id: number): Promise<void> {
+    await db.delete(certificateImages).where(eq(certificateImages.id, id.toString()));
   }
 
   // Admin statistics

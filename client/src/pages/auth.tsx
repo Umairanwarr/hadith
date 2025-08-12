@@ -129,11 +129,8 @@ const Auth = () => {
         duration: 3000,
       });
 
-      // Force redirect to dashboard after successful login
-      console.log('Login mutation success, redirecting to dashboard...');
-      setTimeout(() => {
-        setLocation('/');
-      }, 100);
+      // Redirect to an appropriate home based on role is handled by Router via user state
+      console.log('Login mutation success');
     },
     onError: (error) => {
       toast({

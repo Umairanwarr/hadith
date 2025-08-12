@@ -46,10 +46,14 @@ export function ImageUpload({ onImageUpload, currentImage, label, accept = "imag
       const formData = new FormData();
       formData.append('image', file);
 
-      // Upload to server
-      const response = await fetch('/api/upload-image', {
+      // Upload to server with auth and baseURL
+      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${baseURL}/upload-image`, {
         method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: formData,
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -111,7 +115,9 @@ export function ImageUpload({ onImageUpload, currentImage, label, accept = "imag
           type="file"
           accept={accept}
           onChange={handleFileSelect}
-          className="hidden"
+          className="hidden notranslate"
+          translate="no"
+          data-no-translate
         />
         <Button
           type="button"

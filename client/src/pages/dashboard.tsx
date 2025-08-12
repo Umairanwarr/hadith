@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 
 interface Course {
-  id: number;
+  id: string;
   title: string;
   description: string;
   instructor: string;
@@ -24,7 +24,7 @@ interface Course {
 
 interface Enrollment {
   id: number;
-  courseId: number;
+  courseId: string;
   progress: string;
   enrolledAt: string;
   course: Course;
@@ -51,23 +51,23 @@ export default function Dashboard() {
   });
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/dashboard/stats"],
+    queryKey: ["api", "dashboard", "stats"],
     retry: false,
   });
 
   const { data: enrollments, isLoading: enrollmentsLoading } = useQuery<Enrollment[]>({
-    queryKey: ["/api/my-enrollments"],
+    queryKey: ["api", "my-enrollments"],
     retry: false,
   });
 
   const { data: courses, isLoading: coursesLoading } = useQuery<Course[]>({
-    queryKey: ["/courses"],
+    queryKey: ["api", "courses"],
     retry: false,
   });
 
   const enrollMutation = useMutation({
-    mutationFn: async (courseId: number) => {
-      await apiRequest('POST', `/courses/${courseId}/enroll`);
+    mutationFn: async (courseId: string) => {
+      await apiRequest('POST', `/api/courses/${courseId}/enroll`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/my-enrollments"] });
@@ -99,9 +99,11 @@ export default function Dashboard() {
   const enrolledCourseIds = enrollments?.map(e => e.courseId) || [];
   const availableCourses = courses?.filter(course => !enrolledCourseIds.includes(course.id)) || [];
 
-  const handleEnroll = (courseId: number) => {
+  const handleEnroll = (courseId: string) => {
     enrollMutation.mutate(courseId);
   };
+
+  // No inline lessons preview on dashboard cards per request
 
   const promoteToAdminMutation = useMutation({
     mutationFn: async () => {
@@ -336,6 +338,42 @@ export default function Dashboard() {
           </Card>
         </section>
 
+        {/* Available Courses */}
+        {availableCourses && availableCourses.length > 0 && (
+          <section className="mb-12">
+            <h3 className="text-2xl font-amiri font-bold text-green-700 mb-6">
+              الدورات المتاحة
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {availableCourses.map((course) => (
+                <Card key={course.id} className="hover-scale overflow-hidden">
+                  <div className="h-32 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-800">
+                    <div className="text-center">
+                      <i className="fas fa-book-open text-2xl mb-2"></i>
+                      <h4 className="font-amiri text-sm font-bold">{course.title}</h4>
+                    </div>
+                  </div>
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-gray-600">{course.instructor}</span>
+                      <Badge className={getLevelColor(course.level)}>{course.level}</Badge>
+                    </div>
+                    <div className="text-xs text-gray-500 mb-3">{course.duration} دقيقة</div>
+                    <Button
+                      size="sm"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white text-xs"
+                      disabled={enrollMutation.isPending}
+                      onClick={() => handleEnroll(course.id)}
+                    >
+                      {enrollMutation.isPending ? "...جاري التسجيل" : "سجل الآن"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Current Learning */}
         {enrollments && enrollments.length > 0 && (
           <section className="mb-12">
@@ -377,14 +415,9 @@ export default function Dashboard() {
                           متابعة
                         </Button>
                       </Link>
-                      {Number(enrollment.progress) >= 100 && (
-                        <Link href={`/course/${enrollment.courseId}/exam`}>
-                          <Button variant="outline" size="sm" className="bg-white text-green-700 hover:bg-gray-50 border border-green-700 px-2">
-                            <i className="fas fa-clipboard-list text-xs"></i>
-                          </Button>
-                        </Link>
-                      )}
                     </div>
+
+                    {/* Lessons preview removed */}
                   </CardContent>
                 </Card>
               ))}

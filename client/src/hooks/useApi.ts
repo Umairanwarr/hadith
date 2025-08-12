@@ -98,6 +98,15 @@ export const useApi = <T = any>(
     setError(null);
   }, []);
 
+  // Auto-fetch support when requested
+  useEffect(() => {
+    if (autoFetch) {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      execute();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoFetch, execute, ...autoFetchDeps]);
+
   return {
     data,
     loading,

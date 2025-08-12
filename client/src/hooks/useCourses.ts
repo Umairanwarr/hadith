@@ -1,12 +1,32 @@
 import { useApi } from './useApi';
 import { apiService } from '../lib/axios';
-import { Course, CreateCourse } from '@shared/schema';
+import { Course, CreateCourse, Enrollment } from '@shared/schema';
 import { useCallback } from 'react';
 
 // Hook to get all courses
 export const useGetCourses = () => {
   const apiCall = useCallback(() => apiService.get<Course[]>('/courses'), []);
   
+  return useApi<Course[]>(apiCall, {
+    showLoading: true,
+    showNotifications: false,
+    autoFetch: true,
+  });
+};
+
+// Hook to get only the current user's courses (based on enrollments)
+export const useGetMyCourses = () => {
+  const apiCall = useCallback(async () => {
+    const enrollments = await apiService.get<(Enrollment & { course: Course })[]>('/my-enrollments');
+    const uniqueCoursesMap = new Map<string, Course>();
+    enrollments.forEach((en) => {
+      if (en.course && !uniqueCoursesMap.has(en.course.id)) {
+        uniqueCoursesMap.set(en.course.id, en.course);
+      }
+    });
+    return Array.from(uniqueCoursesMap.values());
+  }, []);
+
   return useApi<Course[]>(apiCall, {
     showLoading: true,
     showNotifications: false,

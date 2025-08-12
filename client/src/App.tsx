@@ -12,6 +12,7 @@ import Dashboard from '@/pages/dashboard';
 import CourseDetails from '@/pages/course-details';
 import VideoPlayer from '@/pages/video-player';
 import Exam from '@/pages/exam';
+import CourseExams from '@/pages/course-exams';
 import Certificates from '@/pages/certificates';
 import LevelsPage from '@/pages/levels';
 import DiplomasPage from '@/pages/diplomas';
@@ -22,6 +23,7 @@ import Profile from '@/pages/profile';
 import AdminDashboard from '@/pages/admin-dashboard';
 import AdminCreateCourse from '@/pages/admin-create-course';
 import AdminCreateExam from '@/pages/admin-create-exam';
+import AdminEditExam from '@/pages/admin-edit-exam';
 import AdminCourseDetails from '@/pages/admin-course-details';
 import { DiplomaPreparatoryPage } from '@/pages/diploma-preparatory';
 import { DiplomaIntermediatePage } from '@/pages/diploma-intermediate';
@@ -39,6 +41,7 @@ import { DiplomaManagementPage } from '@/pages/diploma-management';
 import { CertificateGeneratorPage } from '@/pages/certificate-generator';
 import { SampleCertificatesPage } from '@/pages/sample-certificates';
 import { CourseManagementPage } from '@/pages/course-management';
+import TeacherDashboard from '@/pages/teacher-dashboard';
 
 import AboutUniversity from '@/pages/about-university';
 import { TestCertificateGenerationPage } from '@/pages/test-certificate-generation';
@@ -47,7 +50,7 @@ import { AppContextProvider } from './contexts/AppContext';
 import { AuthProvider } from './contexts/AuthContext';
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   
   console.log('🔄 Router state changed:', {
     isAuthenticated,
@@ -76,14 +79,16 @@ function Router() {
         </>
       ) : (
         <>
-          <Route path='/' component={Dashboard} />
+          <Route path='/' component={user?.role === 'teacher' ? TeacherDashboard : Dashboard} />
           <Route path='/auth' component={Dashboard} />
+          <Route path='/teacher' component={TeacherDashboard} />
           <Route path='/course/:id' component={CourseDetails} />
           <Route
             path='/course/:courseId/lessons/:lessonId'
             component={VideoPlayer}
           />
           <Route path='/course/:courseId/exam' component={Exam} />
+          <Route path='/course/:courseId/exams' component={CourseExams} />
           <Route path='/certificates' component={Certificates} />
           <Route path='/certificate-generator' component={CertificateGeneratorPage} />
           <Route path='/test-certificate-generation' component={TestCertificateGenerationPage} />
@@ -111,6 +116,7 @@ function Router() {
           <Route path='/admin' component={AdminDashboard} />
           <Route path='/admin/create-course' component={AdminCreateCourse} />
           <Route path='/admin/create-exam' component={AdminCreateExam} />
+          <Route path='/admin/edit-exam/:id' component={AdminEditExam} />
           <Route path='/admin/courses/:id' component={AdminCourseDetails} />
           <Route path='/teacher-guide' component={TeacherGuidePage} />
           <Route path='/quick-add' component={QuickAddPage} />
@@ -147,7 +153,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
-            <PWAInstallBanner />
+            {import.meta.env.PROD ? <PWAInstallBanner /> : null}
             <OfflineIndicator />
           </TooltipProvider>
         </AppContextProvider>
