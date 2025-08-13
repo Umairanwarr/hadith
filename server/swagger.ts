@@ -108,17 +108,68 @@ const options = {
               format: 'uuid',
               description: 'Unique template ID'
             },
-            name: {
+            title: {
               type: 'string',
-              description: 'Template name'
+              maxLength: 255,
+              description: 'Title of the diploma template'
             },
-            description: {
+            level: {
               type: 'string',
-              description: 'Template description'
+              maxLength: 100,
+              description: 'Academic level of the diploma'
             },
-            templateData: {
-              type: 'object',
-              description: 'Template configuration data'
+            backgroundColor: {
+              type: 'string',
+              maxLength: 50,
+              description: 'Background color hex code'
+            },
+            textColor: {
+              type: 'string',
+              maxLength: 50,
+              description: 'Text color hex code'
+            },
+            borderColor: {
+              type: 'string',
+              maxLength: 50,
+              description: 'Border color hex code'
+            },
+            logoUrl: {
+              type: 'string',
+              maxLength: 500,
+              description: 'URL to the institution logo'
+            },
+            sealUrl: {
+              type: 'string',
+              maxLength: 500,
+              description: 'URL to the university seal'
+            },
+            institutionName: {
+              type: 'string',
+              maxLength: 255,
+              description: 'Name of the institution'
+            },
+            templateStyle: {
+              type: 'string',
+              maxLength: 50,
+              description: 'Template style (classic, modern, elegant)'
+            },
+            requirements: {
+              type: 'string',
+              description: 'Requirements to obtain the certificate'
+            },
+            isActive: {
+              type: 'boolean',
+              description: 'Whether the template is active'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Template creation date'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Template last update date'
             }
           }
         },

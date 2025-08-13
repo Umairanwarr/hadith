@@ -2363,6 +2363,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Diploma Templates routes
+  /**
+   * @swagger
+   * /api/diploma-templates:
+   *   get:
+   *     summary: Get all diploma templates
+   *     description: Retrieve all available diploma templates for certificates
+   *     tags: [Diploma Templates]
+   *     responses:
+   *       200:
+   *         description: List of diploma templates retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/DiplomaTemplate'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get('/api/diploma-templates', async (req, res) => {
     try {
       const templates = await storage.getDiplomaTemplates();
@@ -2373,10 +2396,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/diploma-templates:
+   *   post:
+   *     summary: Create a new diploma template
+   *     description: Create a new customizable diploma template for certificates (Admin only)
+   *     tags: [Diploma Templates]
+   *     security:
+   *       - sessionAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - title
+   *               - level
+   *               - institutionName
+   *               - requirements
+   *             properties:
+   *               title:
+   *                 type: string
+   *                 maxLength: 255
+   *                 description: Title of the diploma template
+   *                 example: "شهادة إتمام المستوى المتوسط"
+   *               level:
+   *                 type: string
+   *                 maxLength: 100
+   *                 description: Academic level of the diploma
+   *                 example: "متوسط"
+   *               backgroundColor:
+   *                 type: string
+   *                 maxLength: 50
+   *                 description: Background color hex code
+   *                 example: "#f8f9fa"
+   *               textColor:
+   *                 type: string
+   *                 maxLength: 50
+   *                 description: Text color hex code
+   *                 example: "#2c3e50"
+   *               borderColor:
+   *                 type: string
+   *                 maxLength: 50
+   *                 description: Border color hex code
+   *                 example: "#d4af37"
+   *               logoUrl:
+   *                 type: string
+   *                 maxLength: 500
+   *                 description: URL to the institution logo
+   *                 example: "/uploads/logo.png"
+   *               sealUrl:
+   *                 type: string
+   *                 maxLength: 500
+   *                 description: URL to the university seal
+   *                 example: "/uploads/seal.png"
+   *               institutionName:
+   *                 type: string
+   *                 maxLength: 255
+   *                 description: Name of the institution
+   *                 example: "جامعة الإمام الزُّهري"
+   *               templateStyle:
+   *                 type: string
+   *                 maxLength: 50
+   *                 description: Template style (classic, modern, elegant)
+   *                 example: "classic"
+   *               requirements:
+   *                 type: string
+   *                 description: Requirements to obtain the certificate
+   *                 example: "إكمال جميع الدروس المطلوبة بنسبة نجاح لا تقل عن 70%"
+   *     responses:
+   *       200:
+   *         description: Diploma template created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/DiplomaTemplate'
+   *       400:
+   *         description: Bad request - missing required fields
+   *       401:
+   *         description: Unauthorized - invalid or missing authentication
+   *       403:
+   *         description: Forbidden - admin access required
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.post('/api/diploma-templates', isAuthenticated, async (req, res) => {
     try {
       // const userId = req.user?.id;
-      const userId = req.user?.id || req.user?.sub;
+      const userId = (req as any).user?.id || (req as any).user?.sub;
       if (!userId) {
         console.warn('⚠️ Missing sub in JWT payload');
         return res.status(401).json({ message: 'Unauthorized: Invalid token payload' });
@@ -2395,16 +2508,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/diploma-templates/{id}:
+   *   put:
+   *     summary: Update a diploma template
+   *     description: Update an existing diploma template (Admin only)
+   *     tags: [Diploma Templates]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Diploma template ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               title:
+   *                 type: string
+   *                 maxLength: 255
+   *                 description: Title of the diploma template
+   *               level:
+   *                 type: string
+   *                 maxLength: 100
+   *                 description: Academic level of the diploma
+   *               backgroundColor:
+   *                 type: string
+   *                 maxLength: 50
+   *                 description: Background color hex code
+   *               textColor:
+   *                 type: string
+   *                 maxLength: 50
+   *                 description: Text color hex code
+   *               borderColor:
+   *                 type: string
+   *                 maxLength: 50
+   *                 description: Border color hex code
+   *               logoUrl:
+   *                 type: string
+   *                 maxLength: 500
+   *                 description: URL to the institution logo
+   *               sealUrl:
+   *                 type: string
+   *                 maxLength: 500
+   *                 description: URL to the university seal
+   *               institutionName:
+   *                 type: string
+   *                 maxLength: 255
+   *                 description: Name of the institution
+   *               templateStyle:
+   *                 type: string
+   *                 maxLength: 50
+   *                 description: Template style (classic, modern, elegant)
+   *               requirements:
+   *                 type: string
+   *                 description: Requirements to obtain the certificate
+   *     responses:
+   *       200:
+   *         description: Diploma template updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/DiplomaTemplate'
+   *       400:
+   *         description: Bad request - invalid UUID format
+   *       401:
+   *         description: Unauthorized - invalid or missing authentication
+   *       403:
+   *         description: Forbidden - admin access required
+   *       404:
+   *         description: Template not found
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.put('/api/diploma-templates/:id', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = (req as any).user?.id || (req as any).user?.sub;
+      if (!userId) {
+        console.warn('⚠️ Missing sub in JWT payload');
+        return res.status(401).json({ message: 'Unauthorized: Invalid token payload' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || user.role !== 'admin') {
         return res.status(403).json({ message: 'Admin access required' });
       }
 
-      const templateId = parseInt(req.params.id);
+      const templateId = req.params.id;
+      if (!isValidUUID(templateId)) {
+        console.log('❌ Invalid UUID format:', templateId);
+        return res.status(400).json({ message: 'Invalid template ID format. Must be a valid UUID.' });
+      }
       const updatedTemplate = await storage.updateDiplomaTemplate(
         templateId,
         req.body
@@ -2421,16 +2627,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/diploma-templates/{id}:
+   *   delete:
+   *     summary: Delete a diploma template
+   *     description: Delete an existing diploma template (Admin only)
+   *     tags: [Diploma Templates]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Diploma template ID
+   *     responses:
+   *       200:
+   *         description: Diploma template deleted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Template deleted successfully"
+   *       400:
+   *         description: Bad request - invalid UUID format
+   *       401:
+   *         description: Unauthorized - invalid or missing authentication
+   *       403:
+   *         description: Forbidden - admin access required
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.delete('/api/diploma-templates/:id', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = (req as any).user?.id || (req as any).user?.sub;
+      if (!userId) {
+        console.warn('⚠️ Missing sub in JWT payload');
+        return res.status(401).json({ message: 'Unauthorized: Invalid token payload' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || user.role !== 'admin') {
         return res.status(403).json({ message: 'Admin access required' });
       }
 
-      const templateId = parseInt(req.params.id);
+      const templateId = req.params.id;
+      if (!isValidUUID(templateId)) {
+        return res.status(400).json({ message: 'Invalid template ID format. Must be a valid UUID.' });
+      }
       await storage.deleteDiplomaTemplate(templateId);
 
       res.json({ message: 'Template deleted successfully' });
@@ -2441,17 +2695,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   );
 
+  /**
+   * @swagger
+   * /api/diploma-templates/{id}/status:
+   *   patch:
+   *     summary: Toggle diploma template status
+   *     description: Activate or deactivate a diploma template (Admin only)
+   *     tags: [Diploma Templates]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Diploma template ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - isActive
+   *             properties:
+   *               isActive:
+   *                 type: boolean
+   *                 description: Whether the template should be active or not
+   *                 example: true
+   *     responses:
+   *       200:
+   *         description: Template status updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Template status updated successfully"
+   *       400:
+   *         description: Bad request - invalid UUID format or missing isActive field
+   *       401:
+   *         description: Unauthorized - invalid or missing authentication
+   *       403:
+   *         description: Forbidden - admin access required
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.patch('/api/diploma-templates/:id/status', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.id;
+      const userId = (req as any).user?.id || (req as any).user?.sub;
+      if (!userId) {
+        console.warn('⚠️ Missing sub in JWT payload');
+        return res.status(401).json({ message: 'Unauthorized: Invalid token payload' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || user.role !== 'admin') {
         return res.status(403).json({ message: 'Admin access required' });
       }
 
-      const templateId = parseInt(req.params.id);
+      const templateId = req.params.id;
+      if (!isValidUUID(templateId)) {
+        return res.status(400).json({ message: 'Invalid template ID format. Must be a valid UUID.' });
+      }
       const { isActive } = req.body;
+      if (typeof isActive !== 'boolean') {
+        return res.status(400).json({ message: 'isActive must be a boolean' });
+      }
 
       await storage.toggleDiplomaTemplateStatus(templateId, isActive);
 

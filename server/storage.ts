@@ -133,21 +133,21 @@ export interface IStorage {
   getUserCertificates(
     userId: string
   ): Promise<(Certificate & { course: Course })[]>;
-  getCertificate(id: number): Promise<Certificate | undefined>;
-  getCertificateById(id: number): Promise<Certificate | undefined>;
+  getCertificate(id: string): Promise<Certificate | undefined>;
+  getCertificateById(id: string): Promise<Certificate | undefined>;
 
   // Certificate Image operations
   createCertificateImage(data: {
-    certificateId: number;
-    templateId: number;
+    certificateId: string;
+    templateId: string;
     imageUrl: string;
     generatedAt: Date;
     generatedBy: string;
     metadata?: any;
   }): Promise<any>;
-  getCertificateImage(id: number): Promise<any | undefined>;
-  getCertificateImages(certificateId: number): Promise<any[]>;
-  deleteCertificateImage(id: number): Promise<void>;
+  getCertificateImage(id: string): Promise<any | undefined>;
+  getCertificateImages(certificateId: string): Promise<any[]>;
+  deleteCertificateImage(id: string): Promise<void>;
 
   // Dashboard statistics
   getUserStats(userId: string): Promise<{
@@ -676,7 +676,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateDiplomaTemplate(
-    id: number,
+    id: string,
     updates: any
   ): Promise<any | undefined> {
     const [updated] = await db
@@ -690,12 +690,12 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async deleteDiplomaTemplate(id: number): Promise<void> {
+  async deleteDiplomaTemplate(id: string): Promise<void> {
     await db.delete(diplomaTemplates).where(eq(diplomaTemplates.id, id));
   }
 
   async toggleDiplomaTemplateStatus(
-    id: number,
+    id: string,
     isActive: boolean
   ): Promise<void> {
     await db
@@ -704,7 +704,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(diplomaTemplates.id, id));
   }
 
-  async getCertificate(id: number): Promise<Certificate | undefined> {
+  async getCertificate(id: string): Promise<Certificate | undefined> {
     const [certificate] = await db
       .select()
       .from(certificates)
