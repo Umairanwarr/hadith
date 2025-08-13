@@ -11,7 +11,7 @@ export function SampleCertificatesPage() {
 
   // Fetch diploma templates
   const { data: templates = [], isLoading } = useQuery({
-    queryKey: ["/api/diploma-templates"],
+    queryKey: ["/diploma-templates"],
   });
 
   const sampleCertificate = {

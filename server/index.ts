@@ -12,14 +12,26 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({
-  origin: [
-    'http://localhost:3001',
-    'http://127.0.0.1:3001',
-    'http://localhost:5000',
-    'http://127.0.0.1:5000',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000'
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = [
+      'http://localhost:3001',
+      'http://127.0.0.1:3001',
+      'http://localhost:5000',
+      'http://127.0.0.1:5000',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000'
+    ];
+
+    // Allow Vercel preview and production domains
+    if (origin.includes('.vercel.app') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],

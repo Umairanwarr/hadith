@@ -70,7 +70,7 @@ export default function Dashboard() {
       await apiRequest('POST', `/api/courses/${courseId}/enroll`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/my-enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["/my-enrollments"] });
       toast({
         title: "تم التسجيل بنجاح",
         description: "تم تسجيلك في المادة بنجاح",
@@ -84,7 +84,7 @@ export default function Dashboard() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }

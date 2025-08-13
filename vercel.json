@@ -1,0 +1,27 @@
+{
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "dist/public",
+  "functions": {
+    "server/index.ts": {
+      "runtime": "@vercel/node@3"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/server/index.ts"
+    },
+    {
+      "source": "/docs",
+      "destination": "/server/index.ts"
+    },
+    {
+      "source": "/uploads/(.*)",
+      "destination": "/server/index.ts"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

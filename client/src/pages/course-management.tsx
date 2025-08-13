@@ -326,7 +326,7 @@ export function CourseManagementPage() {
   const createCourseMutation = useMutation({
     mutationFn: async (data: CourseFormData) => {
       const payload = sanitizeCourseData(data);
-      return await apiRequest("POST", "/api/courses", payload);
+      return await apiRequest("POST", "/courses", payload);
     },
     onSuccess: () => {
       toast({

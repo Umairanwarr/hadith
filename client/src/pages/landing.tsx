@@ -5,7 +5,7 @@ import logoPath from "@assets/logo better_1752953272174.png";
 export default function Landing() {
   const handleLogin = () => {
     // Add timestamp to force cache refresh
-    window.location.href = "/api/login?t=" + Date.now();
+    window.location.href = "/login?t=" + Date.now();
   };
 
   return (

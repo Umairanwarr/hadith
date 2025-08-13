@@ -110,7 +110,7 @@ export default function ExamPage() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -152,8 +152,8 @@ export default function ExamPage() {
         variant: result.passed ? "default" : "destructive",
       });
       
-      queryClient.invalidateQueries({ queryKey: ["/api/my-certificates"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/my-certificates"] });
+      queryClient.invalidateQueries({ queryKey: ["/dashboard/stats"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -163,7 +163,7 @@ export default function ExamPage() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }

@@ -1233,34 +1233,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create certificate if passed
       if (passed) {
-        // Get user info for certificate
-        const user = await storage.getUserById(userId);
-        const course = await storage.getCourse(attempt.courseId);
+        try {
+          console.log('Student passed exam, creating certificate...');
+          console.log('Score:', score, 'Passing grade:', exam.passingGrade);
+          
+          // Get user info for certificate
+          const user = await storage.getUserById(userId);
+          const course = await storage.getCourse(attempt.courseId);
 
-        const certificateNumber = `CERT-${Date.now()}-${userId.slice(-4)}`;
-        const studentName =
-          user && user.firstName && user.lastName
-            ? `${user.firstName} ${user.lastName}`
-            : user?.email?.split('@')[0] || 'الطالب';
+          console.log('User:', user?.email, 'Course:', course?.title);
 
-        // Determine honors based on score
-        let honors = '';
-        if (score >= 95) honors = 'امتياز مع مرتبة الشرف';
-        else if (score >= 85) honors = 'امتياز';
-        else if (score >= 75) honors = 'جيد جداً';
-        else if (score >= 70) honors = 'جيد';
+          const certificateNumber = `CERT-${Date.now()}-${userId.slice(-4)}`;
+          const studentName =
+            user && user.firstName && user.lastName
+              ? `${user.firstName} ${user.lastName}`
+              : user?.email?.split('@')[0] || 'الطالب';
 
-        await storage.createCertificate({
-          userId,
-          courseId: attempt.courseId,
-          examAttemptId: attemptId,
-          certificateNumber,
-          grade: score.toString(),
-          studentName,
-          specialization: course?.title || 'علوم الحديث',
-          honors,
-          completionDate: new Date(),
-        });
+          // Determine honors based on score
+          let honors = '';
+          if (score >= 95) honors = 'امتياز مع مرتبة الشرف';
+          else if (score >= 85) honors = 'امتياز';
+          else if (score >= 75) honors = 'جيد جداً';
+          else if (score >= 70) honors = 'جيد';
+
+          console.log('Creating certificate with data:', {
+            userId,
+            courseId: attempt.courseId,
+            examAttemptId: attemptId,
+            certificateNumber,
+            studentName,
+            honors
+          });
+
+          const certificate = await storage.createCertificate({
+            userId,
+            courseId: attempt.courseId,
+            examAttemptId: attemptId,
+            certificateNumber,
+            grade: score.toString(),
+            studentName,
+            specialization: course?.title || 'علوم الحديث',
+            honors,
+            completionDate: new Date(),
+          });
+
+          console.log('Certificate created successfully:', certificate.id);
+        } catch (certError) {
+          console.error('Error creating certificate:', certError);
+          // Don't fail the whole exam submission if certificate creation fails
+        }
       }
 
       // Include correct answers in response for review
@@ -1292,7 +1313,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/my-certificates', isAuthenticated, async (req: any, res) => {
     try {
       const userId = (req.user as any)?.id;
+      console.log('Fetching certificates for user:', userId);
+      
       const certificates = await storage.getUserCertificates(userId);
+      console.log('Found certificates:', certificates.length);
+      
       res.json(certificates);
     } catch (error) {
       console.error('Error fetching certificates:', error);
@@ -2178,19 +2203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
-  // Get admin dashboard data
-  app.get('/api/admin/dashboard', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const stats = await storage.getAdminStats();
-      res.json(stats);
-    } catch (error) {
-      console.error('Error fetching admin dashboard stats:', error);
-      res
-        .status(500)
-        .json({ message: 'Failed to fetch admin dashboard stats' });
-    }
-  }
-  );
+
 
   // Temporary route to promote user to admin (for development only)
   app.post('/api/promote-to-admin', isAuthenticated, async (req: any, res) => {

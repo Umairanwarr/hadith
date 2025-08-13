@@ -119,7 +119,7 @@ export default function AdminCourseDetails() {
 
   const createLessonMutation = useMutation({
     mutationFn: async (data: CreateLesson) => {
-      return await apiRequest("POST", "/api/admin/lessons", data);
+      return await apiRequest("POST", "/admin/lessons", data);
     },
     onSuccess: () => {
       toast({
@@ -138,7 +138,7 @@ export default function AdminCourseDetails() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -169,7 +169,7 @@ export default function AdminCourseDetails() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }

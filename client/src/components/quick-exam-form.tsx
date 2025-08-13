@@ -51,8 +51,8 @@ export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
         title: "تم إنشاء الامتحان بنجاح",
         description: "تم إنشاء الامتحان الجديد بنجاح. يمكنك الآن إضافة الأسئلة",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/exams"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/exams"] });
+      queryClient.invalidateQueries({ queryKey: ["/admin/dashboard"] });
       form.reset();
       if (onSuccess) onSuccess();
     },

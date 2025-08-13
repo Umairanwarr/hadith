@@ -40,7 +40,7 @@ export function QuickLessonForm({ courseId, onSuccess }: QuickLessonFormProps) {
 
   const createLessonMutation = useMutation({
     mutationFn: async (data: CreateLesson) => {
-      return await apiRequest("POST", "/api/admin/lessons", data);
+      return await apiRequest("POST", "/admin/lessons", data);
     },
     onSuccess: () => {
       toast({

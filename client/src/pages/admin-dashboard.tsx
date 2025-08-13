@@ -44,7 +44,7 @@ function InitializeCoursesButton() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -135,8 +135,8 @@ export default function AdminDashboard() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async ({ type, id }: { type: "course" | "exam"; id: number }) => {
-      await apiRequest(`/admin/${type}s/${id}`, { method: "DELETE" });
+    mutationFn: async ({ type, id }: { type: "course" | "exam"; id: string }) => {
+      await apiRequest("DELETE", `/api/admin/${type}s/${id}`);
     },
     onSuccess: (_, { type }) => {
       toast({
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
     return null;
   }
 
-  const handleDelete = (type: "course" | "exam", id: number, title: string) => {
+  const handleDelete = (type: "course" | "exam", id: string, title: string) => {
     if (confirm(`هل أنت متأكد من حذف ${type === "course" ? "المادة" : "الاختبار"} "${title}"؟`)) {
       deleteMutation.mutate({ type, id });
     }
@@ -207,7 +207,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">المستخدمين</CardTitle>
@@ -240,6 +240,16 @@ export default function AdminDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">قوالب الديبلوم</CardTitle>
+              <i className="fas fa-certificate h-4 w-4 text-muted-foreground"></i>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.totalDiplomaTemplates || 0}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">التسجيلات</CardTitle>
               <GraduationCap className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -251,9 +261,10 @@ export default function AdminDashboard() {
 
         {/* Management Tabs */}
         <Tabs defaultValue="courses" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="courses">إدارة المواد</TabsTrigger>
             <TabsTrigger value="exams">إدارة الاختبارات</TabsTrigger>
+            <TabsTrigger value="diplomas">إدارة الديبلومات</TabsTrigger>
           </TabsList>
 
           <TabsContent value="courses" className="space-y-6">
@@ -452,6 +463,126 @@ export default function AdminDashboard() {
                   </Link>
                 </div>
               )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="diplomas" className="space-y-6">
+            <div className="flex justify-between items-center flex-wrap gap-4">
+              <h2 className="text-2xl font-bold">إدارة قوالب الديبلومات</h2>
+              <div className="flex gap-2 flex-wrap">
+                <Link href="/admin/diploma-management">
+                  <Button className="bg-amber-600 hover:bg-amber-700 text-white">
+                    <i className="fas fa-certificate ml-2"></i>
+                    إدارة قوالب الديبلومات
+                  </Button>
+                </Link>
+                <Link href="/certificate-generator">
+                  <Button variant="outline" className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100">
+                    <i className="fas fa-file-image ml-2"></i>
+                    إنتاج الشهادات
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card className="border-amber-200 bg-amber-50">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                      <i className="fas fa-certificate text-amber-600 text-lg"></i>
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg text-amber-800">قوالب الديبلومات</CardTitle>
+                      <CardDescription className="text-amber-600">إنشاء وتخصيص قوالب الشهادات</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-amber-700 mb-4">
+                    إنشاء قوالب مخصصة للديبلومات والشهادات بتصاميم متنوعة ومرونة في الألوان والخطوط
+                  </p>
+                  <Link href="/admin/diploma-management">
+                    <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white">
+                      <i className="fas fa-plus ml-2"></i>
+                      إدارة القوالب
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+
+              <Card className="border-blue-200 bg-blue-50">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <i className="fas fa-file-image text-blue-600 text-lg"></i>
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg text-blue-800">إنتاج الشهادات</CardTitle>
+                      <CardDescription className="text-blue-600">إنتاج شهادات بتصاميم احترافية</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-blue-700 mb-4">
+                    إنتاج شهادات عالية الجودة للطلاب المتفوقين باستخدام القوالب المصممة
+                  </p>
+                  <Link href="/certificate-generator">
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                      <i className="fas fa-magic ml-2"></i>
+                      إنتاج شهادة
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+
+              <Card className="border-green-200 bg-green-50">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                      <i className="fas fa-images text-green-600 text-lg"></i>
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg text-green-800">عينات الشهادات</CardTitle>
+                      <CardDescription className="text-green-600">استعراض نماذج الشهادات</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-green-700 mb-4">
+                    استعراض عينات من الشهادات والديبلومات بتصاميم مختلفة للمستويات المتنوعة
+                  </p>
+                  <Link href="/sample-certificates">
+                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+                      <i className="fas fa-eye ml-2"></i>
+                      عرض العينات
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Stats for Diploma Management */}
+            <div className="bg-gradient-to-r from-amber-100 to-orange-100 rounded-xl p-6 border border-amber-200">
+              <h3 className="text-lg font-semibold text-amber-800 mb-4">إحصائيات سريعة - إدارة الديبلومات</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-amber-600">{stats?.totalDiplomaTemplates || 0}</div>
+                  <div className="text-sm text-amber-700">قوالب الديبلومات</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-amber-600">{stats?.activeDiplomaTemplates || 0}</div>
+                  <div className="text-sm text-amber-700">القوالب النشطة</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-amber-600">{stats?.totalCertificates || 0}</div>
+                  <div className="text-sm text-amber-700">الشهادات المُصدرة</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-amber-600">{stats?.certificatesThisMonth || 0}</div>
+                  <div className="text-sm text-amber-700">شهادات هذا الشهر</div>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>

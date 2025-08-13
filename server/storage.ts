@@ -129,7 +129,18 @@ export interface IStorage {
   ): Promise<ExamAttempt>;
 
   // Certificate operations
-  createCertificate(certificate: InsertCertificate): Promise<Certificate>;
+  createCertificate(data: {
+    userId: string;
+    courseId: string;
+    examAttemptId: string;
+    certificateNumber: string;
+    grade: string;
+    studentName: string;
+    diplomaTemplateId?: string;
+    completionDate?: Date;
+    specialization?: string;
+    honors?: string;
+  }): Promise<Certificate>;
   getUserCertificates(
     userId: string
   ): Promise<(Certificate & { course: Course })[]>;
@@ -163,6 +174,10 @@ export interface IStorage {
     totalCourses: number;
     totalExams: number;
     totalEnrollments: number;
+    totalDiplomaTemplates: number;
+    activeDiplomaTemplates: number;
+    totalCertificates: number;
+    certificatesThisMonth: number;
   }>;
 }
 
@@ -485,6 +500,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteExam(id: string): Promise<void> {
+    // Delete in the correct order to respect foreign key constraints
+    
+    // 1. First, get all exam attempts for this exam
+    const examAttemptsList = await db
+      .select({ id: examAttempts.id })
+      .from(examAttempts)
+      .where(eq(examAttempts.examId, id));
+    
+    // 2. Delete certificates that reference these exam attempts
+    for (const attempt of examAttemptsList) {
+      await db.delete(certificates).where(eq(certificates.examAttemptId, attempt.id));
+    }
+    
+    // 3. Delete exam attempts
+    await db.delete(examAttempts).where(eq(examAttempts.examId, id));
+    
+    // 4. Delete exam questions
+    await db.delete(examQuestions).where(eq(examQuestions.examId, id));
+    
+    // 5. Finally delete the exam
     await db.delete(exams).where(eq(exams.id, id));
   }
 
@@ -586,12 +621,12 @@ export class DatabaseStorage implements IStorage {
   // Certificate operations
   async createCertificate(data: {
     userId: string;
-    courseId: number;
-    examAttemptId: number;
+    courseId: string;
+    examAttemptId: string;
     certificateNumber: string;
     grade: string;
     studentName: string;
-    diplomaTemplateId?: number;
+    diplomaTemplateId?: string;
     completionDate?: Date;
     specialization?: string;
     honors?: string;
@@ -769,6 +804,10 @@ export class DatabaseStorage implements IStorage {
     totalCourses: number;
     totalExams: number;
     totalEnrollments: number;
+    totalDiplomaTemplates: number;
+    activeDiplomaTemplates: number;
+    totalCertificates: number;
+    certificatesThisMonth: number;
   }> {
     const [usersCount] = await db
       .select({
@@ -796,11 +835,46 @@ export class DatabaseStorage implements IStorage {
       })
       .from(enrollments);
 
+    const [diplomaTemplatesCount] = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(diplomaTemplates);
+
+    const [activeDiplomaTemplatesCount] = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(diplomaTemplates)
+      .where(eq(diplomaTemplates.isActive, true));
+
+    const [certificatesCount] = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(certificates);
+
+    // Get certificates from this month
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const [certificatesThisMonthCount] = await db
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(certificates)
+      .where(sql`${certificates.completionDate} >= ${startOfMonth}`);
+
     return {
       totalUsers: usersCount?.count || 0,
       totalCourses: coursesCount?.count || 0,
       totalExams: examsCount?.count || 0,
       totalEnrollments: enrollmentsCount?.count || 0,
+      totalDiplomaTemplates: diplomaTemplatesCount?.count || 0,
+      activeDiplomaTemplates: activeDiplomaTemplatesCount?.count || 0,
+      totalCertificates: certificatesCount?.count || 0,
+      certificatesThisMonth: certificatesThisMonthCount?.count || 0,
     };
   }
 

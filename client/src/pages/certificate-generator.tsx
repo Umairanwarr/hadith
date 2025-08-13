@@ -52,12 +52,12 @@ export function CertificateGeneratorPage() {
 
   // Fetch user certificates
   const { data: certificates = [], isLoading: certificatesLoading } = useQuery({
-    queryKey: ["/api/my-certificates"],
+    queryKey: ["/my-certificates"],
   });
 
   // Fetch diploma templates
   const { data: templates = [], isLoading: templatesLoading } = useQuery({
-    queryKey: ["/api/diploma-templates"],
+    queryKey: ["/diploma-templates"],
   });
 
   // Generate Certificate Image

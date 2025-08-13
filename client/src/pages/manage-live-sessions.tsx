@@ -70,7 +70,7 @@ export function ManageLiveSessionsPage() {
 
   // Fetch live sessions
   const { data: sessions = [], isLoading } = useQuery({
-    queryKey: ["/api/live-sessions"],
+    queryKey: ["/live-sessions"],
   });
 
   // Create session mutation
@@ -81,13 +81,13 @@ export function ManageLiveSessionsPage() {
         duration: parseInt(data.duration),
         scheduledTime: new Date(data.scheduledTime).toISOString(),
       };
-      return apiRequest("/api/live-sessions", {
+      return apiRequest("/live-sessions", {
         method: "POST",
         body: JSON.stringify(sessionData),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/live-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["/live-sessions"] });
       setIsCreateDialogOpen(false);
       form.reset();
       toast({
@@ -118,7 +118,7 @@ export function ManageLiveSessionsPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/live-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["/live-sessions"] });
       setEditingSession(null);
       form.reset();
       toast({
@@ -143,7 +143,7 @@ export function ManageLiveSessionsPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/live-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["/live-sessions"] });
       toast({
         title: "تم حذف الجلسة",
         description: "تم حذف الجلسة المباشرة بنجاح",
@@ -167,7 +167,7 @@ export function ManageLiveSessionsPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/live-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["/live-sessions"] });
       toast({
         title: "تم تحديث حالة البث",
         description: "تم تحديث حالة البث المباشر",

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
@@ -52,6 +52,89 @@ interface DiplomaTemplate {
   updatedAt: string;
 }
 
+// Certificate Preview Component
+const CertificatePreview = ({ template }: { template: DiplomaTemplate }) => (
+  <div
+    className="mx-auto p-6 border-4 rounded-lg shadow-xl bg-white"
+    style={{
+      backgroundColor: template.backgroundColor,
+      color: template.textColor,
+      borderColor: template.borderColor,
+      width: '100%',
+      maxWidth: '600px',
+      height: '400px',
+      aspectRatio: '3/2'
+    }}
+  >
+    <div className="text-center space-y-3">
+      {template.logoUrl && (
+        <img src={template.logoUrl} alt="شعار الجامعة" className="mx-auto h-12 w-12 object-contain" />
+      )}
+      <h1 className="text-xl font-amiri font-bold">{template.institutionName}</h1>
+      <div className="border-t border-b border-current py-3">
+        <h2 className="text-lg font-amiri">شهادة {template.title}</h2>
+        <p className="text-sm mt-1">المستوى: {template.level}</p>
+      </div>
+      <p className="text-center text-sm">
+        تشهد هذه الجامعة بأن الطالب/الطالبة:
+      </p>
+      <div className="text-lg font-bold border-b border-current pb-2 mx-8">
+        [اسم الطالب]
+      </div>
+      <p className="text-sm">
+        قد أكمل بنجاح جميع متطلبات {template.title}
+      </p>
+      <div className="flex justify-between items-end pt-4 text-xs">
+        <div>
+          التاريخ: [تاريخ الإصدار]
+          {template.sealUrl && (
+            <div className="mt-1">
+              <img src={template.sealUrl} alt="ختم الجامعة" className="w-8 h-8 object-contain" />
+            </div>
+          )}
+        </div>
+        <div>رقم الشهادة: [رقم الشهادة]</div>
+      </div>
+    </div>
+  </div>
+);
+
+// Live Preview Component to prevent re-rendering issues
+function LivePreview({ form }: { form: any }) {
+  const watchedValues = useWatch({
+    control: form.control,
+    name: ['title', 'level', 'backgroundColor', 'textColor', 'borderColor', 'logoUrl', 'sealUrl', 'institutionName', 'templateStyle', 'requirements']
+  });
+
+  const [title, level, backgroundColor, textColor, borderColor, logoUrl, sealUrl, institutionName, templateStyle, requirements] = watchedValues;
+
+  const previewTemplate = {
+    id: 0,
+    title: title || 'عنوان الديبلوم',
+    level: level || 'تحضيري',
+    backgroundColor: backgroundColor || '#ffffff',
+    textColor: textColor || '#000000',
+    borderColor: borderColor || '#d4af37',
+    logoUrl: logoUrl || '',
+    sealUrl: sealUrl || '',
+    institutionName: institutionName || 'جامعة الإمام الزُّهري',
+    templateStyle: templateStyle || 'classic',
+    requirements: requirements || '',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  return (
+    <div className="w-full">
+      <h3 className="text-lg font-semibold mb-4">معاينة مباشرة</h3>
+      <div className="border rounded-lg p-4 bg-gray-50 overflow-hidden w-full flex justify-center">
+        <CertificatePreview template={previewTemplate} />
+      </div>
+    </div>
+  );
+}
+
 export function DiplomaManagementPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -76,19 +159,35 @@ export function DiplomaManagementPage() {
   });
 
   // Fetch diploma templates
-  const { data: templates = [], isLoading } = useQuery({
-    queryKey: ["/api/diploma-templates"],
+  const { data: templates = [], isLoading, error, refetch } = useQuery({
+    queryKey: ["/diploma-templates"],
+    retry: 3,
+    retryDelay: 1000,
+  });
+
+  // Debug logging
+  console.log('📋 Diploma Templates Debug:', {
+    templates,
+    templatesLength: templates?.length,
+    isLoading,
+    error,
+    timestamp: new Date().toISOString()
   });
 
   // Create template mutation
   const createTemplateMutation = useMutation({
     mutationFn: async (data: CreateDiplomaTemplate) => {
-      return apiRequest("POST", "/api/diploma-templates", data);
+      console.log('🚀 Creating diploma template:', data);
+      const result = await apiRequest("POST", "/api/diploma-templates", data);
+      console.log('📄 Template creation result:', result);
+      return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/diploma-templates"] });
+    onSuccess: (newTemplate) => {
+      console.log('✅ Template created successfully:', newTemplate);
+      queryClient.invalidateQueries({ queryKey: ["/diploma-templates"] });
+      // Force refetch to ensure latest data
+      refetch();
       setIsCreateDialogOpen(false);
-      form.reset();
       toast({
         title: "تم إنشاء قالب الديبلوم",
         description: "تم إضافة قالب ديبلوم جديد بنجاح",
@@ -106,13 +205,13 @@ export function DiplomaManagementPage() {
   // Update template mutation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<CreateDiplomaTemplate> }) => {
+      console.log('🔄 Updating diploma template:', { id, data });
       return apiRequest("PUT", `/api/diploma-templates/${id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/diploma-templates"] });
-      setEditingTemplate(null);
+      queryClient.invalidateQueries({ queryKey: ["/diploma-templates"] });
+      refetch();
       setIsCreateDialogOpen(false);
-      form.reset();
       toast({
         title: "تم تحديث القالب",
         description: "تم حفظ التغييرات بنجاح",
@@ -130,10 +229,12 @@ export function DiplomaManagementPage() {
   // Delete template mutation
   const deleteTemplateMutation = useMutation({
     mutationFn: async (templateId: number) => {
+      console.log('🗑️ Deleting diploma template:', templateId);
       return apiRequest("DELETE", `/api/diploma-templates/${templateId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/diploma-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["/diploma-templates"] });
+      refetch();
       toast({
         title: "تم حذف القالب",
         description: "تم حذف قالب الديبلوم بنجاح",
@@ -151,10 +252,12 @@ export function DiplomaManagementPage() {
   // Toggle active status mutation
   const toggleActiveStatusMutation = useMutation({
     mutationFn: async ({ templateId, isActive }: { templateId: number; isActive: boolean }) => {
+      console.log('🔄 Toggling template status:', { templateId, isActive });
       return apiRequest("PATCH", `/api/diploma-templates/${templateId}/status`, { isActive });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/diploma-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["/diploma-templates"] });
+      refetch();
       toast({
         title: "تم تحديث حالة القالب",
         description: "تم تحديث حالة تفعيل القالب",
@@ -179,18 +282,21 @@ export function DiplomaManagementPage() {
 
   const handleEdit = (template: DiplomaTemplate) => {
     setEditingTemplate(template);
-    form.reset({
-      title: template.title,
-      level: template.level as any,
-      backgroundColor: template.backgroundColor,
-      textColor: template.textColor,
-      borderColor: template.borderColor,
-      logoUrl: template.logoUrl || "",
-      sealUrl: template.sealUrl || "",
-      institutionName: template.institutionName,
-      templateStyle: template.templateStyle as any,
-      requirements: template.requirements,
-    });
+    // Use setTimeout to ensure the dialog state is set first
+    setTimeout(() => {
+      form.reset({
+        title: template.title,
+        level: template.level as any,
+        backgroundColor: template.backgroundColor,
+        textColor: template.textColor,
+        borderColor: template.borderColor,
+        logoUrl: template.logoUrl || "",
+        sealUrl: template.sealUrl || "",
+        institutionName: template.institutionName,
+        templateStyle: template.templateStyle as any,
+        requirements: template.requirements,
+      });
+    }, 0);
     setIsCreateDialogOpen(true);
   };
 
@@ -214,50 +320,7 @@ export function DiplomaManagementPage() {
     return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  // Certificate Preview Component
-  const CertificatePreview = ({ template }: { template: DiplomaTemplate }) => (
-    <div
-      className="mx-auto p-12 border-8 rounded-lg shadow-xl bg-white"
-      style={{
-        backgroundColor: template.backgroundColor,
-        color: template.textColor,
-        borderColor: template.borderColor,
-        width: '900px',
-        height: '600px'
-      }}
-    >
-      <div className="text-center space-y-6">
-        {template.logoUrl && (
-          <img src={template.logoUrl} alt="شعار الجامعة" className="mx-auto h-24 w-24 object-contain" />
-        )}
-        <h1 className="text-4xl font-amiri font-bold">{template.institutionName}</h1>
-        <div className="border-t-2 border-b-2 border-current py-6">
-          <h2 className="text-3xl font-amiri">شهادة {template.title}</h2>
-          <p className="text-2xl mt-3">المستوى: {template.level}</p>
-        </div>
-        <p className="text-center text-xl">
-          تشهد هذه الجامعة بأن الطالب/الطالبة:
-        </p>
-        <div className="text-3xl font-bold border-b-2 border-current pb-3 mx-12">
-          [اسم الطالب]
-        </div>
-        <p className="text-lg">
-          قد أكمل بنجاح جميع متطلبات {template.title}
-        </p>
-        <div className="flex justify-between items-end pt-12 text-base">
-          <div>
-            التاريخ: [تاريخ الإصدار]
-            {template.sealUrl && (
-              <div className="mt-3">
-                <img src={template.sealUrl} alt="ختم الجامعة" className="w-24 h-24 object-contain" />
-              </div>
-            )}
-          </div>
-          <div>رقم الشهادة: [رقم الشهادة]</div>
-        </div>
-      </div>
-    </div>
-  );
+
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
@@ -282,7 +345,16 @@ export function DiplomaManagementPage() {
                 </div>
               </div>
 
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+                setIsCreateDialogOpen(open);
+                if (!open) {
+                  // Cleanup when dialog closes
+                  setTimeout(() => {
+                    setEditingTemplate(null);
+                    form.reset();
+                  }, 100);
+                }
+              }}>
                 <DialogTrigger asChild>
                   <Button
                     className="bg-white text-amber-600 hover:bg-amber-50"
@@ -296,7 +368,7 @@ export function DiplomaManagementPage() {
                   </Button>
                 </DialogTrigger>
 
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingTemplate ? "تحديث قالب الديبلوم" : "إضافة قالب ديبلوم جديد"}
@@ -306,7 +378,7 @@ export function DiplomaManagementPage() {
                     </DialogDescription>
                   </DialogHeader>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 xl:grid-cols-[1fr,600px] gap-8">
                     {/* Form */}
                     <div>
                       <Form {...form}>
@@ -511,8 +583,6 @@ export function DiplomaManagementPage() {
                               variant="outline"
                               onClick={() => {
                                 setIsCreateDialogOpen(false);
-                                setEditingTemplate(null);
-                                form.reset();
                               }}
                             >
                               إلغاء
@@ -523,29 +593,7 @@ export function DiplomaManagementPage() {
                     </div>
 
                     {/* Live Preview */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">معاينة مباشرة</h3>
-                      <div className="border rounded-lg p-4 bg-gray-50 overflow-auto">
-                        <CertificatePreview
-                          template={{
-                            id: 0,
-                            title: form.watch('title') || 'عنوان الديبلوم',
-                            level: form.watch('level') || 'تحضيري',
-                            backgroundColor: form.watch('backgroundColor') || '#ffffff',
-                            textColor: form.watch('textColor') || '#000000',
-                            borderColor: form.watch('borderColor') || '#d4af37',
-                            logoUrl: form.watch('logoUrl') || '',
-                            sealUrl: form.watch('sealUrl') || '',
-                            institutionName: form.watch('institutionName') || 'جامعة الإمام الزُّهري',
-                            templateStyle: form.watch('templateStyle') || 'classic',
-                            requirements: form.watch('requirements') || '',
-                            isActive: true,
-                            createdAt: new Date().toISOString(),
-                            updatedAt: new Date().toISOString(),
-                          }}
-                        />
-                      </div>
-                    </div>
+                    <LivePreview form={form} />
                   </div>
                 </DialogContent>
               </Dialog>
@@ -556,7 +604,23 @@ export function DiplomaManagementPage() {
         {/* Templates Table */}
         <Card>
           <CardHeader>
-            <CardTitle>جميع قوالب الديبلومات ({templates.length})</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle>جميع قوالب الديبلومات ({templates.length})</CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetch()}
+                disabled={isLoading}
+              >
+                <i className="fas fa-refresh ml-2"></i>
+                {isLoading ? "جاري التحميل..." : "تحديث"}
+              </Button>
+            </div>
+            {error && (
+              <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                خطأ في تحميل القوالب: {(error as any)?.message || 'خطأ غير معروف'}
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             {isLoading ? (

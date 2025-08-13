@@ -80,12 +80,15 @@ export const getQueryFn: <T>(options: {
     } else {
       path = queryKey.join("/");
     }
-    const url = `${baseURL}/${path}`;
+    // Remove leading slash from path to avoid double slash
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    const url = `${baseURL}/${cleanPath}`;
     
     console.log('🔍 QueryClient DEBUG:', {
       queryKey,
       baseURL,
       path,
+      cleanPath,
       constructedUrl: url,
       tokenExists: !!token,
       timestamp: new Date().toISOString()

@@ -52,7 +52,7 @@ export default function Profile() {
   });
 
   const { data: stats, isLoading: statsLoading } = useQuery<UserStats>({
-    queryKey: ["/api/dashboard/stats"],
+    queryKey: ["/dashboard/stats"],
     retry: false,
   });
 
@@ -94,7 +94,7 @@ export default function Profile() {
       await apiRequest('PATCH', '/api/profile', data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/auth/user"] });
       setIsEditing(false);
       toast({
         title: "تم تحديث الملف الشخصي",
@@ -109,7 +109,7 @@ export default function Profile() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -536,7 +536,7 @@ export default function Profile() {
                   </a>
                   
                   <a 
-                    href="/api/logout" 
+                    href="/logout" 
                     className="flex items-center gap-3 p-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
                     <i className="fas fa-sign-out-alt text-xl"></i>

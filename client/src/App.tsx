@@ -118,6 +118,7 @@ function Router() {
           <Route path='/admin/create-exam' component={AdminCreateExam} />
           <Route path='/admin/edit-exam/:id' component={AdminEditExam} />
           <Route path='/admin/courses/:id' component={AdminCourseDetails} />
+          <Route path='/admin/diploma-management' component={DiplomaManagementPage} />
           <Route path='/teacher-guide' component={TeacherGuidePage} />
           <Route path='/quick-add' component={QuickAddPage} />
           <Route path='/live-sessions' component={LiveSessionsPage} />

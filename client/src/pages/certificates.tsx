@@ -27,7 +27,7 @@ export default function Certificates() {
   const { user } = useAuth();
 
   const { data: certificates, isLoading, error } = useQuery<Certificate[]>({
-    queryKey: ["/api/my-certificates"],
+    queryKey: ["/my-certificates"],
     retry: false,
   });
 
@@ -40,7 +40,7 @@ export default function Certificates() {
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/login";
       }, 500);
     }
   }, [error, toast]);

@@ -28,7 +28,7 @@ interface LiveSession {
 export function LiveSessionsPage() {
   // Fetch live sessions from API
   const { data: allSessions = [], isLoading: isLoadingSessions } = useQuery({
-    queryKey: ["/api/live-sessions"],
+    queryKey: ["/live-sessions"],
   });
 
   // Separate live and upcoming sessions
