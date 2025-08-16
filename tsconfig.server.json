@@ -3,9 +3,9 @@
   "compilerOptions": {
     "noEmit": false,
     "outDir": "dist",
-    "module": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "target": "ES2020",
-    "moduleResolution": "node",
     "allowImportingTsExtensions": false,
     "types": ["node"]
   },

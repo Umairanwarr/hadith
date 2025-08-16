@@ -1,8 +1,8 @@
 import express, { type Request, Response, NextFunction } from 'express';
-import { registerRoutes } from './routes';
+import { registerRoutes } from './routes.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import { specs, swaggerUi } from './swagger';
+import { specs, swaggerUi } from './swagger.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
