@@ -2292,11 +2292,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
    */
   app.get('/api/live-sessions', async (req, res) => {
     try {
+      console.log('🔍 GET /api/live-sessions - Fetching live sessions from database...');
       // Get live sessions from database instead of mock data
       const sessions = await storage.getAllLiveSessions();
+      console.log('✅ GET /api/live-sessions - Found sessions:', sessions.length);
+      console.log('📊 Session data:', JSON.stringify(sessions, null, 2));
       res.json(sessions);
     } catch (error) {
-      console.error('Error fetching live sessions:', error);
+      console.error('❌ Error fetching live sessions:', error);
       res.status(500).json({ message: 'Failed to fetch live sessions' });
     }
   });
@@ -2488,8 +2491,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convert any date fields to Date objects
       const convertedSessionData = convertDateFields(sessionData);
 
-
+      console.log('🔍 POST /api/live-sessions - Creating session with data:', JSON.stringify(convertedSessionData, null, 2));
       const newSession = await storage.createLiveSession(convertedSessionData);
+      console.log('✅ POST /api/live-sessions - Session created successfully:', JSON.stringify(newSession, null, 2));
 
       res.status(201).json(newSession);
     } catch (error) {

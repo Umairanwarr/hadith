@@ -27,6 +27,7 @@ const createLiveSessionSchema = z.object({
   courseTitle: z.string().optional(),
   scheduledTime: z.string().min(1, "التوقيت مطلوب"),
   duration: z.string().min(1, "المدة مطلوبة"),
+  platform: z.enum(["google-meet", "zoom", "teams"]).default("google-meet"),
   meetingLink: z.string().url("رابط صحيح مطلوب").optional().or(z.literal("")),
   description: z.string().min(10, "الوصف يجب أن يكون 10 أحرف على الأقل"),
   level: z.enum(["مبتدئ", "متوسط", "متقدم"]),
@@ -35,13 +36,14 @@ const createLiveSessionSchema = z.object({
 type CreateLiveSession = z.infer<typeof createLiveSessionSchema>;
 
 interface LiveSession {
-  id: number;
+  id: string;
   title: string;
   instructor: string;
   courseTitle?: string;
   scheduledTime: string;
   duration: number;
   isLive: boolean;
+  platform?: string;
   meetingLink?: string;
   description: string;
   level: string;
@@ -62,6 +64,7 @@ export function ManageLiveSessionsPage() {
       courseTitle: "",
       scheduledTime: "",
       duration: "60",
+      platform: "google-meet",
       meetingLink: "",
       description: "",
       level: "مبتدئ",
@@ -69,8 +72,8 @@ export function ManageLiveSessionsPage() {
   });
 
   // Fetch live sessions
-  const { data: sessions = [], isLoading } = useQuery({
-    queryKey: ["/live-sessions"],
+  const { data: sessions = [], isLoading, error } = useQuery({
+    queryKey: ["api", "live-sessions"],
   });
 
   // Create session mutation
@@ -81,13 +84,10 @@ export function ManageLiveSessionsPage() {
         duration: parseInt(data.duration),
         scheduledTime: new Date(data.scheduledTime).toISOString(),
       };
-      return apiRequest("/live-sessions", {
-        method: "POST",
-        body: JSON.stringify(sessionData),
-      });
+      return apiRequest("POST", "/api/live-sessions", sessionData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/live-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "live-sessions"] });
       setIsCreateDialogOpen(false);
       form.reset();
       toast({
@@ -106,19 +106,16 @@ export function ManageLiveSessionsPage() {
 
   // Update session mutation
   const updateSessionMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<CreateLiveSession> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CreateLiveSession> }) => {
       const sessionData = {
         ...data,
         duration: data.duration ? parseInt(data.duration) : undefined,
         scheduledTime: data.scheduledTime ? new Date(data.scheduledTime).toISOString() : undefined,
       };
-      return apiRequest(`/api/live-sessions/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(sessionData),
-      });
+      return apiRequest("PUT", `/api/live-sessions/${id}`, sessionData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/live-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "live-sessions"] });
       setEditingSession(null);
       form.reset();
       toast({
@@ -137,13 +134,11 @@ export function ManageLiveSessionsPage() {
 
   // Delete session mutation
   const deleteSessionMutation = useMutation({
-    mutationFn: async (sessionId: number) => {
-      return apiRequest(`/api/live-sessions/${sessionId}`, {
-        method: "DELETE",
-      });
+    mutationFn: async (sessionId: string) => {
+      return apiRequest("DELETE", `/api/live-sessions/${sessionId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/live-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "live-sessions"] });
       toast({
         title: "تم حذف الجلسة",
         description: "تم حذف الجلسة المباشرة بنجاح",
@@ -160,14 +155,11 @@ export function ManageLiveSessionsPage() {
 
   // Toggle live status mutation
   const toggleLiveStatusMutation = useMutation({
-    mutationFn: async ({ sessionId, isLive }: { sessionId: number; isLive: boolean }) => {
-      return apiRequest(`/api/live-sessions/${sessionId}/live-status`, {
-        method: "PATCH",
-        body: JSON.stringify({ isLive }),
-      });
+    mutationFn: async ({ sessionId, isLive }: { sessionId: string; isLive: boolean }) => {
+      return apiRequest("PATCH", `/api/live-sessions/${sessionId}/live-status`, { isLive });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/live-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "live-sessions"] });
       toast({
         title: "تم تحديث حالة البث",
         description: "تم تحديث حالة البث المباشر",
@@ -203,6 +195,7 @@ export function ManageLiveSessionsPage() {
       courseTitle: session.courseTitle || "",
       scheduledTime: localDateTime,
       duration: session.duration.toString(),
+      platform: (session.platform as "google-meet" | "zoom" | "teams") || "google-meet",
       meetingLink: session.meetingLink || "",
       description: session.description,
       level: session.level as "مبتدئ" | "متوسط" | "متقدم",
@@ -210,11 +203,11 @@ export function ManageLiveSessionsPage() {
     setIsCreateDialogOpen(true);
   };
 
-  const handleDelete = (sessionId: number) => {
+  const handleDelete = (sessionId: string) => {
     deleteSessionMutation.mutate(sessionId);
   };
 
-  const toggleLiveStatus = (sessionId: number, currentStatus: boolean) => {
+  const toggleLiveStatus = (sessionId: string, currentStatus: boolean) => {
     toggleLiveStatusMutation.mutate({ sessionId, isLive: !currentStatus });
   };
 
@@ -378,39 +371,66 @@ export function ManageLiveSessionsPage() {
                         />
                       </div>
 
-                      <FormField
-                        control={form.control}
-                        name="meetingLink"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>رابط الاجتماع</FormLabel>
-                            <FormControl>
-                              <div className="flex gap-2">
-                                <Input 
-                                  placeholder="https://meet.google.com/..." 
-                                  {...field} 
-                                  className="flex-1"
-                                />
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  onClick={() => form.setValue('meetingLink', generateMeetingLink('google-meet'))}
-                                >
-                                  Meet
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  onClick={() => form.setValue('meetingLink', generateMeetingLink('zoom'))}
-                                >
-                                  Zoom
-                                </Button>
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="platform"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>منصة الاجتماع</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="اختر المنصة" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="google-meet">Google Meet</SelectItem>
+                                  <SelectItem value="zoom">Zoom</SelectItem>
+                                  <SelectItem value="teams">Microsoft Teams</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="meetingLink"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>رابط الاجتماع</FormLabel>
+                              <FormControl>
+                                <div className="flex gap-2">
+                                  <Input 
+                                    placeholder="https://meet.google.com/..." 
+                                    {...field} 
+                                    className="flex-1"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => form.setValue('meetingLink', generateMeetingLink('google-meet'))}
+                                  >
+                                    Meet
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => form.setValue('meetingLink', generateMeetingLink('zoom'))}
+                                  >
+                                    Zoom
+                                  </Button>
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+
 
                       <FormField
                         control={form.control}
@@ -478,6 +498,12 @@ export function ManageLiveSessionsPage() {
               <div className="flex items-center justify-center py-8">
                 <i className="fas fa-spinner fa-spin text-2xl text-gray-400 ml-3"></i>
                 <span>جاري تحميل الجلسات...</span>
+              </div>
+            ) : error ? (
+              <div className="text-center py-8 text-red-500">
+                <i className="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                <p className="text-lg">خطأ في تحميل الجلسات</p>
+                <p className="text-sm mt-2">{error.message}</p>
               </div>
             ) : sessions.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
