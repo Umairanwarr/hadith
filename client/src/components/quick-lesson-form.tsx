@@ -47,7 +47,7 @@ export function QuickLessonForm({ courseId, onSuccess }: QuickLessonFormProps) {
         title: "تم إضافة الدرس بنجاح",
         description: "تم إضافة الدرس الجديد للمادة",
       });
-      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "courses"] });
       form.reset();
       if (onSuccess) onSuccess();
     },

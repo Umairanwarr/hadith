@@ -288,7 +288,7 @@ export function CourseManagementPage() {
 
   // Fetch courses
   const { data: courses = [], isLoading, refetch } = useQuery({
-    queryKey: ["courses"],
+    queryKey: ["api", "courses"],
   });
 
   // Remove empty strings from URL fields so server validation (which requires valid URL when present) passes
@@ -326,14 +326,14 @@ export function CourseManagementPage() {
   const createCourseMutation = useMutation({
     mutationFn: async (data: CourseFormData) => {
       const payload = sanitizeCourseData(data);
-      return await apiRequest("POST", "/courses", payload);
+      return await apiRequest("POST", "/api/courses", payload);
     },
     onSuccess: () => {
       toast({
         title: "نجح إنشاء الكورس",
         description: "تم إنشاء الكورس بنجاح",
       });
-      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "courses"] });
       setIsCreateDialogOpen(false);
       form.reset();
     },
@@ -358,7 +358,7 @@ export function CourseManagementPage() {
         title: "نجح تحديث الكورس",
         description: "تم تحديث الكورس بنجاح",
       });
-      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "courses"] });
       setIsEditDialogOpen(false);
       setSelectedCourse(null);
       form.reset();
@@ -382,7 +382,7 @@ export function CourseManagementPage() {
         title: "نجح حذف الكورس",
         description: "تم حذف الكورس بنجاح",
       });
-      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "courses"] });
     },
     onError: (error: any) => {
       toast({

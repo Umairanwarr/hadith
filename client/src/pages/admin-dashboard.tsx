@@ -125,7 +125,7 @@ export default function AdminDashboard() {
   });
 
   const { data: courses, isLoading: coursesLoading } = useQuery({
-    queryKey: ["courses"],
+    queryKey: ["api", "courses"],
     retry: false,
   });
 
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
         title: "تم الحذف بنجاح",
         description: type === "course" ? "تم حذف المادة بنجاح" : "تم حذف الاختبار بنجاح",
       });
-      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "courses"] });
       queryClient.invalidateQueries({ queryKey: ["exams"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
     },

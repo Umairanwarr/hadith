@@ -45,7 +45,7 @@ export default function AdminCreateCourse() {
         title: "تم إنشاء المادة بنجاح",
         description: "تم إضافة المادة الجديدة إلى النظام",
       });
-          queryClient.invalidateQueries({ queryKey: ["courses"] });
+          queryClient.invalidateQueries({ queryKey: ["api", "courses"] });
     queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
       setLocation("/admin");
     },
