@@ -1,8 +1,8 @@
 import type { Express } from 'express';
 import { createServer, type Server } from 'http';
 import express from 'express';
-import { storage } from './storage';
-import { isAdmin, isAuthenticated } from './middleware/auth';
+import { storage } from './storage.js';
+import { isAdmin, isAuthenticated } from './middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -1928,7 +1928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         examId,
         points: validationResult.data.points?.toString() || '1'
       };
-      
+
       const question = await storage.createExamQuestion(questionData);
 
       // Update exam question count
@@ -2011,7 +2011,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...validationResult.data,
         points: validationResult.data.points?.toString() || undefined
       };
-      
+
       const updatedQuestion = await storage.updateExamQuestion(
         questionId,
         updateData
