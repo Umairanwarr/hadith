@@ -80,12 +80,29 @@ app.use((req, res, next) => {
   });
 
   // only load vite helpers dynamically in dev
-  if (app.get('env') === 'development') {
-    const { setupVite } = await import('./vite.js');
-    await setupVite(app, server);
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const { setupVite } = await import('./vite');
+      await setupVite(app, server);
+    } catch (e) {
+      console.warn('Failed to setup Vite:', e);
+    }
   } else {
-    const { serveStatic } = await import('./vite.js');
-    serveStatic(app);
+    // In production, serve static files directly
+    const fs = await import('fs');
+    const path = await import('path');
+    
+    const distPath = path.resolve(import.meta.dirname, '..', 'client', 'dist');
+    
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath));
+      // SPA fallback
+      app.use('*', (_req, res) => {
+        res.sendFile(path.resolve(distPath, 'index.html'));
+      });
+    } else {
+      console.warn(`Build directory not found: ${distPath}`);
+    }
   }
 
   const port = parseInt(process.env.PORT || '5000', 10);
