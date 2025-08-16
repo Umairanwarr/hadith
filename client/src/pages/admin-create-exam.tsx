@@ -30,7 +30,7 @@ export default function AdminCreateExam() {
   const queryClient = useQueryClient();
 
   const { data: courses, isLoading: coursesLoading } = useQuery({
-    queryKey: ["courses"],
+    queryKey: ["api", "courses"],
     retry: false,
   });
 
@@ -62,7 +62,7 @@ export default function AdminCreateExam() {
         title: "تم إنشاء الاختبار بنجاح",
         description: "تم إضافة الاختبار الجديد إلى النظام",
       });
-          queryClient.invalidateQueries({ queryKey: ["courses"] });
+          queryClient.invalidateQueries({ queryKey: ["api", "courses"] });
     queryClient.invalidateQueries({ queryKey: ["exams"] });
     queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
       setLocation("/admin");
