@@ -442,6 +442,7 @@ export const liveSessions = pgTable('live_sessions', {
   scheduledTime: timestamp('scheduled_time').notNull(),
   duration: integer('duration').notNull().default(60), // duration in minutes
   isLive: boolean('is_live').default(false),
+  platform: varchar('platform', { length: 50 }).default('google-meet'), // google-meet, zoom, teams
   meetingLink: varchar('meeting_link', { length: 500 }),
   level: varchar('level', { length: 100 }),
   createdBy: varchar('created_by').notNull(), // user ID who created the session

@@ -197,6 +197,81 @@ const options = {
             }
           }
         },
+        LiveSession: {
+          type: 'object',
+          required: ['title', 'instructor', 'scheduledTime', 'duration', 'meetingLink'],
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique live session ID'
+            },
+            title: {
+              type: 'string',
+              maxLength: 255,
+              description: 'Title of the live session'
+            },
+            instructor: {
+              type: 'string',
+              maxLength: 255,
+              description: 'Name of the instructor'
+            },
+            courseTitle: {
+              type: 'string',
+              maxLength: 255,
+              description: 'Title of the course (optional)'
+            },
+            description: {
+              type: 'string',
+              description: 'Description of the session'
+            },
+            scheduledTime: {
+              type: 'string',
+              format: 'date-time',
+              description: 'When the session is scheduled to start'
+            },
+            duration: {
+              type: 'integer',
+              minimum: 1,
+              description: 'Duration of the session in minutes'
+            },
+            isLive: {
+              type: 'boolean',
+              default: false,
+              description: 'Whether the session is currently live'
+            },
+            platform: {
+              type: 'string',
+              enum: ['google-meet', 'zoom', 'teams'],
+              default: 'google-meet',
+              description: 'Meeting platform being used'
+            },
+            meetingLink: {
+              type: 'string',
+              maxLength: 500,
+              description: 'URL to join the meeting'
+            },
+            level: {
+              type: 'string',
+              maxLength: 100,
+              description: 'Difficulty level of the session'
+            },
+            createdBy: {
+              type: 'string',
+              description: 'User ID who created the session'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'When the session was created'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'When the session was last updated'
+            }
+          }
+        },
         Exam: {
           type: 'object',
           properties: {

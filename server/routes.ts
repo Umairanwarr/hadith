@@ -37,6 +37,50 @@ const isValidUUID = (uuid: string): boolean => {
   return uuidRegex.test(uuid);
 };
 
+// Meeting link generation utility function
+const generateMeetingLink = (platform: string): string => {
+  switch (platform) {
+    case 'google-meet':
+      // Generate Google Meet link with random meeting ID
+      const meetId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      return `https://meet.google.com/${meetId}`;
+    case 'zoom':
+      // Generate Zoom link with random meeting ID
+      const meetingId = Math.floor(Math.random() * 900000000) + 100000000;
+      return `https://zoom.us/j/${meetingId}`;
+    case 'teams':
+      // Generate Teams link (placeholder - would need Microsoft Graph API for real integration)
+      const teamsId = Math.random().toString(36).substring(2, 15);
+      return `https://teams.microsoft.com/l/meetup-join/teams.microsoft.com/19:meeting_${teamsId}@thread.v2/0?context={"Tid":"${teamsId}","Oid":"${teamsId}"}`;
+    default:
+      // Default to Google Meet
+      const defaultMeetId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      return `https://meet.google.com/${defaultMeetId}`;
+  }
+};
+
+// Date conversion utility function
+const convertDateFields = (data: any): any => {
+  const converted = { ...data };
+
+  // Convert scheduledTime if it's a string
+  if (converted.scheduledTime && typeof converted.scheduledTime === 'string') {
+    converted.scheduledTime = new Date(converted.scheduledTime);
+  }
+
+  // Convert createdAt if it's a string
+  if (converted.createdAt && typeof converted.createdAt === 'string') {
+    converted.createdAt = new Date(converted.createdAt);
+  }
+
+  // Convert updatedAt if it's a string
+  if (converted.updatedAt && typeof converted.updatedAt === 'string') {
+    converted.updatedAt = new Date(converted.updatedAt);
+  }
+
+  return converted;
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   // await setupAuth(app);
@@ -435,24 +479,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const userId = (req.user as any)?.id;
         const courseId = req.params.id as string;
 
-      // Check if already enrolled
-      const existing = await storage.getUserEnrollment(userId, courseId);
-      if (existing) {
-        return res
-          .status(400)
-          .json({ message: 'Already enrolled in this course' });
-      }
+        // Check if already enrolled
+        const existing = await storage.getUserEnrollment(userId, courseId);
+        if (existing) {
+          return res
+            .status(400)
+            .json({ message: 'Already enrolled in this course' });
+        }
 
-      const enrollment = await storage.enrollUserInCourse({
-        userId,
-        courseId,
-      });
-      res.json(enrollment);
-    } catch (error) {
-      console.error('Error enrolling in course:', error);
-      res.status(500).json({ message: 'Failed to enroll in course' });
+        const enrollment = await storage.enrollUserInCourse({
+          userId,
+          courseId,
+        });
+        res.json(enrollment);
+      } catch (error) {
+        console.error('Error enrolling in course:', error);
+        res.status(500).json({ message: 'Failed to enroll in course' });
+      }
     }
-  }
   );
 
   /**
@@ -1236,7 +1280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           console.log('Student passed exam, creating certificate...');
           console.log('Score:', score, 'Passing grade:', exam.passingGrade);
-          
+
           // Get user info for certificate
           const user = await storage.getUserById(userId);
           const course = await storage.getCourse(attempt.courseId);
@@ -1314,10 +1358,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.user as any)?.id;
       console.log('Fetching certificates for user:', userId);
-      
+
       const certificates = await storage.getUserCertificates(userId);
       console.log('Found certificates:', certificates.length);
-      
+
       res.json(certificates);
     } catch (error) {
       console.error('Error fetching certificates:', error);
@@ -2221,90 +2265,357 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
   // Live Sessions routes
+  /**
+   * @swagger
+   * /api/live-sessions:
+   *   get:
+   *     summary: Get all live sessions
+   *     description: Retrieve all live sessions from the database
+   *     tags: [Live Sessions]
+   *     responses:
+   *       200:
+   *         description: List of live sessions retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/LiveSession'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get('/api/live-sessions', async (req, res) => {
     try {
-      // For now return mock data - in real app this would come from database
-      const mockSessions = [
-        {
-          id: 1,
-          title: 'مقدمة في علم الحديث - المحاضرة الأولى',
-          instructor: 'الشيخ أحمد محمد الزهري',
-          courseTitle: 'أصول علم الحديث',
-          scheduledTime: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-          duration: 90,
-          isLive: true,
-          meetingLink: 'https://meet.google.com/abc-defg-hij',
-          description:
-            'مقدمة شاملة في علم الحديث وتاريخه وأهميته في العلوم الشرعية',
-          level: 'مبتدئ',
-          createdBy: req.user?.id || 'admin',
-        },
-        {
-          id: 2,
-          title: 'شرح الأربعين النووية - الحديث الأول',
-          instructor: 'الدكتور محمد عبد الرحمن',
-          courseTitle: 'شرح الأربعين النووية',
-          scheduledTime: new Date(
-            Date.now() + 2 * 60 * 60 * 1000
-          ).toISOString(),
-          duration: 60,
-          isLive: false,
-          description: 'شرح تفصيلي للحديث الأول من الأربعين النووية',
-          level: 'متوسط',
-          createdBy: req.user?.id || 'admin',
-        },
-      ];
-
-      res.json(mockSessions);
+      // Get live sessions from database instead of mock data
+      const sessions = await storage.getAllLiveSessions();
+      res.json(sessions);
     } catch (error) {
       console.error('Error fetching live sessions:', error);
       res.status(500).json({ message: 'Failed to fetch live sessions' });
     }
   });
 
+  /**
+   * @swagger
+   * /api/live-sessions/{id}:
+   *   get:
+   *     summary: Get a specific live session
+   *     description: Retrieve a specific live session by its ID
+   *     tags: [Live Sessions]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Live session ID
+   *     responses:
+   *       200:
+   *         description: Live session retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/LiveSession'
+   *       400:
+   *         description: Invalid UUID format
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       404:
+   *         description: Live session not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  app.get('/api/live-sessions/:id', async (req, res) => {
+    try {
+      const sessionId = req.params.id;
+
+      // Validate UUID format
+      if (!isValidUUID(sessionId)) {
+        return res.status(400).json({
+          message: 'Invalid session ID format. Must be a valid UUID.'
+        });
+      }
+
+      const session = await storage.getLiveSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: 'Live session not found' });
+      }
+
+      res.json(session);
+    } catch (error) {
+      console.error('Error fetching live session:', error);
+      res.status(500).json({ message: 'Failed to fetch live session' });
+    }
+  });
+
+  /**
+   * @swagger
+   * /api/live-sessions:
+   *   post:
+   *     summary: Create a new live session
+   *     description: Create a new live session (Admin or Teacher only)
+   *     tags: [Live Sessions]
+   *     security:
+   *       - sessionAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - title
+   *               - instructor
+   *               - scheduledTime
+   *               - duration
+   *               - meetingLink
+   *             properties:
+   *               title:
+   *                 type: string
+   *                 maxLength: 255
+   *                 description: Title of the live session
+   *                 example: "مقدمة في علم الحديث - المحاضرة الأولى"
+   *               instructor:
+   *                 type: string
+   *                 maxLength: 255
+   *                 description: Name of the instructor
+   *                 example: "الشيخ أحمد محمد الزهري"
+   *               courseTitle:
+   *                 type: string
+   *                 maxLength: 255
+   *                 description: Title of the course (optional)
+   *                 example: "أصول علم الحديث"
+   *               description:
+   *                 type: string
+   *                 description: Description of the session
+   *                 example: "مقدمة شاملة في علم الحديث وتاريخه"
+   *               scheduledTime:
+   *                 type: string
+   *                 format: date-time
+   *                 description: When the session is scheduled to start
+   *                 example: "2024-01-15T14:00:00.000Z"
+   *               duration:
+   *                 type: integer
+   *                 minimum: 1
+   *                 description: Duration of the session in minutes
+   *                 example: 90
+   *               level:
+   *                 type: string
+   *                 maxLength: 100
+   *                 description: Difficulty level of the session
+   *                 example: "مبتدئ"
+   *               meetingLink:
+   *                 type: string
+   *                 maxLength: 500
+   *                 description: URL to join the meeting
+   *                 example: "https://meet.google.com/abc-1234-def"
+   *               platform:
+   *                 type: string
+   *                 enum: [google-meet, zoom, teams]
+   *                 default: google-meet
+   *                 description: Meeting platform being used
+   *                 example: "google-meet"
+   *     responses:
+   *       201:
+   *         description: Live session created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/LiveSession'
+   *       400:
+   *         description: Missing required fields
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - not authenticated
+   *       403:
+   *         description: Forbidden - admin or teacher access required
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.post('/api/live-sessions', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
       const user = await storage.getUserById(userId);
 
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
+      if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
+        console.log('❌ Access denied - User role:', user?.role);
+        return res.status(403).json({ message: 'Admin or teacher access required' });
       }
 
+      // Validate required fields
+      const { title, instructor, scheduledTime, duration, meetingLink, platform = 'google-meet' } = req.body;
+      if (!title || !instructor || !scheduledTime || !duration || !meetingLink) {
+        console.log('❌ Missing required fields:', { title, instructor, scheduledTime, duration, meetingLink });
+        return res.status(400).json({
+          message: 'Title, instructor, scheduled time, duration, and meeting link are required'
+        });
+      }
+
+      // Meeting link is provided by teacher/admin
       const sessionData = {
         ...req.body,
+        platform: platform || 'google-meet',
+        isLive: false, // Always start as not live
         createdBy: userId,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      const newSession = await storage.createLiveSession(sessionData);
-      res.json(newSession);
+      // Convert any date fields to Date objects
+      const convertedSessionData = convertDateFields(sessionData);
+
+
+      const newSession = await storage.createLiveSession(convertedSessionData);
+
+      res.status(201).json(newSession);
     } catch (error) {
-      console.error('Error creating live session:', error);
+      console.error('❌ Error creating live session:', error);
       res.status(500).json({ message: 'Failed to create live session' });
     }
   });
 
+  /**
+   * @swagger
+   * /api/live-sessions/{id}:
+   *   put:
+   *     summary: Update a live session
+   *     description: Update an existing live session (Admin or Teacher only)
+   *     tags: [Live Sessions]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Live session ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               title:
+   *                 type: string
+   *                 maxLength: 255
+   *                 description: Title of the live session
+   *               instructor:
+   *                 type: string
+   *                 maxLength: 255
+   *                 description: Name of the instructor
+   *               courseTitle:
+   *                 type: string
+   *                 maxLength: 255
+   *                 description: Title of the course
+   *               description:
+   *                 type: string
+   *                 description: Description of the session
+   *               scheduledTime:
+   *                 type: string
+   *                 format: date-time
+   *                 description: When the session is scheduled to start
+   *               duration:
+   *                 type: integer
+   *                 minimum: 1
+   *                 description: Duration of the session in minutes
+   *               level:
+   *                 type: string
+   *                 maxLength: 100
+   *                 description: Difficulty level of the session
+   *               meetingLink:
+   *                 type: string
+   *                 maxLength: 500
+   *                 description: URL to join the meeting
+   *               platform:
+   *                 type: string
+   *                 enum: [google-meet, zoom, teams]
+   *                 description: Meeting platform being used
+   *     responses:
+   *       200:
+   *         description: Live session updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/LiveSession'
+   *       400:
+   *         description: Invalid UUID format
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - not authenticated
+   *       403:
+   *         description: Forbidden - admin or teacher access required
+   *       404:
+   *         description: Live session not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.put('/api/live-sessions/:id', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
       const user = await storage.getUserById(userId);
 
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
+      if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
+        return res.status(403).json({ message: 'Admin or teacher access required' });
       }
 
-      const sessionId = parseInt(req.params.id);
+      const sessionId = req.params.id; // Use UUID string directly instead of parseInt
+
+      // Validate UUID format
+      if (!isValidUUID(sessionId)) {
+        return res.status(400).json({
+          message: 'Invalid session ID format. Must be a valid UUID.'
+        });
+      }
+
       const updates = {
         ...req.body,
         updatedAt: new Date(),
       };
 
+      // Convert any date fields to Date objects
+      const convertedUpdates = convertDateFields(updates);
+
       const updatedSession = await storage.updateLiveSession(
         sessionId,
-        updates
+        convertedUpdates
       );
       if (!updatedSession) {
         return res.status(404).json({ message: 'Session not found' });
@@ -2317,16 +2628,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/live-sessions/{id}:
+   *   delete:
+   *     summary: Delete a live session
+   *     description: Delete an existing live session (Admin or Teacher only)
+   *     tags: [Live Sessions]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Live session ID
+   *     responses:
+   *       200:
+   *         description: Live session deleted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Session deleted successfully"
+   *       400:
+   *         description: Invalid UUID format
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - not authenticated
+   *       403:
+   *         description: Forbidden - admin or teacher access required
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.delete('/api/live-sessions/:id', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
       const user = await storage.getUserById(userId);
 
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
+      if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
+        return res.status(403).json({ message: 'Admin or teacher access required' });
       }
 
-      const sessionId = parseInt(req.params.id);
+      const sessionId = req.params.id; // Use UUID string directly instead of parseInt
+
+      // Validate UUID format
+      if (!isValidUUID(sessionId)) {
+        return res.status(400).json({
+          message: 'Invalid session ID format. Must be a valid UUID.'
+        });
+      }
+
       await storage.deleteLiveSession(sessionId);
 
       res.json({ message: 'Session deleted successfully' });
@@ -2336,24 +2700,458 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/live-sessions/{id}/live-status:
+   *   patch:
+   *     summary: Toggle live status
+   *     description: Toggle the live status of a session (Admin or Teacher only)
+   *     tags: [Live Sessions]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Live session ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - isLive
+   *             properties:
+   *               isLive:
+   *                 type: boolean
+   *                 description: Whether the session should be live or not
+   *                 example: true
+   *     responses:
+   *       200:
+   *         description: Live status updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Session is now live!"
+   *                 isLive:
+   *                   type: boolean
+   *                   example: true
+   *       400:
+   *         description: Invalid UUID format or invalid isLive value
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - not authenticated
+   *       403:
+   *         description: Forbidden - admin or teacher access required
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.patch('/api/live-sessions/:id/live-status', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
       const user = await storage.getUserById(userId);
 
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({ message: 'Admin access required' });
+      if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
+        return res.status(403).json({ message: 'Admin or teacher access required' });
       }
 
-      const sessionId = parseInt(req.params.id);
+      const sessionId = req.params.id;
+
+      // Validate UUID format
+      if (!isValidUUID(sessionId)) {
+        return res.status(400).json({
+          message: 'Invalid session ID format. Must be a valid UUID.'
+        });
+      }
+
       const { isLive } = req.body;
 
-      await storage.setSessionLive(sessionId, isLive);
+      if (typeof isLive !== 'boolean') {
+        return res.status(400).json({
+          message: 'isLive must be a boolean value'
+        });
+      }
 
-      res.json({ message: 'Live status updated successfully' });
+      // Update live status
+      const updates = { isLive, updatedAt: new Date() };
+
+      await storage.updateLiveSession(sessionId, updates);
+
+      res.json({
+        message: isLive ? 'Session is now live!' : 'Session is no longer live',
+        isLive
+      });
     } catch (error) {
       console.error('Error updating live status:', error);
       res.status(500).json({ message: 'Failed to update live status' });
+    }
+  }
+  );
+
+  // Update meeting link for a live session
+  /**
+   * @swagger
+   * /api/live-sessions/{id}/meeting-link:
+   *   patch:
+   *     summary: Update meeting link
+   *     description: Update the meeting link for a live session (Admin or Teacher only)
+   *     tags: [Live Sessions]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Live session ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - meetingLink
+   *             properties:
+   *               meetingLink:
+   *                 type: string
+   *                 maxLength: 500
+   *                 description: New meeting link URL
+   *                 example: "https://meet.google.com/new-link-here"
+   *               platform:
+   *                 type: string
+   *                 enum: [google-meet, zoom, teams]
+   *                 description: Meeting platform (optional)
+   *                 example: "zoom"
+   *     responses:
+   *       200:
+   *         description: Meeting link updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Meeting link updated successfully"
+   *                 session:
+   *                   $ref: '#/components/schemas/LiveSession'
+   *                 meetingLink:
+   *                   type: string
+   *                   example: "https://meet.google.com/new-link-here"
+   *       400:
+   *         description: Invalid UUID format or missing meeting link
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - not authenticated
+   *       403:
+   *         description: Forbidden - admin or teacher access required
+   *       404:
+   *         description: Live session not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  app.patch('/api/live-sessions/:id/meeting-link', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const user = await storage.getUserById(userId);
+
+      if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
+        return res.status(403).json({ message: 'Admin or teacher access required' });
+      }
+
+      const sessionId = req.params.id;
+
+      // Validate UUID format
+      if (!isValidUUID(sessionId)) {
+        return res.status(400).json({
+          message: 'Invalid session ID format. Must be a valid UUID.'
+        });
+      }
+
+      const { meetingLink, platform } = req.body;
+
+      if (!meetingLink) {
+        return res.status(400).json({
+          message: 'Meeting link is required'
+        });
+      }
+
+      // Update the session with new meeting link
+      const updatedSession = await storage.updateLiveSession(sessionId, {
+        meetingLink,
+        ...(platform && { platform }),
+        updatedAt: new Date(),
+      });
+
+      if (!updatedSession) {
+        return res.status(404).json({ message: 'Session not found' });
+      }
+
+      res.json({
+        message: 'Meeting link updated successfully',
+        session: updatedSession,
+        meetingLink: updatedSession.meetingLink
+      });
+    } catch (error) {
+      console.error('Error updating meeting link:', error);
+      res.status(500).json({ message: 'Failed to update meeting link' });
+    }
+  }
+  );
+
+
+  // Start streaming - dedicated route for going live
+  /**
+   * @swagger
+   * /api/live-sessions/{id}/start-streaming:
+   *   post:
+   *     summary: Start streaming
+   *     description: Start streaming for a live session (Admin or Teacher only)
+   *     tags: [Live Sessions]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Live session ID
+   *     requestBody:
+   *       required: false
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               platform:
+   *                 type: string
+   *                 enum: [google-meet, zoom, teams]
+   *                 description: Meeting platform (optional, defaults to existing)
+   *     responses:
+   *       200:
+   *         description: Streaming started successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Streaming started successfully!"
+   *                 session:
+   *                   $ref: '#/components/schemas/LiveSession'
+   *                 meetingLink:
+   *                   type: string
+   *                   example: "https://meet.google.com/abc-1234-def"
+   *                 isLive:
+   *                   type: boolean
+   *                   example: true
+   *       400:
+   *         description: Invalid UUID format, session already live, or missing meeting link
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - not authenticated
+   *       403:
+   *         description: Forbidden - admin or teacher access required
+   *       404:
+   *         description: Live session not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  app.post('/api/live-sessions/:id/start-streaming', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const user = await storage.getUserById(userId);
+
+      if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
+        return res.status(403).json({ message: 'Admin or teacher access required' });
+      }
+
+      const sessionId = req.params.id;
+
+      // Validate UUID format
+      if (!isValidUUID(sessionId)) {
+        return res.status(400).json({
+          message: 'Invalid session ID format. Must be a valid UUID.'
+        });
+      }
+
+      const { platform = 'google-meet' } = req.body;
+
+      // Get current session
+      const currentSession = await storage.getLiveSession(sessionId);
+      if (!currentSession) {
+        return res.status(404).json({ message: 'Session not found' });
+      }
+
+      // Check if session is already live
+      if (currentSession.isLive) {
+        return res.status(400).json({ message: 'Session is already live' });
+      }
+
+      // Check if meeting link exists
+      if (!currentSession.meetingLink) {
+        return res.status(400).json({ message: 'Meeting link is required to start streaming' });
+      }
+
+      // Start streaming
+      const updatedSession = await storage.updateLiveSession(sessionId, {
+        isLive: true,
+        updatedAt: new Date(),
+      });
+
+      if (!updatedSession) {
+        return res.status(500).json({ message: 'Failed to update session' });
+      }
+
+      res.json({
+        message: 'Streaming started successfully!',
+        session: updatedSession,
+        meetingLink: updatedSession.meetingLink,
+        isLive: true
+      });
+    } catch (error) {
+      console.error('Error starting streaming:', error);
+      res.status(500).json({ message: 'Failed to start streaming' });
+    }
+  }
+  );
+
+  // Stop streaming
+  /**
+   * @swagger
+   * /api/live-sessions/{id}/stop-streaming:
+   *   post:
+   *     summary: Stop streaming
+   *     description: Stop streaming for a live session (Admin or Teacher only)
+   *     tags: [Live Sessions]
+   *     security:
+   *       - sessionAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Live session ID
+   *     responses:
+   *       200:
+   *         description: Streaming stopped successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Streaming stopped successfully"
+   *                 session:
+   *                   $ref: '#/components/schemas/LiveSession'
+   *                 isLive:
+   *                   type: boolean
+   *                   example: false
+   *       400:
+   *         description: Invalid UUID format
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       401:
+   *         description: Unauthorized - not authenticated
+   *       403:
+   *         description: Forbidden - admin or teacher access required
+   *       404:
+   *         description: Live session not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  app.post('/api/live-sessions/:id/stop-streaming', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      const user = await storage.getUserById(userId);
+
+      if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
+        return res.status(403).json({ message: 'Admin or teacher access required' });
+      }
+
+      const sessionId = req.params.id;
+
+      // Validate UUID format
+      if (!isValidUUID(sessionId)) {
+        return res.status(400).json({
+          message: 'Invalid session ID format. Must be a valid UUID.'
+        });
+      }
+
+      // Stop streaming
+      const updatedSession = await storage.updateLiveSession(sessionId, {
+        isLive: false,
+        updatedAt: new Date(),
+      });
+
+      if (!updatedSession) {
+        return res.status(404).json({ message: 'Session not found' });
+      }
+
+      res.json({
+        message: 'Streaming stopped successfully',
+        session: updatedSession,
+        isLive: false
+      });
+    } catch (error) {
+      console.error('Error stopping streaming:', error);
+      res.status(500).json({ message: 'Failed to stop streaming' });
     }
   }
   );
@@ -3182,6 +3980,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to download certificate' });
     }
   });
+
+
 
   const httpServer = createServer(app);
   return httpServer;

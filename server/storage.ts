@@ -60,12 +60,12 @@ export interface IStorage {
   updateCourseLessonCount(courseId: string): Promise<void>;
 
   // Live Sessions operations
-  getAllLiveSessions(): Promise<any[]>;
-  getLiveSession(id: number): Promise<any | undefined>;
-  createLiveSession(session: any): Promise<any>;
-  updateLiveSession(id: number, updates: any): Promise<any | undefined>;
-  deleteLiveSession(id: number): Promise<void>;
-  setSessionLive(id: number, isLive: boolean): Promise<void>;
+  getAllLiveSessions(): Promise<LiveSession[]>;
+  getLiveSession(id: string): Promise<LiveSession | undefined>;
+  createLiveSession(session: InsertLiveSession): Promise<LiveSession>;
+  updateLiveSession(id: string, updates: Partial<LiveSession>): Promise<LiveSession | undefined>;
+  deleteLiveSession(id: string): Promise<void>;
+  setSessionLive(id: string, isLive: boolean): Promise<void>;
 
   // Lesson operations
   getLessonsByCourse(courseId: string): Promise<Lesson[]>;
@@ -96,7 +96,7 @@ export interface IStorage {
   updateLessonProgress(progress: InsertLessonProgress): Promise<LessonProgress>;
   getUserLessonProgress(
     userId: string,
-    lessonId: number
+    lessonId: string
   ): Promise<LessonProgress | undefined>;
   getUserCourseProgress(
     userId: string,
@@ -212,28 +212,50 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Live Sessions operations
-  async getAllLiveSessions(): Promise<any[]> {
-    return []; // Mock for now until we implement database
+  async getAllLiveSessions(): Promise<LiveSession[]> {
+    return db
+      .select()
+      .from(liveSessions)
+      .orderBy(liveSessions.createdAt);
   }
 
-  async getLiveSession(id: number): Promise<any | undefined> {
-    return undefined; // Mock for now
+  async getLiveSession(id: string): Promise<LiveSession | undefined> {
+    const [session] = await db
+      .select()
+      .from(liveSessions)
+      .where(eq(liveSessions.id, id));
+    return session;
   }
 
-  async createLiveSession(session: any): Promise<any> {
-    return { id: Date.now(), ...session }; // Mock for now
+  async createLiveSession(session: InsertLiveSession): Promise<LiveSession> {
+    try {
+      const [newSession] = await db.insert(liveSessions).values(session).returning();
+      console.log('✅ Storage: Session created successfully:', newSession);
+      return newSession;
+    } catch (error) {
+      console.error('❌ Storage: Error creating live session:', error);
+      throw error;
+    }
   }
 
-  async updateLiveSession(id: number, updates: any): Promise<any | undefined> {
-    return undefined; // Mock for now
+  async updateLiveSession(id: string, updates: Partial<LiveSession>): Promise<LiveSession | undefined> {
+    const [updatedSession] = await db
+      .update(liveSessions)
+      .set(updates)
+      .where(eq(liveSessions.id, id))
+      .returning();
+    return updatedSession;
   }
 
-  async deleteLiveSession(id: number): Promise<void> {
-    // Mock for now
+  async deleteLiveSession(id: string): Promise<void> {
+    await db.delete(liveSessions).where(eq(liveSessions.id, id));
   }
 
-  async setSessionLive(id: number, isLive: boolean): Promise<void> {
-    // Mock for now
+  async setSessionLive(id: string, isLive: boolean): Promise<void> {
+    await db
+      .update(liveSessions)
+      .set({ isLive, updatedAt: new Date() })
+      .where(eq(liveSessions.id, id));
   }
 
   // Course operations
@@ -424,7 +446,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserLessonProgress(
     userId: string,
-    lessonId: number
+    lessonId: string
   ): Promise<LessonProgress | undefined> {
     const [progress] = await db
       .select()
@@ -501,24 +523,24 @@ export class DatabaseStorage implements IStorage {
 
   async deleteExam(id: string): Promise<void> {
     // Delete in the correct order to respect foreign key constraints
-    
+
     // 1. First, get all exam attempts for this exam
     const examAttemptsList = await db
       .select({ id: examAttempts.id })
       .from(examAttempts)
       .where(eq(examAttempts.examId, id));
-    
+
     // 2. Delete certificates that reference these exam attempts
     for (const attempt of examAttemptsList) {
       await db.delete(certificates).where(eq(certificates.examAttemptId, attempt.id));
     }
-    
+
     // 3. Delete exam attempts
     await db.delete(examAttempts).where(eq(examAttempts.examId, id));
-    
+
     // 4. Delete exam questions
     await db.delete(examQuestions).where(eq(examQuestions.examId, id));
-    
+
     // 5. Finally delete the exam
     await db.delete(exams).where(eq(exams.id, id));
   }
@@ -557,11 +579,11 @@ export class DatabaseStorage implements IStorage {
     return updatedQuestion;
   }
 
-  async deleteExamQuestion(id: number): Promise<void> {
+  async deleteExamQuestion(id: string): Promise<void> {
     await db.delete(examQuestions).where(eq(examQuestions.id, id));
   }
 
-  async getExamQuestion(id: number): Promise<ExamQuestion | undefined> {
+  async getExamQuestion(id: string): Promise<ExamQuestion | undefined> {
     const [question] = await db
       .select()
       .from(examQuestions)
