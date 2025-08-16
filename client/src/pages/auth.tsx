@@ -66,18 +66,23 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
   const { t, currentLanguage } = useTranslation();
-  const { login, register: authRegister, isAuthenticated } = useAuth();
+  const { login, register: authRegister, isAuthenticated, user } = useAuth();
   const [, setLocation] = useLocation();
 
-  // Redirect to dashboard when authenticated
+  // Redirect based on user role when authenticated
   useEffect(() => {
-    console.log('Auth useEffect triggered, isAuthenticated:', isAuthenticated);
-    if (isAuthenticated) {
-      console.log('Redirecting to dashboard...');
-      setLocation('/');
+    console.log('Auth useEffect triggered, isAuthenticated:', isAuthenticated, 'user:', user);
+    if (isAuthenticated && user) {
+      if (user.role === 'teacher') {
+        console.log('Redirecting teacher to /teacher...');
+        setLocation('/teacher');
+      } else {
+        console.log('Redirecting to dashboard...');
+        setLocation('/');
+      }
       console.log('setLocation called');
     }
-  }, [isAuthenticated, setLocation]);
+  }, [isAuthenticated, user, setLocation]);
 
   // React Hook Form configurations
   const loginForm = useForm({
