@@ -3,6 +3,10 @@ import { registerRoutes } from './routes';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { specs, swaggerUi } from './swagger';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 dotenv.config();
 
@@ -76,7 +80,7 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
     res.status(status).json({ message });
-    throw err;
+    console.error(err);
   });
 
   // only load vite helpers dynamically in dev
@@ -91,9 +95,9 @@ app.use((req, res, next) => {
     // In production, serve static files directly
     const fs = await import('fs');
     const path = await import('path');
-    
-    const distPath = path.resolve(import.meta.dirname, '..', 'client', 'dist');
-    
+
+    const distPath = path.resolve(__dirname, '..', 'client', 'dist');
+
     if (fs.existsSync(distPath)) {
       app.use(express.static(distPath));
       // SPA fallback
