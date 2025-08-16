@@ -80,7 +80,7 @@ function Router() {
       ) : (
         <>
           <Route path='/' component={user?.role === 'teacher' ? TeacherDashboard : Dashboard} />
-          <Route path='/auth' component={Dashboard} />
+          <Route path='/auth' component={user?.role === 'teacher' ? TeacherDashboard : Dashboard} />
           <Route path='/teacher' component={TeacherDashboard} />
           <Route path='/course/:id' component={CourseDetails} />
           <Route
