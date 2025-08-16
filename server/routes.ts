@@ -82,8 +82,8 @@ const convertDateFields = (data: any): any => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  // await setupAuth(app);
+
+  app.get('/health', (req, res) => res.send('ok'));
 
   // Configure multer for file uploads
   const storage_config = multer.diskStorage({

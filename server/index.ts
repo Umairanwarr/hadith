@@ -22,7 +22,8 @@ app.use(cors({
       'http://localhost:5000',
       'http://127.0.0.1:5000',
       'http://localhost:3000',
-      'http://127.0.0.1:3000'
+      'http://127.0.0.1:3000',
+      'https://hadith-learning.netlify.app/'
     ];
 
     // Allow Vercel preview and production domains
@@ -70,7 +71,7 @@ app.use((req, res, next) => {
 (async () => {
   // Swagger documentation route
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-  
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
