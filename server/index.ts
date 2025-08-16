@@ -1,6 +1,5 @@
 import express, { type Request, Response, NextFunction } from 'express';
 import { registerRoutes } from './routes';
-import { log } from './vite'; // only import log here
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { specs, swaggerUi } from './swagger';
@@ -21,10 +20,9 @@ app.use(cors({
       'http://127.0.0.1:5000',
       'http://localhost:3000',
       'http://127.0.0.1:3000',
-      'https://hadith-learning.netlify.app/'
+      'https://hadith-learning.netlify.app/',
     ];
 
-    // Allow Vercel preview and production domains
     if (origin.includes('.vercel.app') || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
@@ -34,8 +32,13 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-}));
+})
+);
 
+// simple logger for production
+const log = (...args: any[]) => console.log(...args);
+
+// request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -54,11 +57,7 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + '…';
-      }
-
+      if (logLine.length > 80) logLine = logLine.slice(0, 79) + '…';
       log(logLine);
     }
   });
@@ -67,11 +66,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Swagger documentation route
+  // Swagger docs
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
   const server = await registerRoutes(app);
 
+  // global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
@@ -79,7 +79,7 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // 🚀 Load vite only in dev, serve static only in prod
+  // only load vite helpers dynamically in dev
   if (app.get('env') === 'development') {
     const { setupVite } = await import('./vite.js');
     await setupVite(app, server);
@@ -88,13 +88,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Render sets process.env.PORT → default fallback 5000
   const port = parseInt(process.env.PORT || '5000', 10);
   server.listen(
-    {
-      port,
-      host: '0.0.0.0',
-    },
+    { port, host: '0.0.0.0' },
     () => {
       log(`Server running on port ${port}`);
       log(`Access your app at: http://localhost:${port}`);
