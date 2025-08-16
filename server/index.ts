@@ -1,10 +1,12 @@
 import express, { type Request, Response, NextFunction } from 'express';
 import { registerRoutes } from './routes';
-import { setupVite, serveStatic, log } from './vite';
-// import 'dotenv/config';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { specs, swaggerUi } from './swagger';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 dotenv.config();
 
@@ -13,8 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) return callback(null, true); // allow mobile/curl
 
     const allowedOrigins = [
       'http://localhost:3001',
@@ -22,10 +23,10 @@ app.use(cors({
       'http://localhost:5000',
       'http://127.0.0.1:5000',
       'http://localhost:3000',
-      'http://127.0.0.1:3000'
+      'http://127.0.0.1:3000',
+      'https://hadith-learning.netlify.app/',
     ];
 
-    // Allow Vercel preview and production domains
     if (origin.includes('.vercel.app') || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
@@ -35,8 +36,13 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-}));
+})
+);
 
+// simple logger for production
+const log = (...args: any[]) => console.log(...args);
+
+// request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -55,11 +61,7 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + '…';
-      }
-
+      if (logLine.length > 80) logLine = logLine.slice(0, 79) + '…';
       log(logLine);
     }
   });
@@ -68,38 +70,48 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Swagger documentation route
+  // Swagger docs
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-  
+
   const server = await registerRoutes(app);
 
+  // global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || 'Internal Server Error';
-
     res.status(status).json({ message });
-    throw err;
+    console.error(err);
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get('env') === 'development') {
-    await setupVite(app, server);
+  // only load vite helpers dynamically in dev
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const { setupVite } = await import('./vite');
+      await setupVite(app, server);
+    } catch (e) {
+      console.warn('Failed to setup Vite:', e);
+    }
   } else {
-    serveStatic(app);
+    // In production, serve static files directly
+    const fs = await import('fs');
+    const path = await import('path');
+
+    const distPath = path.resolve(__dirname, '..', 'dist');
+
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath));
+      // SPA fallback
+      app.use('*', (_req, res) => {
+        res.sendFile(path.resolve(distPath, 'index.html'));
+      });
+    } else {
+      console.warn(`Build directory not found: ${distPath}`);
+    }
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
   server.listen(
-    {
-      port,
-      host: '0.0.0.0',
-    },
+    { port, host: '0.0.0.0' },
     () => {
       log(`Server running on port ${port}`);
       log(`Access your app at: http://localhost:${port}`);
