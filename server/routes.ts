@@ -30,7 +30,7 @@ import {
   insertUserSchema,
   Exam,
   ExamQuestion,
-} from '@shared/schema';
+} from '@shared/schema.js';
 import { z } from 'zod';
 
 // UUID validation utility function
