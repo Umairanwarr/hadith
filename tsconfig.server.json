@@ -1,23 +1,14 @@
 {
-    "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "noEmit": false,
-        "outDir": "dist",
-        "module": "ESNext",
-        "target": "ES2020",
-        "moduleResolution": "node",
-        "allowImportingTsExtensions": false,
-        "types": [
-            "node"
-        ]
-    },
-    "include": [
-        "server/**/*",
-        "shared/**/*"
-    ],
-    "exclude": [
-        "client",
-        "node_modules",
-        "dist"
-    ]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "dist",
+    "module": "ESNext",
+    "target": "ES2020",
+    "moduleResolution": "node",
+    "allowImportingTsExtensions": false,
+    "types": ["node"]
+  },
+  "include": ["server/**/*", "shared/**/*"],
+  "exclude": ["client", "node_modules", "dist"]
 }
