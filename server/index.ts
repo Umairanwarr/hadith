@@ -96,7 +96,7 @@ app.use((req, res, next) => {
     const fs = await import('fs');
     const path = await import('path');
 
-    const distPath = path.resolve(__dirname, '..', 'client', 'dist');
+    const distPath = path.resolve(__dirname, '..', 'dist');
 
     if (fs.existsSync(distPath)) {
       app.use(express.static(distPath));
