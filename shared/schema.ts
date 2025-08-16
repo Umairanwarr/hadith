@@ -284,78 +284,39 @@ export const insertExamAttemptSchema = createInsertSchema(examAttempts);
 export const insertCertificateSchema = createInsertSchema(certificates);
 
 // Profile update schema (subset of user fields that can be updated)
-export const updateProfileSchema = insertUserSchema
-  .pick({
-    firstName: true,
-    lastName: true,
-    city: true,
-    specialization: true,
-    level: true,
-  })
-  .extend({
-    firstName: z
-      .string()
-      .min(1, 'الاسم الأول مطلوب')
-      .max(50, 'الاسم الأول يجب أن يكون أقل من 50 حرف'),
-    lastName: z
-      .string()
-      .min(1, 'اسم العائلة مطلوب')
-      .max(50, 'اسم العائلة يجب أن يكون أقل من 50 حرف'),
-    city: z
-      .string()
-      .min(1, 'المدينة مطلوبة')
-      .max(100, 'اسم المدينة يجب أن يكون أقل من 100 حرف'),
-    specialization: z
-      .string()
-      .min(1, 'التخصص مطلوب')
-      .max(100, 'التخصص يجب أن يكون أقل من 100 حرف'),
-    level: z.enum(['مبتدئ', 'متوسط', 'متقدم'], {
-      errorMap: () => ({ message: 'يجب اختيار مستوى صحيح' }),
-    }),
-  });
+export const updateProfileSchema = z.object({
+  firstName: z
+    .string()
+    .min(1, 'الاسم الأول مطلوب')
+    .max(50, 'الاسم الأول يجب أن يكون أقل من 50 حرف'),
+  lastName: z
+    .string()
+    .min(1, 'اسم العائلة مطلوب')
+    .max(50, 'اسم العائلة يجب أن يكون أقل من 50 حرف'),
+  city: z
+    .string()
+    .min(1, 'المدينة مطلوبة')
+    .max(100, 'اسم المدينة يجب أن يكون أقل من 100 حرف'),
+  specialization: z
+    .string()
+    .min(1, 'التخصص مطلوب')
+    .max(100, 'التخصص يجب أن يكون أقل من 100 حرف'),
+  level: z.enum(['مبتدئ', 'متوسط', 'متقدم'], {
+    errorMap: () => ({ message: 'يجب اختيار مستوى صحيح' }),
+  }),
+});
 
 // Admin course creation schema
-export const createCourseSchema = insertCourseSchema.pick({
-  title: true,
-  description: true,
-  instructor: true,
-  level: true,
-  duration: true,
-  thumbnailUrl: true,
-  imageUrl: true,
-  syllabusUrl: true,
-  syllabusFileName: true,
-}).refine((data) => {
-  // Validate level field
-  const validLevels = ['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه'];
-  return validLevels.includes(data.level);
-}, {
-  message: 'Invalid level. Must be one of: تمهيدي, متوسط, متقدم, بكالوريوس, ماجستير, دكتوراه',
-  path: ['level']
-}).refine((data) => {
-  // Validate title length
-  return data.title && data.title.length >= 1 && data.title.length <= 200;
-}, {
-  message: 'Title must be between 1 and 200 characters',
-  path: ['title']
-}).refine((data) => {
-  // Validate description length
-  return data.description && data.description.length >= 1 && data.description.length <= 2000;
-}, {
-  message: 'Description must be between 1 and 2000 characters',
-  path: ['description']
-}).refine((data) => {
-  // Validate instructor length
-  return data.instructor && data.instructor.length >= 1 && data.instructor.length <= 100;
-}, {
-  message: 'Instructor name must be between 1 and 100 characters',
-  path: ['instructor']
-}).refine((data) => {
-  // Validate duration
-  return data.duration && data.duration >= 1 && data.duration <= 10080;
-}, {
-  message: 'Duration must be between 1 and 10080 minutes',
-  path: ['duration']
+export const createCourseSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters'),
+  description: z.string().min(1, 'Description is required').max(2000, 'Description must be less than 2000 characters'),
+  instructor: z.string().min(1, 'Instructor name is required').max(100, 'Instructor name must be less than 100 characters'),
+  level: z.enum(['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه']),
+  duration: z.number().min(1, 'Duration is required').max(10080, 'Duration must be less than 10080 minutes'),
+  thumbnailUrl: z.string().url('Thumbnail URL must be valid').optional(),
+  imageUrl: z.string().url('Image URL must be valid').optional(),
+  syllabusUrl: z.string().url('Syllabus URL must be valid').optional(),
+  syllabusFileName: z.string().max(255, 'File name must be less than 255 characters').optional(),
 });
 
 // Admin course update schema
@@ -373,14 +334,14 @@ export const updateCourseSchema = z.object({
 });
 
 // Admin lesson creation schema
-export const createLessonSchema = insertLessonSchema.pick({
-  title: true,
-  description: true,
-  videoUrl: true,
-  duration: true,
-  order: true,
-  courseId: true,
-  isActive: true,
+export const createLessonSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  videoUrl: z.string().url('Video URL must be valid').optional(),
+  duration: z.number().min(1, 'Duration is required').optional(),
+  order: z.number().min(1, 'Order is required'),
+  courseId: z.string().uuid('Course ID must be a valid UUID'),
+  isActive: z.boolean().default(true),
 });
 
 // Admin exam creation schema
@@ -401,8 +362,7 @@ export const createExamSchema = z.object({
   passingGrade: z
     .number()
     .min(1, 'الدرجة المطلوبة للنجاح مطلوبة')
-    .max(100, 'الدرجة يجب أن تكون بين 1 و 100')
-    .transform(String),
+    .max(100, 'الدرجة يجب أن تكون بين 1 و 100'),
   totalQuestions: z.number().default(0),
   isActive: z.boolean().default(true),
 });
@@ -424,13 +384,8 @@ export const createExamQuestionSchema = z.object({
     .number()
     .min(0.1, 'النقاط يجب أن تكون أكبر من 0')
     .max(10, 'النقاط يجب أن تكون أقل من أو تساوي 10')
-    .default(1)
-    .transform(String),
+    .default(1),
 });
-
-// Types
-export type UpsertUser = typeof users.$inferInsert;
-export type User = typeof users.$inferSelect;
 
 // Live Sessions table for managing live streaming sessions
 export const liveSessions = pgTable('live_sessions', {
@@ -493,6 +448,9 @@ export const certificateImages = pgTable('certificate_images', {
 export type CertificateImage = typeof certificateImages.$inferSelect;
 export type InsertCertificateImage = typeof certificateImages.$inferInsert;
 
+// Types
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
 export type CreateCourse = z.infer<typeof createCourseSchema>;
 export type UpdateCourse = z.infer<typeof updateCourseSchema>;
