@@ -2483,6 +2483,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/live-sessions', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
@@ -2615,6 +2618,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/live-sessions/:id', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
@@ -2701,6 +2707,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/live-sessions/:id', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
@@ -2789,6 +2798,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/live-sessions/:id/live-status', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
@@ -2907,6 +2919,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/live-sessions/:id/meeting-link', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
@@ -3028,6 +3043,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/live-sessions/:id/start-streaming', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
@@ -3144,6 +3162,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/live-sessions/:id/stop-streaming', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
