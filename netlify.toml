@@ -1,6 +1,6 @@
 [build]
   publish = "dist/public"
-  command = "rm -rf node_modules package-lock.json && npm install --legacy-peer-deps && npm run vercel-build"
+  command = "npm run vercel-build"
 
 [[redirects]]
   from = "/*"
@@ -9,7 +9,6 @@
 
 [build.environment]
   NODE_VERSION = "18"
-  NPM_USE_PRODUCTION = "false"
 
 
 
