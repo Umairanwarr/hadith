@@ -13,6 +13,10 @@ const Textarea = React.forwardRef<
         className
       )}
       ref={ref}
+      // Prevent browser translation from interfering with form inputs
+      translate="no"
+      data-translate="no"
+      autoComplete="off"
       {...props}
     />
   )

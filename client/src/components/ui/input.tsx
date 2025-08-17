@@ -12,6 +12,10 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
+        // Prevent browser translation from interfering with form inputs
+        translate="no"
+        data-translate="no"
+        autoComplete="off"
         {...props}
       />
     )
