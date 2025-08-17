@@ -1,6 +1,6 @@
 [build]
   publish = "dist/public"
-  command = "npm run vercel-build"
+  command = "npm install --legacy-peer-deps && npm run vercel-build"
 
 [[redirects]]
   from = "/*"
