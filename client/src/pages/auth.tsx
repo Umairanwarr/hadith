@@ -28,6 +28,7 @@ import { LanguageSwitcher } from '@/components/language-switcher';
 import { useTranslation } from '@/hooks/use-translation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
+import { TranslationSafeForm } from '@/components/translation-safe-form';
 
 // API Configuration
 const API_BASE_URL =
@@ -229,89 +230,89 @@ const Auth = () => {
         <CardDescription>{t('auth.enterCredentials')}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className='space-y-4'>
-          <div className='space-y-2'>
-            <Label htmlFor='email'>{t('auth.email')}</Label>
-            <div className='relative'>
-              <Mail
-                className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
-                  }`}
-              />
-              <Input
-                id='email'
-                type='email'
-                placeholder={t('auth.enterEmail')}
-                className={currentLanguage === 'ar' ? 'pl-10' : 'pr-10'}
-                {...loginForm.register('email', {
-                  required: t('validation.emailRequired'),
-                  pattern: {
-                    value: /^\S+@\S+$/i,
-                    message: t('validation.emailInvalid'),
-                  },
-                })}
-              />
+        <TranslationSafeForm onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
+          <div className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='email'>{t('auth.email')}</Label>
+              <div className='relative'>
+                <Mail
+                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
+                    }`}
+                />
+                <Input
+                  id='email'
+                  type='email'
+                  placeholder={t('auth.enterEmail')}
+                  className={currentLanguage === 'ar' ? 'pl-10' : 'pr-10'}
+                  {...loginForm.register('email', {
+                    required: t('validation.emailRequired'),
+                    pattern: {
+                      value: /^\S+@\S+$/i,
+                      message: t('validation.emailInvalid'),
+                    },
+                  })}
+                />
+              </div>
+              {loginForm.formState.errors.email && (
+                <p className='text-sm text-destructive'>
+                  {loginForm.formState.errors.email.message}
+                </p>
+              )}
             </div>
-            {loginForm.formState.errors.email && (
-              <p className='text-sm text-destructive'>
-                {loginForm.formState.errors.email.message}
-              </p>
-            )}
-          </div>
 
-          <div className='space-y-2'>
-            <Label htmlFor='password'>{t('auth.password')}</Label>
-            <div className='relative'>
-              <Lock
-                className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
-                  }`}
-              />
-              <Input
-                id='password'
-                type={showPassword ? 'text' : 'password'}
-                placeholder={t('auth.enterPassword')}
-                className={`${currentLanguage === 'ar' ? 'pl-10 pr-10' : 'pr-10 pl-10'
-                  }`}
-                {...loginForm.register('password', {
-                  required: t('validation.passwordRequired'),
-                })}
-              />
-              <Button
-                type='button'
-                variant='ghost'
-                size='sm'
-                className={`absolute top-2 h-6 w-6 p-0 ${currentLanguage === 'ar' ? 'right-2' : 'left-2'
-                  }`}
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className='h-4 w-4' />
-                ) : (
-                  <Eye className='h-4 w-4' />
-                )}
-              </Button>
+            <div className='space-y-2'>
+              <Label htmlFor='password'>{t('auth.password')}</Label>
+              <div className='relative'>
+                <Lock
+                  className={`absolute top-3 h-4 w-4 text-muted-foreground ${currentLanguage === 'ar' ? 'left-3' : 'right-3'
+                    }`}
+                />
+                <Input
+                  id='password'
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder={t('auth.enterPassword')}
+                  className={`${currentLanguage === 'ar' ? 'pl-10 pr-10' : 'pr-10 pl-10'
+                    }`}
+                  {...loginForm.register('password', {
+                    required: t('validation.passwordRequired'),
+                  })}
+                />
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  className={`absolute top-2 h-6 w-6 p-0 ${currentLanguage === 'ar' ? 'right-2' : 'left-2'
+                    }`}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className='h-4 w-4' />
+                  ) : (
+                    <Eye className='h-4 w-4' />
+                  )}
+                </Button>
+              </div>
+              {loginForm.formState.errors.password && (
+                <p className='text-sm text-destructive'>
+                  {loginForm.formState.errors.password.message}
+                </p>
+              )}
             </div>
-            {loginForm.formState.errors.password && (
-              <p className='text-sm text-destructive'>
-                {loginForm.formState.errors.password.message}
-              </p>
-            )}
-          </div>
 
-          <Button
-            type='button'
-            className='w-full btn-primary'
-            disabled={loginMutation.isPending}
-            onClick={loginForm.handleSubmit(onLoginSubmit)}
-          >
-            {loginMutation.isPending ? t('auth.loggingIn') : t('auth.login')}
-            {currentLanguage === 'ar' ? (
-              <ArrowLeft className='mr-2 h-4 w-4' />
-            ) : (
-              <ArrowRight className='ml-2 h-4 w-4' />
-            )}
-          </Button>
+            <Button
+              type='submit'
+              className='w-full btn-primary'
+              disabled={loginMutation.isPending}
+            >
+              {loginMutation.isPending ? t('auth.loggingIn') : t('auth.login')}
+              {currentLanguage === 'ar' ? (
+                <ArrowLeft className='mr-2 h-4 w-4' />
+              ) : (
+                <ArrowRight className='ml-2 h-4 w-4' />
+              )}
+            </Button>
 
-          <div className='space-y-2 text-center'>
+            <div className='space-y-2 text-center'>
             <Button
               type='button'
               variant='link'
@@ -352,8 +353,9 @@ const Auth = () => {
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </TranslationSafeForm>
+    </CardContent>
+  </Card>
   );
 
   const renderSignup = () => (

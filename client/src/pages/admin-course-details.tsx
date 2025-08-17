@@ -119,7 +119,7 @@ export default function AdminCourseDetails() {
 
   const createLessonMutation = useMutation({
     mutationFn: async (data: CreateLesson) => {
-      return await apiRequest("POST", "/admin/lessons", data);
+      return await apiRequest("POST", "/api/admin/lessons", data);
     },
     onSuccess: () => {
       toast({

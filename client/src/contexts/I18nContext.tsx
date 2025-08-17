@@ -1,5 +1,6 @@
 import React, { createContext, useReducer, useEffect, ReactNode, useContext } from 'react';
 import { translations, defaultLanguage } from '../locales';
+import { safeDOMOperation, setupTranslationDetection } from '../utils/dom-safety';
 
 interface I18nState {
   currentLanguage: string;
@@ -61,8 +62,33 @@ export const I18nProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Update document direction when language changes
   useEffect(() => {
-    document.documentElement.dir = state.isRTL ? 'rtl' : 'ltr';
-    document.documentElement.lang = state.currentLanguage;
+    safeDOMOperation(
+      () => {
+        document.documentElement.dir = state.isRTL ? 'rtl' : 'ltr';
+        document.documentElement.lang = state.currentLanguage;
+      },
+      () => {
+        console.log('Skipped DOM update due to browser translation conflict');
+      }
+    );
+  }, [state.currentLanguage, state.isRTL]);
+
+  // Setup translation detection and cleanup
+  useEffect(() => {
+    const cleanup = setupTranslationDetection((isTranslating) => {
+      if (isTranslating) {
+        console.log('Browser translation detected - DOM operations will be limited');
+      } else {
+        console.log('Browser translation ended - resuming normal DOM operations');
+        // Re-apply our language settings when translation ends
+        safeDOMOperation(() => {
+          document.documentElement.dir = state.isRTL ? 'rtl' : 'ltr';
+          document.documentElement.lang = state.currentLanguage;
+        });
+      }
+    });
+
+    return cleanup;
   }, [state.currentLanguage, state.isRTL]);
 
   // Change language function

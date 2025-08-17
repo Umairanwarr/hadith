@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent browser translation from interfering with form elements */
+.notranslate,
+[translate="no"],
+[data-translate="no"],
+[data-notranslate="true"] {
+  /* Prevent translation services from modifying these elements */
+  -webkit-user-select: auto !important;
+  -moz-user-select: auto !important;
+  -ms-user-select: auto !important;
+  user-select: auto !important;
+}
+
+/* Additional protection for form inputs */
+input.notranslate,
+textarea.notranslate,
+select.notranslate,
+input[translate="no"],
+textarea[translate="no"],
+select[translate="no"] {
+  /* Ensure inputs remain functional during translation */
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);

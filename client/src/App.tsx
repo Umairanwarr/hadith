@@ -48,6 +48,7 @@ import { TestCertificateGenerationPage } from '@/pages/test-certificate-generati
 import Auth from './pages/auth';
 import { AppContextProvider } from './contexts/AppContext';
 import { AuthProvider } from './contexts/AuthContext';
+import TranslationErrorBoundary from '@/components/translation-error-boundary';
 
 function Router() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -148,18 +149,20 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppContextProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-            {import.meta.env.PROD ? <PWAInstallBanner /> : null}
-            <OfflineIndicator />
-          </TooltipProvider>
-        </AppContextProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <TranslationErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AppContextProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+              {import.meta.env.PROD ? <PWAInstallBanner /> : null}
+              <OfflineIndicator />
+            </TooltipProvider>
+          </AppContextProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </TranslationErrorBoundary>
   );
 }
 
