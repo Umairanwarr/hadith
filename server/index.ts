@@ -15,7 +15,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow mobile/curl
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
 
     const allowedOrigins = [
       'http://localhost:3001',
@@ -24,19 +25,28 @@ app.use(cors({
       'http://127.0.0.1:5000',
       'http://localhost:3000',
       'http://127.0.0.1:3000',
-      'https://hadith-learning.netlify.app/',
       'https://hadith-learning.netlify.app',
+      'https://hadith-learning.netlify.app/',
     ];
 
-    if (origin.includes('.vercel.app') || allowedOrigins.includes(origin)) {
+    // Log the origin for debugging
+    console.log('CORS origin check:', origin);
+
+    // Check if origin is in allowed list or is a Vercel/Netlify deployment
+    if (allowedOrigins.includes(origin) || 
+        origin.includes('.vercel.app') || 
+        origin.includes('.netlify.app')) {
+      console.log('CORS: Origin allowed:', origin);
       return callback(null, true);
     }
 
-    return callback(new Error('Not allowed by CORS'));
+    console.log('CORS: Origin blocked:', origin);
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 })
 );
 
