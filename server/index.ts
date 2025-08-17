@@ -24,7 +24,7 @@ app.use(cors({
       'http://127.0.0.1:5000',
       'http://localhost:3000',
       'http://127.0.0.1:3000',
-      'https://hadith-learning.netlify.app/',
+      'https://hadith-learning.netlify.app',
     ];
 
     if (origin.includes('.vercel.app') || allowedOrigins.includes(origin)) {
