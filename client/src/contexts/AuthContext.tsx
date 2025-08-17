@@ -168,19 +168,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('🔗 Making registration request to:', '/auth/register');
       console.log('📦 User data:', userData);
 
-      const response = await apiService.post<{ token: string }>('/auth/register', {
+      const response = await apiService.post<{ message: string; emailVerificationRequired?: boolean }>('/auth/register', {
         user: userData
       });
 
-      console.log('✅ Registration successful. Token received:', response.token);
+      console.log('✅ Registration successful. Response:', response);
 
-
-      // Store token
-      localStorage.setItem('authToken', response.token);
-
-      // Fetch user data after successful registration
-      const user = await apiService.get<User>('/auth/user');
-      dispatch({ type: 'AUTH_SUCCESS', payload: user });
+      // Don't store token or authenticate user immediately
+      // Email verification is required first
+      dispatch({ type: 'LOGOUT' }); // Clear loading state without error
+      
+      return response; // Return response so component can handle email verification message
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Registration failed';
       dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });

@@ -233,57 +233,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Password must be at least 8 characters long.' });
       }
 
-      const exists = await storage.getUserByEmail(email);
-      if (exists) {
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
         console.warn(`⚠️ User already exists with email: ${email}`);
         return res.status(409).json({ message: 'User already exists.' });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const user = await storage.registerUser({
-        ...data,
-        password: hashedPassword,
-        isEmailVerified: false, // Ensure email is not verified initially
-      });
-
-      if (!user || !user.id) {
-        console.error('🚨 registerUser returned null or undefined.');
-        return res.status(500).json({ message: 'Failed to create user.' });
+      // Check if there's already a pending registration for this email
+      const existingPending = await storage.getPendingRegistrationByEmail(email);
+      if (existingPending) {
+        // Delete the old pending registration and create a new one
+        await storage.deletePendingRegistration(existingPending.token);
       }
 
-      console.log('✅ User registered successfully:', user);
+      const hashedPassword = await bcrypt.hash(password, 10);
 
       // Generate verification token
       const verificationToken = generateVerificationToken();
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
 
-      try {
-        // Store verification token
-        await storage.createEmailVerificationToken({
-          userId: user.id,
-          token: verificationToken,
-          expiresAt
-        });
+      // Store pending registration instead of creating user
+      const pendingRegistration = await storage.createPendingRegistration({
+        ...data,
+        password: hashedPassword,
+        token: verificationToken,
+        expiresAt
+      });
 
+      console.log('✅ Pending registration created successfully for:', email);
+
+      try {
         // Send verification email
-        await sendVerificationEmail(email, verificationToken, user.firstName || undefined);
+        await sendVerificationEmail(email, verificationToken, data.firstName || undefined);
 
         console.log('✅ Verification email sent successfully to:', email);
 
-        // Return success message instead of JWT token
+        // Return success message
         return res.status(201).json({ 
-          message: 'User registered successfully. Please check your email to verify your account.',
+          message: 'Registration initiated. Please check your email to verify your account and complete registration.',
           requiresEmailVerification: true
         });
       } catch (emailError) {
         console.error('❌ Error sending verification email:', emailError);
         
-        // If email fails, we should still create the user but inform them
-        // You might want to implement a retry mechanism or admin notification
-        return res.status(201).json({ 
-          message: 'User registered successfully, but verification email could not be sent. Please contact support.',
-          requiresEmailVerification: true,
+        // If email fails, delete the pending registration
+        await storage.deletePendingRegistration(verificationToken);
+        
+        return res.status(500).json({ 
+          message: 'Failed to send verification email. Please try again.',
           emailError: true
         });
       }
@@ -346,44 +344,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Verification token is required.' });
       }
 
-      // Get verification token from database
-      const tokenRecord = await storage.getEmailVerificationToken(token);
+      // Get pending registration from database
+      const pendingRegistration = await storage.getPendingRegistration(token);
       
-      if (!tokenRecord) {
+      if (!pendingRegistration) {
         return res.status(400).json({ message: 'Invalid verification token.' });
       }
 
       // Check if token has expired
-      if (new Date() > tokenRecord.expiresAt) {
-        // Delete expired token
-        await storage.deleteEmailVerificationToken(token);
-        return res.status(400).json({ message: 'Verification token has expired. Please request a new one.' });
+      if (new Date() > pendingRegistration.expiresAt) {
+        // Delete expired pending registration
+        await storage.deletePendingRegistration(token);
+        return res.status(400).json({ message: 'Verification token has expired. Please register again.' });
       }
 
-      // Verify user's email
-      await storage.verifyUserEmail(tokenRecord.userId);
-
-      // Delete the used token
-      await storage.deleteEmailVerificationToken(token);
-
-      // Get the verified user
-      const user = await storage.getUserById(tokenRecord.userId);
-      
-      if (!user) {
-        return res.status(404).json({ message: 'User not found.' });
+      // Check if user already exists (in case they registered after the pending registration)
+      const existingUser = await storage.getUserByEmail(pendingRegistration.email);
+      if (existingUser) {
+        // Delete the pending registration and return error
+        await storage.deletePendingRegistration(token);
+        return res.status(409).json({ message: 'User already exists. Please login instead.' });
       }
 
-      // Generate JWT token for the verified user
+      // Create the actual user account
+      const user = await storage.registerUser({
+        email: pendingRegistration.email,
+        password: pendingRegistration.password, // Already hashed
+        firstName: pendingRegistration.firstName,
+        lastName: pendingRegistration.lastName,
+        city: pendingRegistration.city,
+        specialization: pendingRegistration.specialization,
+        level: pendingRegistration.level,
+        role: pendingRegistration.role,
+        phone: pendingRegistration.phone,
+        nationalId: pendingRegistration.nationalId,
+        isEmailVerified: true, // Email is verified since they clicked the link
+      });
+
+      // Delete the pending registration
+      await storage.deletePendingRegistration(token);
+
+      if (!user || !user.id) {
+        console.error('🚨 Failed to create user account after verification.');
+        return res.status(500).json({ message: 'Failed to create user account.' });
+      }
+
+      // Generate JWT token for the new user
       const jwtToken = jwt.sign(
         { id: user.id, role: user.role },
         process.env.JWT_SECRET!,
         { expiresIn: '7d' }
       );
 
-      console.log('✅ Email verified successfully for user:', user.email);
+      console.log('✅ Email verified and user created successfully:', user.email);
 
       return res.status(200).json({ 
-        message: 'Email verified successfully!',
+        message: 'Email verified successfully! Your account has been created.',
         token: jwtToken,
         user: {
           id: user.id,
@@ -448,31 +464,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Email is required.' });
       }
 
-      // Check if user exists
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found.' });
+      // First check if user already exists and is verified
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        if (existingUser.isEmailVerified) {
+          return res.status(400).json({ message: 'Email is already verified. Please login.' });
+        } else {
+          return res.status(400).json({ message: 'User already exists but email not verified. This should not happen.' });
+        }
       }
 
-      // Check if email is already verified
-      if (user.isEmailVerified) {
-        return res.status(400).json({ message: 'Email is already verified.' });
+      // Check if there's a pending registration
+      const pendingRegistration = await storage.getPendingRegistrationByEmail(email);
+      if (!pendingRegistration) {
+        return res.status(404).json({ message: 'No pending registration found for this email. Please register first.' });
       }
 
       // Generate new verification token
       const verificationToken = generateVerificationToken();
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
 
-      // Store new verification token (delete old ones first)
-      await storage.deleteEmailVerificationToken(verificationToken); // Clean up any existing tokens
-      await storage.createEmailVerificationToken({
-        userId: user.id,
+      // Delete old pending registration and create new one with new token
+      await storage.deletePendingRegistration(pendingRegistration.token);
+      await storage.createPendingRegistration({
+        ...pendingRegistration,
         token: verificationToken,
         expiresAt
       });
 
       // Send verification email
-      await sendVerificationEmail(email, verificationToken, user.firstName || undefined);
+      await sendVerificationEmail(email, verificationToken, pendingRegistration.firstName || undefined);
 
       console.log('✅ Verification email resent successfully to:', email);
 

@@ -449,7 +449,28 @@ export const certificateImages = pgTable('certificate_images', {
 export type CertificateImage = typeof certificateImages.$inferSelect;
 export type InsertCertificateImage = typeof certificateImages.$inferInsert;
 
-// Email verification tokens table
+// Pending registrations table - stores user data before email verification
+export const pendingRegistrations = pgTable('pending_registrations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: varchar('email').unique().notNull(),
+  password: varchar('password').notNull(), // hashed password
+  firstName: varchar('first_name'),
+  lastName: varchar('last_name'),
+  city: varchar('city'),
+  specialization: varchar('specialization'),
+  level: varchar('level').default('مبتدئ'),
+  role: userRoleEnum('role').notNull(),
+  phone: varchar('phone'),
+  nationalId: varchar('national_id'),
+  token: varchar('token').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export type PendingRegistration = typeof pendingRegistrations.$inferSelect;
+export type InsertPendingRegistration = typeof pendingRegistrations.$inferInsert;
+
+// Email verification tokens table (now only for existing users)
 export const emailVerificationTokens = pgTable('email_verification_tokens', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')

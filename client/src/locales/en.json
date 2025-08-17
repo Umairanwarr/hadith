@@ -57,6 +57,31 @@
     "loginWelcome": "Welcome back!",
     "signupWelcome": "Welcome! Your account has been created successfully."
   },
+  "emailVerification": {
+    "title": "Email Verification",
+    "description": "Please verify your email address to complete your registration",
+    "verifying": "Verifying your email...",
+    "verifyingMessage": "Please wait while we verify your email address.",
+    "success": "Email Verified Successfully!",
+    "successMessage": "Your email has been verified. You can now log in to your account.",
+    "error": "Verification Failed",
+    "errorMessage": "The verification link is invalid or has expired.",
+    "resendVerification": "Resend Verification Email",
+    "resendSuccess": "Verification Email Sent",
+    "resendSuccessMessage": "A new verification email has been sent to your inbox.",
+    "resendError": "Failed to Resend",
+    "resendErrorMessage": "Could not send verification email. Please try again.",
+    "resend": "Resend",
+    "backToAuth": "Back to Login",
+    "goToLogin": "Go to Login",
+    "redirectingToLogin": "Redirecting to login page...",
+    "enterEmailToResend": "Please enter your email address to resend verification.",
+    "checkEmail": "Please check your email",
+    "checkEmailMessage": "We've sent a verification link to your email address. Please click the link to verify your account before logging in."
+  },
+  "common": {
+    "cancel": "Cancel"
+  },
   "courseForm": {
     "title": "Course title",
     "titlePlaceholder": "Course name",

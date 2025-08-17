@@ -60,9 +60,36 @@ const forgotPasswordApi = async (data: any) => {
   }
 };
 
+// Resend verification email API function
+const resendVerificationApi = async (email: string) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/resend-verification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to resend verification email');
+    }
+
+    return result;
+  } catch (error: any) {
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      throw new Error('NETWORK_ERROR');
+    }
+    throw error;
+  }
+};
+
 const Auth = () => {
   const [currentView, setCurrentView] = useState('login');
   const [signupRole, setSignupRole] = useState('student');
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
@@ -150,20 +177,17 @@ const Auth = () => {
 
   const signupMutation = useMutation({
     mutationFn: async (data: any) => {
-      await authRegister(data);
+      return await authRegister(data);
     },
-    onSuccess: () => {
-      const roleName = t('auth.student');
+    onSuccess: (response) => {
+      setRegisteredEmail(signupForm.getValues('email'));
       toast({
-        title: t('toast.signupSuccess'),
-        description: t('toast.signupWelcome', {
-          name: '',
-          role: roleName,
-        }),
-        duration: 3000,
+        title: t('emailVerification.checkEmail'),
+        description: t('emailVerification.checkEmailMessage'),
+        duration: 8000,
       });
 
-      setCurrentView('login');
+      setCurrentView('email-verification-sent');
     },
     onError: (error) => {
       toast({
@@ -195,6 +219,25 @@ const Auth = () => {
     },
   });
 
+  const resendVerificationMutation = useMutation({
+    mutationFn: resendVerificationApi,
+    onSuccess: (data) => {
+      toast({
+        title: t('emailVerification.resendSuccess'),
+        description: t('emailVerification.resendSuccessMessage'),
+        duration: 5000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: 'destructive',
+        title: t('emailVerification.resendError'),
+        description: getErrorMessage(error),
+        duration: 4000,
+      });
+    },
+  });
+
   const onLoginSubmit = (data: any) => {
     loginMutation.mutate(data);
   };
@@ -219,6 +262,12 @@ const Auth = () => {
 
   const onForgotPasswordSubmit = (data: any) => {
     forgotPasswordMutation.mutate(data);
+  };
+
+  const handleResendVerification = () => {
+    if (registeredEmail) {
+      resendVerificationMutation.mutate(registeredEmail);
+    }
   };
 
   const renderLogin = () => (
@@ -666,6 +715,64 @@ const Auth = () => {
     </Card>
   );
 
+  const renderEmailVerificationSent = () => (
+    <Card className='w-full max-w-md mx-auto'>
+      <CardHeader className='text-center'>
+        <CardTitle className='text-2xl font-bold text-primary'>
+          {t('emailVerification.checkEmail')}
+        </CardTitle>
+        <CardDescription>
+          {t('emailVerification.checkEmailMessage')}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className='text-center space-y-4'>
+          <Mail className='h-12 w-12 mx-auto text-primary' />
+          <p className='text-sm text-muted-foreground'>
+            {t('emailVerification.checkEmailMessage')}
+          </p>
+          <p className='text-sm font-medium'>
+            {registeredEmail}
+          </p>
+          
+          <div className='space-y-2 pt-4'>
+            <Button
+              onClick={handleResendVerification}
+              disabled={resendVerificationMutation.isPending}
+              variant='outline'
+              className='w-full'
+            >
+              {resendVerificationMutation.isPending ? (
+                <>
+                  <ArrowRight className='mr-2 h-4 w-4 animate-spin' />
+                  {t('auth.sending')}
+                </>
+              ) : (
+                <>
+                  <Mail className='mr-2 h-4 w-4' />
+                  {t('emailVerification.resendVerification')}
+                </>
+              )}
+            </Button>
+            
+            <Button
+              variant='link'
+              onClick={() => setCurrentView('login')}
+              className='w-full'
+            >
+              {t('emailVerification.backToAuth')}
+              {currentLanguage === 'ar' ? (
+                <ArrowRight className='mr-2 h-4 w-4' />
+              ) : (
+                <ArrowLeft className='ml-2 h-4 w-4' />
+              )}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <>
       <div
@@ -677,6 +784,7 @@ const Auth = () => {
           {currentView === 'login' && renderLogin()}
           {currentView === 'signup' && renderSignup()}
           {currentView === 'forgot-password' && renderForgotPassword()}
+          {currentView === 'email-verification-sent' && renderEmailVerificationSent()}
         </div>
       </div>
       <Toaster />

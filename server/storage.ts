@@ -12,6 +12,7 @@ import {
   diplomaTemplates,
   certificateImages,
   emailVerificationTokens,
+  pendingRegistrations,
   type User,
   type UpsertUser,
   type Course,
@@ -38,6 +39,8 @@ import {
   type InsertCertificateImage,
   type EmailVerificationToken,
   type InsertEmailVerificationToken,
+  type PendingRegistration,
+  type InsertPendingRegistration,
   UserRole,
 } from '../shared/schema.js';
 import { db } from './db.js';
@@ -53,6 +56,12 @@ export interface IStorage {
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
   updateUserRole(id: string, role: UserRole): Promise<User | undefined>;
 
+  // Pending registration operations
+  createPendingRegistration(registration: InsertPendingRegistration): Promise<PendingRegistration>;
+  getPendingRegistration(token: string): Promise<PendingRegistration | undefined>;
+  getPendingRegistrationByEmail(email: string): Promise<PendingRegistration | undefined>;
+  deletePendingRegistration(token: string): Promise<void>;
+  
   // Email verification operations
   createEmailVerificationToken(token: InsertEmailVerificationToken): Promise<EmailVerificationToken>;
   getEmailVerificationToken(token: string): Promise<EmailVerificationToken | undefined>;
@@ -238,6 +247,37 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updatedUser;
+  }
+
+  // Pending registration operations
+  async createPendingRegistration(registration: InsertPendingRegistration): Promise<PendingRegistration> {
+    const [newRegistration] = await db
+      .insert(pendingRegistrations)
+      .values(registration)
+      .returning();
+    return newRegistration;
+  }
+
+  async getPendingRegistration(token: string): Promise<PendingRegistration | undefined> {
+    const [registration] = await db
+      .select()
+      .from(pendingRegistrations)
+      .where(eq(pendingRegistrations.token, token));
+    return registration;
+  }
+
+  async getPendingRegistrationByEmail(email: string): Promise<PendingRegistration | undefined> {
+    const [registration] = await db
+      .select()
+      .from(pendingRegistrations)
+      .where(eq(pendingRegistrations.email, email));
+    return registration;
+  }
+
+  async deletePendingRegistration(token: string): Promise<void> {
+    await db
+      .delete(pendingRegistrations)
+      .where(eq(pendingRegistrations.token, token));
   }
 
   // Email verification operations

@@ -46,6 +46,7 @@ import TeacherDashboard from '@/pages/teacher-dashboard';
 import AboutUniversity from '@/pages/about-university';
 import { TestCertificateGenerationPage } from '@/pages/test-certificate-generation';
 import Auth from './pages/auth';
+import VerifyEmail from './pages/verify-email';
 import { AppContextProvider } from './contexts/AppContext';
 import { AuthProvider } from './contexts/AuthContext';
 import TranslationErrorBoundary from '@/components/translation-error-boundary';
@@ -72,6 +73,9 @@ function Router() {
 
   return (
     <Switch>
+      {/* Email verification should be accessible regardless of auth state */}
+      <Route path='/verify-email' component={VerifyEmail} />
+      
       {!isAuthenticated ? (
         <>
           <Route path='/' component={LandingNew} />

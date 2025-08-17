@@ -154,7 +154,7 @@ export default function CourseDetails() {
     <div className="min-h-screen bg-gray-50" dir="rtl">
       <Header />
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 mt-6">
         {/* Course Header - compact like the screenshot */}
         <Card className="mb-6">
           <CardContent className="p-6">
