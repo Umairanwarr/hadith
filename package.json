@@ -7,7 +7,7 @@
     "dev": "tsx server/index.ts",
     "build:client": "vite build",
     "build:server": "tsc -p tsconfig.server.json",
-    "build": "npm run build:client && npm run build:server",
+    "build": "npm run build:server",
     "start": "node dist/server/index.js",
     "vercel-build": "vite build",
     "check": "tsc",

@@ -13,10 +13,14 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cors({
-  origin: function (origin, callback) {
+// Configure CORS
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('CORS: No origin - allowing');
+      return callback(null, true);
+    }
 
     const allowedOrigins = [
       'http://localhost:3001',
@@ -25,6 +29,8 @@ app.use(cors({
       'http://127.0.0.1:5000',
       'http://localhost:3000',
       'http://127.0.0.1:3000',
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
       'https://hadith-learning.netlify.app',
       'https://hadith-learning.netlify.app/',
     ];
@@ -32,10 +38,11 @@ app.use(cors({
     // Log the origin for debugging
     console.log('CORS origin check:', origin);
 
-    // Check if origin is in allowed list or is a Vercel/Netlify deployment
+    // Check if origin is in allowed list or is a deployment platform
     if (allowedOrigins.includes(origin) || 
         origin.includes('.vercel.app') || 
-        origin.includes('.netlify.app')) {
+        origin.includes('.netlify.app') ||
+        origin.includes('.render.com')) {
       console.log('CORS: Origin allowed:', origin);
       return callback(null, true);
     }
@@ -45,10 +52,12 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
-})
-);
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
+  preflightContinue: false
+};
+
+app.use(cors(corsOptions));
 
 // simple logger for production
 const log = (...args: any[]) => console.log(...args);
@@ -81,6 +90,24 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      env: process.env.NODE_ENV 
+    });
+  });
+
+  // CORS test endpoint
+  app.get('/api/cors-test', (req, res) => {
+    res.status(200).json({ 
+      message: 'CORS is working!',
+      origin: req.headers.origin,
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Swagger docs
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
@@ -95,7 +122,7 @@ app.use((req, res, next) => {
   });
 
   // only load vite helpers dynamically in dev
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development' && !process.env.RENDER) {
     try {
       const { setupVite } = await import('./vite');
       await setupVite(app, server);
