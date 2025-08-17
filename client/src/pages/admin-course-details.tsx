@@ -281,106 +281,12 @@ export default function AdminCourseDetails() {
           <TabsContent value="lessons" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">دروس المادة</h2>
-              <Dialog open={isAddLessonOpen} onOpenChange={setIsAddLessonOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="ml-2 h-4 w-4" />
-                    إضافة درس جديد
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]" dir="rtl">
-                  <DialogHeader>
-                    <DialogTitle>إضافة درس جديد</DialogTitle>
-                    <DialogDescription>
-                      أضف درساً جديداً إلى المادة مع رابط الفيديو
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Form {...lessonForm}>
-                    <form onSubmit={lessonForm.handleSubmit(onSubmitLesson)} className="space-y-4">
-                      <FormField
-                        control={lessonForm.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>عنوان الدرس *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="مثل: مقدمة في علم الحديث" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={lessonForm.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>وصف الدرس</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder="وصف مختصر للدرس ومحتواه..." {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={lessonForm.control}
-                        name="videoUrl"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>رابط الفيديو *</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="https://youtube.com/watch?v=..."
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={lessonForm.control}
-                        name="duration"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>مدة الدرس (بالدقائق) *</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="30"
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setIsAddLessonOpen(false)}
-                        >
-                          إلغاء
-                        </Button>
-                        <Button
-                          type="submit"
-                          disabled={createLessonMutation.isPending}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          {createLessonMutation.isPending ? "جاري الإضافة..." : "إضافة الدرس"}
-                        </Button>
-                      </div>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
+              <Link href="/quick-add">
+                <Button>
+                  <Plus className="ml-2 h-4 w-4" />
+                  إضافة درس جديد
+                </Button>
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -459,10 +365,12 @@ export default function AdminCourseDetails() {
                 <div className="col-span-full text-center py-12">
                   <Video className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <p className="text-gray-600 mb-4">لا توجد دروس في هذه المادة حتى الآن</p>
-                  <Button onClick={() => setIsAddLessonOpen(true)}>
-                    <Plus className="ml-2 h-4 w-4" />
-                    إضافة أول درس
-                  </Button>
+                  <Link href="/quick-add">
+                    <Button>
+                      <Plus className="ml-2 h-4 w-4" />
+                      إضافة أول درس
+                    </Button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -471,7 +379,7 @@ export default function AdminCourseDetails() {
           <TabsContent value="exams" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">اختبارات المادة</h2>
-              <Link href={`/admin/create-exam?courseId=${courseId}`}>
+              <Link href="/quick-add">
                 <Button>
                   <Plus className="ml-2 h-4 w-4" />
                   إضافة اختبار جديد
@@ -531,7 +439,7 @@ export default function AdminCourseDetails() {
                 <div className="col-span-full text-center py-12">
                   <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <p className="text-gray-600 mb-4">لا توجد اختبارات لهذه المادة حتى الآن</p>
-                  <Link href={`/admin/create-exam?courseId=${courseId}`}>
+                  <Link href="/quick-add">
                     <Button>
                       <Plus className="ml-2 h-4 w-4" />
                       إضافة أول اختبار

@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
+import { useAuth as useAuthContext } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 
@@ -39,6 +41,8 @@ interface RecentActivity {
 
 export default function Profile() {
   const { user, isLoading: authLoading } = useAuth();
+  const { logout } = useAuthContext();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -156,6 +160,17 @@ export default function Profile() {
       });
     }
     setIsEditing(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setLocation('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if logout fails, redirect to home
+      setLocation('/');
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -535,16 +550,16 @@ export default function Profile() {
                     </div>
                   </a>
                   
-                  <a 
-                    href="/logout" 
-                    className="flex items-center gap-3 p-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  <Button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 p-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors h-auto w-full justify-start"
                   >
                     <i className="fas fa-sign-out-alt text-xl"></i>
                     <div>
                       <div className="font-semibold">تسجيل الخروج</div>
                       <div className="text-sm opacity-90">إنهاء الجلسة</div>
                     </div>
-                  </a>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

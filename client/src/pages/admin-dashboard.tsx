@@ -382,7 +382,7 @@ export default function AdminDashboard() {
                     إدارة البث المباشر
                   </Button>
                 </Link>
-                <Link href="/admin/create-exam">
+                <Link href="/quick-add">
                   <Button>
                     <PlusCircle className="ml-2 h-4 w-4" />
                     إضافة اختبار جديد
@@ -455,7 +455,7 @@ export default function AdminDashboard() {
                 <div className="col-span-full text-center py-12">
                   <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <p className="text-gray-600">لا توجد اختبارات حتى الآن</p>
-                  <Link href="/admin/create-exam">
+                  <Link href="/quick-add">
                     <Button className="mt-4">
                       <PlusCircle className="ml-2 h-4 w-4" />
                       إضافة أول اختبار
