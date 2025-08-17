@@ -1,6 +1,20 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 
+// Extend the Express Request interface to include user property
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        email: string;
+        role: string;
+        [key: string]: any;
+      };
+    }
+  }
+}
+
 export const isAuthenticated = (
   req: Request,
   res: Response,
@@ -14,7 +28,7 @@ export const isAuthenticated = (
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    (req as any).user = decoded;
+    req.user = decoded as any;
     next();
   } catch {
     return res.status(401).json({ message: 'Invalid token' });
@@ -23,7 +37,7 @@ export const isAuthenticated = (
 
 export const requireRole = (role: string) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    const user = (req as any).user;
+    const user = req.user;
     if (!user || user.role !== role) {
       return res.status(403).json({ message: 'Forbidden ' });
     }
@@ -32,7 +46,7 @@ export const requireRole = (role: string) => {
 };
 
 // Admin middleware
-export const isAdmin = async (req: any, res: any, next: any) => {
+export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
     if (!user) {

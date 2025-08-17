@@ -1,8 +1,8 @@
 import type { Express } from 'express';
 import { createServer, type Server } from 'http';
 import express from 'express';
-import { storage } from './storage';
-import { isAdmin, isAuthenticated } from './middleware/auth';
+import { storage } from './storage.js';
+import { isAdmin, isAuthenticated } from './middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -28,7 +28,9 @@ import {
   createExamQuestionSchema,
   userRoleEnum,
   insertUserSchema,
-} from '@shared/schema';
+  Exam,
+  ExamQuestion,
+} from '../shared/schema.js';
 import { z } from 'zod';
 
 // UUID validation utility function
@@ -1472,8 +1474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'User not found' });
       }
 
-      const updatedUser = await storage.upsertUser({
-        ...currentUser,
+      const updatedUser = await storage.updateUser(userId, {
         firstName,
         lastName,
         city,
@@ -1524,7 +1525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAdmin,
     async (req: any, res) => {
       try {
-        const courseId = parseInt(req.params.id);
+        const courseId = req.params.id;
         const validationResult = createCourseSchema
           .partial()
           .safeParse(req.body);
@@ -1560,7 +1561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAdmin,
     async (req: any, res) => {
       try {
-        const courseId = parseInt(req.params.id);
+        const courseId = req.params.id;
         await storage.deleteCourse(courseId);
         res.status(204).send();
       } catch (error) {
@@ -1671,7 +1672,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const exam = await storage.createExam(validationResult.data);
+      // Convert passingGrade from number to string for Drizzle schema compatibility
+      const examData = {
+        ...validationResult.data,
+        passingGrade: validationResult.data.passingGrade?.toString() || '70'
+      };
+      const exam = await storage.createExam(examData);
       res.status(201).json(exam);
     } catch (error) {
       console.error('Error creating exam:', error);
@@ -1774,9 +1780,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Convert passingGrade from number to string for Drizzle schema compatibility
+      const updateData: Partial<Exam> = {
+        ...validationResult.data,
+        passingGrade: validationResult.data.passingGrade?.toString() || undefined
+      };
       const updatedExam = await storage.updateExam(
         examId,
-        validationResult.data
+        updateData
       );
       if (!updatedExam) {
         return res.status(404).json({ message: 'Exam not found' });
@@ -1843,7 +1854,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get course lessons for admin
   app.get('/api/courses/:id/lessons', async (req: any, res) => {
     try {
-      const courseId = parseInt(req.params.id);
+      const courseId = req.params.id;
       const lessons = await storage.getLessonsByCourse(courseId);
       res.json(lessons);
     } catch (error) {
@@ -1911,10 +1922,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const question = await storage.createExamQuestion({
+      // Convert points from number to string for Drizzle schema compatibility
+      const questionData = {
         ...validationResult.data,
-        examId
-      });
+        examId,
+        points: validationResult.data.points?.toString() || '1'
+      };
+
+      const question = await storage.createExamQuestion(questionData);
 
       // Update exam question count
       await storage.updateExamQuestionCount(examId);
@@ -1991,9 +2006,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Convert points from number to string for Drizzle schema compatibility
+      const updateData = {
+        ...validationResult.data,
+        points: validationResult.data.points?.toString() || undefined
+      };
+
       const updatedQuestion = await storage.updateExamQuestion(
         questionId,
-        validationResult.data
+        updateData
       );
       if (!updatedQuestion) {
         return res.status(404).json({ message: 'Question not found' });
@@ -2462,6 +2483,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/live-sessions', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
@@ -2594,6 +2618,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/live-sessions/:id', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
@@ -2680,6 +2707,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/live-sessions/:id', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
@@ -2768,6 +2798,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/live-sessions/:id/live-status', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
@@ -2886,6 +2919,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/live-sessions/:id/meeting-link', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
@@ -3007,6 +3043,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/live-sessions/:id/start-streaming', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
@@ -3123,6 +3162,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/live-sessions/:id/stop-streaming', isAuthenticated, async (req, res) => {
     try {
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: 'User ID not found' });
+      }
       const user = await storage.getUserById(userId);
 
       if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
