@@ -3,22 +3,49 @@ import { Footer } from "@/components/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  instructor: string;
+  level: string;
+  duration?: number;
+  totalLessons: number;
+  thumbnailUrl?: string;
+  imageUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+}
 
 export function DiplomaBachelorPage() {
-  const subjects = [
-    { id: 1, courseId: 1, title: "حفظ 30 حزب", icon: "fas fa-quran", hours: 35 },
-    { id: 2, courseId: 2, title: "حفظ 500 حديث إجمالاً", icon: "fas fa-bookmark", hours: 40 },
-    { id: 3, courseId: 3, title: "تفسير نصف القرآن", icon: "fas fa-book-open", hours: 45 },
-    { id: 4, courseId: 4, title: "الذكاء الاصطناعي", icon: "fas fa-robot", hours: 20 },
-    { id: 5, courseId: 5, title: "المهارات التطبيقية", icon: "fas fa-tools", hours: 18 },
-    { id: 6, courseId: 6, title: "علم الرجال والتراجم", icon: "fas fa-users", hours: 25 },
-    { id: 7, courseId: 1, title: "علم التحقيق", icon: "fas fa-search-plus", hours: 22 },
-    { id: 8, courseId: 2, title: "مناهج المحدثين", icon: "fas fa-route", hours: 28 },
-    { id: 9, courseId: 3, title: "التفسير المقارن", icon: "fas fa-balance-scale", hours: 25 },
-    { id: 10, courseId: 4, title: "التفسير التحليلي", icon: "fas fa-microscope", hours: 22 }
-  ];
+  // Fetch courses for bachelor level
+  const { data: courses = [], isLoading } = useQuery<Course[]>({
+    queryKey: ["api", "courses"],
+  });
 
-  const totalHours = subjects.reduce((sum, subject) => sum + subject.hours, 0);
+  // Filter courses for bachelor level
+  const bachelorCourses = courses.filter(course => course.level === "بكالوريوس");
+
+  // Calculate total hours from courses
+  const totalHours = bachelorCourses.reduce((sum, course) => sum + Math.ceil((course.duration || 0) / 60), 0);
+
+  // Helper function to get course icon based on title
+  const getCourseIcon = (title: string) => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes('قرآن') || lowerTitle.includes('حزب')) return 'fas fa-quran';
+    if (lowerTitle.includes('حديث')) return 'fas fa-bookmark';
+    if (lowerTitle.includes('تفسير')) return 'fas fa-book-open';
+    if (lowerTitle.includes('ذكاء') || lowerTitle.includes('اصطناعي')) return 'fas fa-robot';
+    if (lowerTitle.includes('مهارات') || lowerTitle.includes('تطبيقية')) return 'fas fa-tools';
+    if (lowerTitle.includes('رجال') || lowerTitle.includes('تراجم')) return 'fas fa-users';
+    if (lowerTitle.includes('تحقيق')) return 'fas fa-search-plus';
+    if (lowerTitle.includes('مناهج') || lowerTitle.includes('محدثين')) return 'fas fa-route';
+    if (lowerTitle.includes('مقارن')) return 'fas fa-balance-scale';
+    if (lowerTitle.includes('تحليلي')) return 'fas fa-microscope';
+    return 'fas fa-graduation-cap';
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
@@ -47,53 +74,65 @@ export function DiplomaBachelorPage() {
           </div>
         </div>
 
-        {/* Subjects Grid */}
+        {/* Courses Grid */}
         <div className="mb-8">
           <h2 className="text-xl font-amiri font-bold text-gray-800 mb-6">
-            المواد الدراسية ({subjects.length} مادة)
+            المواد الدراسية ({bachelorCourses.length} مادة)
           </h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {subjects.map((subject, index) => (
-              <Link key={subject.id} href={`/course/${subject.courseId}`}>
-                <Card className="hover-scale overflow-hidden cursor-pointer">
-                  <div className="h-20 bg-gradient-to-br from-purple-400 to-purple-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
-                  <div className="absolute inset-0 bg-black/10"></div>
-                  <div className="relative z-10 text-center">
-                    <i className={`${subject.icon} text-sm mb-1`}></i>
-                    <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
-                      {subject.title.length > 25 ? subject.title.substring(0, 25) + '...' : subject.title}
-                    </h4>
-                  </div>
-                </div>
-                <CardContent className="p-3">
-                  <h4 className="font-amiri font-bold text-sm mb-2 truncate">
-                    {subject.title}
-                  </h4>
-                  <div className="flex justify-between items-center text-xs text-gray-600 mb-3">
-                    <span>{subject.hours} ساعة</span>
-                    <span>22 محاضرة</span>
-                  </div>
-                  <div className="mb-3">
-                    <div className="flex justify-between text-xs text-gray-600 mb-1">
-                      <span>التقدم</span>
-                      <span>0%</span>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <i className="fas fa-spinner fa-spin text-2xl text-gray-400 ml-3"></i>
+              <span>جاري تحميل المواد...</span>
+            </div>
+          ) : bachelorCourses.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-book-open text-3xl text-gray-400"></i>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-600 mb-2">لا توجد مواد بعد</h3>
+              <p className="text-gray-500">سيتم إضافة المواد قريباً</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {bachelorCourses.map((course) => (
+                <Link key={course.id} href={`/course/${course.id}`}>
+                  <Card className="hover-scale overflow-hidden cursor-pointer">
+                    <div className="h-20 bg-gradient-to-br from-purple-400 to-purple-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                      <div className="absolute inset-0 bg-black/10"></div>
+                      <div className="relative z-10 text-center">
+                        <i className={`${getCourseIcon(course.title)} text-sm mb-1`}></i>
+                        <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                          {course.title.length > 25 ? course.title.substring(0, 25) + '...' : course.title}
+                        </h4>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1">
-                      <div className="bg-purple-600 h-1 rounded-full" style={{ width: '0%' }}></div>
-                    </div>
-                  </div>
-                  <Button 
-                    size="sm"
-                    className="w-full bg-purple-500 text-white hover:bg-purple-600 text-xs py-1 h-6"
-                  >
-                    بدء الدراسة
-                  </Button>
-                </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                    <CardContent className="p-3">
+                      <h4 className="font-amiri font-bold text-sm mb-2 truncate">
+                        {course.title}
+                      </h4>
+                      <div className="flex justify-between items-center text-xs text-gray-600 mb-3">
+                        <span>{Math.ceil((course.duration || 0) / 60)} ساعة</span>
+                        <span>{course.totalLessons} محاضرة</span>
+                      </div>
+                      <div className="mb-3">
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>المدرس</span>
+                          <span>{course.instructor}</span>
+                        </div>
+                      </div>
+                      <Button 
+                        size="sm"
+                        className="w-full bg-purple-500 text-white hover:bg-purple-600 text-xs py-1 h-6"
+                      >
+                        بدء الدراسة
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Requirements & Info */}

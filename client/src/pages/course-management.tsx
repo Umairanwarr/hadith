@@ -25,7 +25,7 @@ const courseSchema = z.object({
   title: z.string().min(5, "عنوان الكورس يجب أن يكون 5 أحرف على الأقل"),
   description: z.string().min(10, "وصف الكورس يجب أن يكون 10 أحرف على الأقل"),
   instructor: z.string().min(3, "اسم المدرس مطلوب"),
-  level: z.enum(["مبتدئ", "متوسط", "متقدم", "تمهيدي", "بكالوريوس", "ماجستير", "دكتوراه"]),
+  level: z.enum(["تمهيدي", "متوسط", "إجازة", "بكالوريوس", "ماجستير", "دكتوراه"]),
   duration: z.number().min(1, "مدة الكورس مطلوبة").optional(),
   thumbnailUrl: z.string().optional(),
   imageUrl: z.string().optional(),
@@ -144,13 +144,12 @@ function CourseFormDialogComponent({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                      <SelectItem value="مبتدئ">{t('levels.beginner')}</SelectItem>
-                      <SelectItem value="متوسط">{t('levels.intermediate')}</SelectItem>
-                      <SelectItem value="متقدم">{t('levels.advanced')}</SelectItem>
-                      <SelectItem value="تمهيدي">{t('levels.preparatory')}</SelectItem>
-                      <SelectItem value="بكالوريوس">{t('levels.bachelor')}</SelectItem>
-                      <SelectItem value="ماجستير">{t('levels.master')}</SelectItem>
-                      <SelectItem value="دكتوراه">{t('levels.doctorate')}</SelectItem>
+                      <SelectItem value="تمهيدي">الديبلوم التمهيدي - Preparatory Diploma</SelectItem>
+                      <SelectItem value="متوسط">الدبلوم المتوسط - Intermediate Diploma</SelectItem>
+                      <SelectItem value="إجازة">الإجازة - Vacation</SelectItem>
+                      <SelectItem value="بكالوريوس">البكالوريوس - Bachelor's Degree</SelectItem>
+                      <SelectItem value="ماجستير">الماجستير - Master's Degree</SelectItem>
+                      <SelectItem value="دكتوراه">الدكتوراه - Doctorate Degree</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -277,7 +276,7 @@ export function CourseManagementPage() {
       title: "",
       description: "",
       instructor: "",
-      level: "مبتدئ",
+      level: "تمهيدي",
       duration: 120,
       thumbnailUrl: "",
       imageUrl: "",
@@ -602,14 +601,13 @@ export function CourseManagementPage() {
                 <SelectValue placeholder="جميع المستويات" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">جميع المستويات</SelectItem>
-                <SelectItem value="مبتدئ">مبتدئ</SelectItem>
-                <SelectItem value="متوسط">متوسط</SelectItem>
-                <SelectItem value="متقدم">متقدم</SelectItem>
-                <SelectItem value="تمهيدي">تمهيدي</SelectItem>
-                <SelectItem value="بكالوريوس">بكالوريوس</SelectItem>
-                <SelectItem value="ماجستير">ماجستير</SelectItem>
-                <SelectItem value="دكتوراه">دكتوراه</SelectItem>
+                <SelectItem value="all">جميع المستويات - All Levels</SelectItem>
+                <SelectItem value="تمهيدي">الديبلوم التمهيدي - Preparatory Diploma</SelectItem>
+                <SelectItem value="متوسط">الدبلوم المتوسط - Intermediate Diploma</SelectItem>
+                <SelectItem value="إجازة">الإجازة - Vacation</SelectItem>
+                <SelectItem value="بكالوريوس">البكالوريوس - Bachelor's Degree</SelectItem>
+                <SelectItem value="ماجستير">الماجستير - Master's Degree</SelectItem>
+                <SelectItem value="دكتوراه">الدكتوراه - Doctorate Degree</SelectItem>
               </SelectContent>
             </Select>
           </div>

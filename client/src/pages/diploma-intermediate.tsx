@@ -3,23 +3,51 @@ import { Footer } from "@/components/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  instructor: string;
+  level: string;
+  duration?: number;
+  totalLessons: number;
+  thumbnailUrl?: string;
+  imageUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+}
 
 export function DiplomaIntermediatePage() {
-  const subjects = [
-    { id: 1, courseId: 1, title: "حفظ عشرة أحزاب من القرآن", icon: "fas fa-quran", hours: 25 },
-    { id: 2, courseId: 2, title: "حفظ السلسلة الذهبية", icon: "fas fa-link", hours: 15 },
-    { id: 3, courseId: 3, title: "عمدة الأحكام", icon: "fas fa-gavel", hours: 20 },
-    { id: 4, courseId: 4, title: "شبهات حول السنة", icon: "fas fa-shield-alt", hours: 12 },
-    { id: 5, courseId: 5, title: "تاريخ الصحابة والتابعين", icon: "fas fa-users", hours: 18 },
-    { id: 6, courseId: 6, title: "تفسير عشرة أحزاب", icon: "fas fa-book-open", hours: 25 },
-    { id: 7, courseId: 1, title: "اللغة العربية", icon: "fas fa-font", hours: 15 },
-    { id: 8, courseId: 2, title: "علم المناعة الحضارية", icon: "fas fa-globe", hours: 10 },
-    { id: 9, courseId: 3, title: "المهارات التطبيقية", icon: "fas fa-tools", hours: 12 },
-    { id: 10, courseId: 4, title: "علم طبقات المحدثين", icon: "fas fa-layer-group", hours: 15 },
-    { id: 11, courseId: 5, title: "علم الجرح والتعديل", icon: "fas fa-balance-scale", hours: 13 }
-  ];
+  // Fetch courses for intermediate level
+  const { data: courses = [], isLoading } = useQuery<Course[]>({
+    queryKey: ["api", "courses"],
+  });
 
-  const totalHours = subjects.reduce((sum, subject) => sum + subject.hours, 0);
+  // Filter courses for intermediate level
+  const intermediateCourses = courses.filter(course => course.level === "متوسط");
+
+  // Calculate total hours from courses
+  const totalHours = intermediateCourses.reduce((sum, course) => sum + Math.ceil((course.duration || 0) / 60), 0);
+
+  // Helper function to get course icon based on title
+  const getCourseIcon = (title: string) => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes('قرآن') || lowerTitle.includes('أحزاب')) return 'fas fa-quran';
+    if (lowerTitle.includes('حديث') || lowerTitle.includes('سلسلة')) return 'fas fa-link';
+    if (lowerTitle.includes('أحكام') || lowerTitle.includes('عمدة')) return 'fas fa-gavel';
+    if (lowerTitle.includes('شبهات') || lowerTitle.includes('سنة')) return 'fas fa-shield-alt';
+    if (lowerTitle.includes('تاريخ') || lowerTitle.includes('صحابة')) return 'fas fa-users';
+    if (lowerTitle.includes('تفسير')) return 'fas fa-book-open';
+    if (lowerTitle.includes('لغة') || lowerTitle.includes('عربية')) return 'fas fa-font';
+    if (lowerTitle.includes('مناعة') || lowerTitle.includes('حضارية')) return 'fas fa-globe';
+    if (lowerTitle.includes('مهارات') || lowerTitle.includes('تطبيقية')) return 'fas fa-tools';
+    if (lowerTitle.includes('طبقات') || lowerTitle.includes('محدثين')) return 'fas fa-layer-group';
+    if (lowerTitle.includes('جرح') || lowerTitle.includes('تعديل')) return 'fas fa-balance-scale';
+    return 'fas fa-graduation-cap';
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
@@ -48,53 +76,65 @@ export function DiplomaIntermediatePage() {
           </div>
         </div>
 
-        {/* Subjects Grid */}
+        {/* Courses Grid */}
         <div className="mb-8">
           <h2 className="text-xl font-amiri font-bold text-gray-800 mb-6">
-            المواد الدراسية ({subjects.length} مادة)
+            المواد الدراسية ({intermediateCourses.length} مادة)
           </h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {subjects.map((subject, index) => (
-              <Link key={subject.id} href={`/course/${subject.courseId}`}>
-                <Card className="hover-scale overflow-hidden cursor-pointer">
-                  <div className="h-20 bg-gradient-to-br from-orange-400 to-orange-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
-                    <div className="absolute inset-0 bg-black/10"></div>
-                    <div className="relative z-10 text-center">
-                      <i className={`${subject.icon} text-sm mb-1`}></i>
-                      <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
-                        {subject.title.length > 25 ? subject.title.substring(0, 25) + '...' : subject.title}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <i className="fas fa-spinner fa-spin text-2xl text-gray-400 ml-3"></i>
+              <span>جاري تحميل المواد...</span>
+            </div>
+          ) : intermediateCourses.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-book-open text-3xl text-gray-400"></i>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-600 mb-2">لا توجد مواد بعد</h3>
+              <p className="text-gray-500">سيتم إضافة المواد قريباً</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {intermediateCourses.map((course) => (
+                <Link key={course.id} href={`/course/${course.id}`}>
+                  <Card className="hover-scale overflow-hidden cursor-pointer">
+                    <div className="h-20 bg-gradient-to-br from-orange-400 to-orange-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                      <div className="absolute inset-0 bg-black/10"></div>
+                      <div className="relative z-10 text-center">
+                        <i className={`${getCourseIcon(course.title)} text-sm mb-1`}></i>
+                        <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                          {course.title.length > 25 ? course.title.substring(0, 25) + '...' : course.title}
+                        </h4>
+                      </div>
+                    </div>
+                    <CardContent className="p-3">
+                      <h4 className="font-amiri font-bold text-sm mb-2 truncate">
+                        {course.title}
                       </h4>
-                    </div>
-                  </div>
-                  <CardContent className="p-3">
-                    <h4 className="font-amiri font-bold text-sm mb-2 truncate">
-                      {subject.title}
-                    </h4>
-                    <div className="flex justify-between items-center text-xs text-gray-600 mb-3">
-                      <span>{subject.hours} ساعة</span>
-                      <span>15 محاضرة</span>
-                    </div>
-                    <div className="mb-3">
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
-                        <span>التقدم</span>
-                        <span>0%</span>
+                      <div className="flex justify-between items-center text-xs text-gray-600 mb-3">
+                        <span>{Math.ceil((course.duration || 0) / 60)} ساعة</span>
+                        <span>{course.totalLessons} محاضرة</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1">
-                        <div className="bg-orange-600 h-1 rounded-full" style={{ width: '0%' }}></div>
+                      <div className="mb-3">
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>المدرس</span>
+                          <span>{course.instructor}</span>
+                        </div>
                       </div>
-                    </div>
-                    <Button 
-                      size="sm"
-                      className="w-full bg-orange-500 text-white hover:bg-orange-600 text-xs py-1 h-6"
-                    >
-                      بدء الدراسة
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                      <Button 
+                        size="sm"
+                        className="w-full bg-orange-500 text-white hover:bg-orange-600 text-xs py-1 h-6"
+                      >
+                        بدء الدراسة
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Requirements & Info */}

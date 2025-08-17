@@ -3,23 +3,50 @@ import { Footer } from "@/components/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  instructor: string;
+  level: string;
+  duration?: number;
+  totalLessons: number;
+  thumbnailUrl?: string;
+  imageUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+}
 
 export function DiplomaMasterPage() {
-  const subjects = [
-    { id: 1, courseId: 1, title: "حفظ 40 حزب", icon: "fas fa-quran", hours: 45 },
-    { id: 2, courseId: 2, title: "حفظ 700 حديث إجمالاً", icon: "fas fa-bookmark", hours: 50 },
-    { id: 3, courseId: 3, title: "تفسير 40 حزب من القرآن", icon: "fas fa-book-open", hours: 50 },
-    { id: 4, courseId: 4, title: "مناهج التصنيف في السنة", icon: "fas fa-layer-group", hours: 25 },
-    { id: 5, courseId: 5, title: "مختلف الحديث", icon: "fas fa-code-branch", hours: 22 },
-    { id: 6, courseId: 6, title: "علم الأنساب والقبائل", icon: "fas fa-sitemap", hours: 20 },
-    { id: 7, courseId: 1, title: "تاريخ المحدثين المعاصرين وطرقهم إلى الأئمة", icon: "fas fa-users-cog", hours: 28 },
-    { id: 8, courseId: 2, title: "فقه الأئمة الأربعة", icon: "fas fa-gavel", hours: 30 },
-    { id: 9, courseId: 3, title: "علم الجدل", icon: "fas fa-comments", hours: 18 },
-    { id: 10, courseId: 4, title: "مناهج وطرق البحث العلمي", icon: "fas fa-search", hours: 25 },
-    { id: 11, courseId: 5, title: "رسالة الماجستير", icon: "fas fa-file-alt", hours: 47 }
-  ];
+  // Fetch courses for master level
+  const { data: courses = [], isLoading } = useQuery<Course[]>({
+    queryKey: ["api", "courses"],
+  });
 
-  const totalHours = subjects.reduce((sum, subject) => sum + subject.hours, 0);
+  // Filter courses for master level
+  const masterCourses = courses.filter(course => course.level === "ماجستير");
+
+  // Calculate total hours from courses
+  const totalHours = masterCourses.reduce((sum, course) => sum + Math.ceil((course.duration || 0) / 60), 0);
+
+  // Helper function to get course icon based on title
+  const getCourseIcon = (title: string) => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes('قرآن') || lowerTitle.includes('حزب')) return 'fas fa-quran';
+    if (lowerTitle.includes('حديث')) return 'fas fa-bookmark';
+    if (lowerTitle.includes('تفسير')) return 'fas fa-book-open';
+    if (lowerTitle.includes('مناهج') || lowerTitle.includes('تصنيف')) return 'fas fa-layer-group';
+    if (lowerTitle.includes('مختلف')) return 'fas fa-code-branch';
+    if (lowerTitle.includes('أنساب') || lowerTitle.includes('قبائل')) return 'fas fa-sitemap';
+    if (lowerTitle.includes('تاريخ') || lowerTitle.includes('محدثين')) return 'fas fa-users-cog';
+    if (lowerTitle.includes('فقه') || lowerTitle.includes('أئمة')) return 'fas fa-gavel';
+    if (lowerTitle.includes('جدل')) return 'fas fa-comments';
+    if (lowerTitle.includes('بحث') || lowerTitle.includes('علمي')) return 'fas fa-search';
+    if (lowerTitle.includes('رسالة') || lowerTitle.includes('ماجستير')) return 'fas fa-file-alt';
+    return 'fas fa-graduation-cap';
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
@@ -48,53 +75,65 @@ export function DiplomaMasterPage() {
           </div>
         </div>
 
-        {/* Subjects Grid */}
+        {/* Courses Grid */}
         <div className="mb-8">
           <h2 className="text-xl font-amiri font-bold text-gray-800 mb-6">
-            المواد الدراسية ({subjects.length} مادة)
+            المواد الدراسية ({masterCourses.length} مادة)
           </h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {subjects.map((subject, index) => (
-              <Link key={subject.id} href={`/course/${subject.courseId}`}>
-                <Card className="hover-scale overflow-hidden cursor-pointer">
-                  <div className="h-20 bg-gradient-to-br from-yellow-400 to-yellow-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
-                  <div className="absolute inset-0 bg-black/10"></div>
-                  <div className="relative z-10 text-center">
-                    <i className={`${subject.icon} text-sm mb-1`}></i>
-                    <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
-                      {subject.title.length > 25 ? subject.title.substring(0, 25) + '...' : subject.title}
-                    </h4>
-                  </div>
-                </div>
-                <CardContent className="p-3">
-                  <h4 className="font-amiri font-bold text-sm mb-2 truncate">
-                    {subject.title}
-                  </h4>
-                  <div className="flex justify-between items-center text-xs text-gray-600 mb-3">
-                    <span>{subject.hours} ساعة</span>
-                    <span>25 محاضرة</span>
-                  </div>
-                  <div className="mb-3">
-                    <div className="flex justify-between text-xs text-gray-600 mb-1">
-                      <span>التقدم</span>
-                      <span>0%</span>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <i className="fas fa-spinner fa-spin text-2xl text-gray-400 ml-3"></i>
+              <span>جاري تحميل المواد...</span>
+            </div>
+          ) : masterCourses.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="fas fa-book-open text-3xl text-gray-400"></i>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-600 mb-2">لا توجد مواد بعد</h3>
+              <p className="text-gray-500">سيتم إضافة المواد قريباً</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {masterCourses.map((course) => (
+                <Link key={course.id} href={`/course/${course.id}`}>
+                  <Card className="hover-scale overflow-hidden cursor-pointer">
+                    <div className="h-20 bg-gradient-to-br from-yellow-400 to-yellow-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
+                      <div className="absolute inset-0 bg-black/10"></div>
+                      <div className="relative z-10 text-center">
+                        <i className={`${getCourseIcon(course.title)} text-sm mb-1`}></i>
+                        <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
+                          {course.title.length > 25 ? course.title.substring(0, 25) + '...' : course.title}
+                        </h4>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1">
-                      <div className="bg-yellow-600 h-1 rounded-full" style={{ width: '0%' }}></div>
-                    </div>
-                  </div>
-                  <Button 
-                    size="sm"
-                    className="w-full bg-yellow-500 text-white hover:bg-yellow-600 text-xs py-1 h-6"
-                  >
-                    بدء الدراسة
-                  </Button>
-                </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                    <CardContent className="p-3">
+                      <h4 className="font-amiri font-bold text-sm mb-2 truncate">
+                        {course.title}
+                      </h4>
+                      <div className="flex justify-between items-center text-xs text-gray-600 mb-3">
+                        <span>{Math.ceil((course.duration || 0) / 60)} ساعة</span>
+                        <span>{course.totalLessons} محاضرة</span>
+                      </div>
+                      <div className="mb-3">
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>المدرس</span>
+                          <span>{course.instructor}</span>
+                        </div>
+                      </div>
+                      <Button 
+                        size="sm"
+                        className="w-full bg-yellow-500 text-white hover:bg-yellow-600 text-xs py-1 h-6"
+                      >
+                        بدء الدراسة
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Requirements & Info */}

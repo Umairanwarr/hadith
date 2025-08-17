@@ -3,6 +3,8 @@ import { Footer } from "@/components/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
 import { useGetDiplomaCourses } from "@/hooks/useCourses";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
