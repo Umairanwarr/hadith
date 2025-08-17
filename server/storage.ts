@@ -11,6 +11,7 @@ import {
   liveSessions,
   diplomaTemplates,
   certificateImages,
+  emailVerificationTokens,
   type User,
   type UpsertUser,
   type Course,
@@ -35,6 +36,8 @@ import {
   type InsertDiplomaTemplate,
   type CertificateImage,
   type InsertCertificateImage,
+  type EmailVerificationToken,
+  type InsertEmailVerificationToken,
   UserRole,
 } from '../shared/schema.js';
 import { db } from './db.js';
@@ -49,6 +52,12 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
   updateUserRole(id: string, role: UserRole): Promise<User | undefined>;
+
+  // Email verification operations
+  createEmailVerificationToken(token: InsertEmailVerificationToken): Promise<EmailVerificationToken>;
+  getEmailVerificationToken(token: string): Promise<EmailVerificationToken | undefined>;
+  deleteEmailVerificationToken(token: string): Promise<void>;
+  verifyUserEmail(userId: string): Promise<void>;
 
   // Course operations
   getAllCourses(): Promise<Course[]>;
@@ -229,6 +238,36 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updatedUser;
+  }
+
+  // Email verification operations
+  async createEmailVerificationToken(token: InsertEmailVerificationToken): Promise<EmailVerificationToken> {
+    const [newToken] = await db
+      .insert(emailVerificationTokens)
+      .values(token)
+      .returning();
+    return newToken;
+  }
+
+  async getEmailVerificationToken(token: string): Promise<EmailVerificationToken | undefined> {
+    const [tokenRecord] = await db
+      .select()
+      .from(emailVerificationTokens)
+      .where(eq(emailVerificationTokens.token, token));
+    return tokenRecord;
+  }
+
+  async deleteEmailVerificationToken(token: string): Promise<void> {
+    await db
+      .delete(emailVerificationTokens)
+      .where(eq(emailVerificationTokens.token, token));
+  }
+
+  async verifyUserEmail(userId: string): Promise<void> {
+    await db
+      .update(users)
+      .set({ isEmailVerified: true, updatedAt: new Date() })
+      .where(eq(users.id, userId));
   }
 
   // Live Sessions operations

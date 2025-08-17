@@ -397,6 +397,209 @@ const options = {
               description: 'Error message'
             }
           }
+        },
+        User: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique user ID'
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              description: 'User email address'
+            },
+            firstName: {
+              type: 'string',
+              description: 'User first name'
+            },
+            lastName: {
+              type: 'string',
+              description: 'User last name'
+            },
+            role: {
+              type: 'string',
+              enum: ['student', 'admin', 'teacher'],
+              description: 'User role in the system'
+            },
+            isEmailVerified: {
+              type: 'boolean',
+              description: 'Whether the user email is verified'
+            },
+            profileImageUrl: {
+              type: 'string',
+              description: 'URL to user profile image'
+            },
+            city: {
+              type: 'string',
+              description: 'User city'
+            },
+            specialization: {
+              type: 'string',
+              description: 'User specialization'
+            },
+            level: {
+              type: 'string',
+              description: 'User level (مبتدئ, متوسط, متقدم)'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'User creation date'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'User last update date'
+            }
+          }
+        },
+        RegisterRequest: {
+          type: 'object',
+          required: ['email', 'password', 'role'],
+          properties: {
+            email: {
+              type: 'string',
+              format: 'email',
+              description: 'User email address'
+            },
+            password: {
+              type: 'string',
+              minLength: 8,
+              description: 'User password (minimum 8 characters)'
+            },
+            role: {
+              type: 'string',
+              enum: ['student', 'admin', 'teacher'],
+              description: 'User role in the system'
+            },
+            firstName: {
+              type: 'string',
+              description: 'User first name'
+            },
+            lastName: {
+              type: 'string',
+              description: 'User last name'
+            },
+            city: {
+              type: 'string',
+              description: 'User city'
+            },
+            specialization: {
+              type: 'string',
+              description: 'User specialization'
+            },
+            level: {
+              type: 'string',
+              description: 'User level'
+            }
+          }
+        },
+        LoginRequest: {
+          type: 'object',
+          required: ['email', 'password'],
+          properties: {
+            email: {
+              type: 'string',
+              format: 'email',
+              description: 'User email address'
+            },
+            password: {
+              type: 'string',
+              description: 'User password'
+            }
+          }
+        },
+        RegisterResponse: {
+          type: 'object',
+          properties: {
+            message: {
+              type: 'string',
+              description: 'Success message'
+            },
+            requiresEmailVerification: {
+              type: 'boolean',
+              description: 'Indicates email verification is required'
+            },
+            emailError: {
+              type: 'boolean',
+              description: 'Indicates if there was an error sending verification email'
+            }
+          }
+        },
+        LoginResponse: {
+          type: 'object',
+          properties: {
+            token: {
+              type: 'string',
+              description: 'JWT authentication token'
+            }
+          }
+        },
+        EmailVerificationRequest: {
+          type: 'object',
+          required: ['token'],
+          properties: {
+            token: {
+              type: 'string',
+              description: 'Email verification token'
+            }
+          }
+        },
+        EmailVerificationResponse: {
+          type: 'object',
+          properties: {
+            message: {
+              type: 'string',
+              description: 'Success message'
+            },
+            token: {
+              type: 'string',
+              description: 'JWT authentication token after verification'
+            },
+            user: {
+              $ref: '#/components/schemas/User'
+            }
+          }
+        },
+        ResendVerificationRequest: {
+          type: 'object',
+          required: ['email'],
+          properties: {
+            email: {
+              type: 'string',
+              format: 'email',
+              description: 'User email address'
+            }
+          }
+        },
+        ResendVerificationResponse: {
+          type: 'object',
+          properties: {
+            message: {
+              type: 'string',
+              description: 'Success message'
+            }
+          }
+        },
+        AuthError: {
+          type: 'object',
+          properties: {
+            message: {
+              type: 'string',
+              description: 'Error message'
+            },
+            requiresEmailVerification: {
+              type: 'boolean',
+              description: 'Indicates email verification is required'
+            },
+            email: {
+              type: 'string',
+              description: 'User email address'
+            }
+          }
         }
       }
     },
