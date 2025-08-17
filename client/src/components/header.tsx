@@ -33,11 +33,13 @@ function Header() {
             
             {/* Logo centered */}
             <div className="flex-1 flex justify-center pl-[-3px] pr-[-3px] ml-[2px] mr-[2px] mt-[-47px] mb-[-47px]">
-              <img 
-                src={logo_2} 
-                alt="شعار الجامعة" 
-                className="h-36 w-36 object-contain pl-[-4px] pr-[-4px] ml-[-2px] mr-[-2px] pt-[0px] pb-[0px] mt-[-5px] mb-[-5px]" 
-              />
+              <Link href="/">
+                <img 
+                  src={logo_2} 
+                  alt="شعار الجامعة" 
+                  className="h-36 w-36 object-contain pl-[-4px] pr-[-4px] ml-[-2px] mr-[-2px] pt-[0px] pb-[0px] mt-[-5px] mb-[-5px] cursor-pointer hover:opacity-80 transition-opacity" 
+                />
+              </Link>
             </div>
             
             {/* Live button on right */}
