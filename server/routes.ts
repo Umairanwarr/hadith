@@ -187,6 +187,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Email, password, and role are required.' });
       }
 
+      // Validate password length
+      if (password.length < 8) {
+        console.warn('❌ Password too short.');
+        return res.status(400).json({ message: 'Password must be at least 8 characters long.' });
+      }
+
       const exists = await storage.getUserByEmail(email);
       if (exists) {
         console.warn(`⚠️ User already exists with email: ${email}`);
