@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { sendVerificationEmail, generateVerificationToken } from './lib/emailService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -204,6 +205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.registerUser({
         ...data,
         password: hashedPassword,
+        isEmailVerified: false, // Ensure email is not verified initially
       });
 
       if (!user || !user.id) {
@@ -213,13 +215,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ User registered successfully:', user);
 
-      const token = jwt.sign(
-        { id: user.id, role: user.role },
-        process.env.JWT_SECRET!,
-        { expiresIn: '7d' }
-      );
+      // Generate verification token
+      const verificationToken = generateVerificationToken();
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
 
-      return res.status(201).json({ token });
+      try {
+        // Store verification token
+        await storage.createEmailVerificationToken({
+          userId: user.id,
+          token: verificationToken,
+          expiresAt
+        });
+
+        // Send verification email
+        await sendVerificationEmail(email, verificationToken, user.firstName || undefined);
+
+        console.log('✅ Verification email sent successfully to:', email);
+
+        // Return success message instead of JWT token
+        return res.status(201).json({ 
+          message: 'User registered successfully. Please check your email to verify your account.',
+          requiresEmailVerification: true
+        });
+      } catch (emailError) {
+        console.error('❌ Error sending verification email:', emailError);
+        
+        // If email fails, we should still create the user but inform them
+        // You might want to implement a retry mechanism or admin notification
+        return res.status(201).json({ 
+          message: 'User registered successfully, but verification email could not be sent. Please contact support.',
+          requiresEmailVerification: true,
+          emailError: true
+        });
+      }
     } catch (err) {
       if (err instanceof z.ZodError) {
         console.error('❌ Zod validation error:', err.errors);
@@ -228,6 +256,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.error('🔥 Unexpected error in registration route:', err);
       return res.status(500).json({ message: 'Server error during registration.' });
+    }
+  });
+
+  // Email verification
+  app.post('/api/auth/verify-email', async (req, res) => {
+    try {
+      const { token } = req.body;
+
+      if (!token) {
+        return res.status(400).json({ message: 'Verification token is required.' });
+      }
+
+      // Get verification token from database
+      const tokenRecord = await storage.getEmailVerificationToken(token);
+      
+      if (!tokenRecord) {
+        return res.status(400).json({ message: 'Invalid verification token.' });
+      }
+
+      // Check if token has expired
+      if (new Date() > tokenRecord.expiresAt) {
+        // Delete expired token
+        await storage.deleteEmailVerificationToken(token);
+        return res.status(400).json({ message: 'Verification token has expired. Please request a new one.' });
+      }
+
+      // Verify user's email
+      await storage.verifyUserEmail(tokenRecord.userId);
+
+      // Delete the used token
+      await storage.deleteEmailVerificationToken(token);
+
+      // Get the verified user
+      const user = await storage.getUserById(tokenRecord.userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+
+      // Generate JWT token for the verified user
+      const jwtToken = jwt.sign(
+        { id: user.id, role: user.role },
+        process.env.JWT_SECRET!,
+        { expiresIn: '7d' }
+      );
+
+      console.log('✅ Email verified successfully for user:', user.email);
+
+      return res.status(200).json({ 
+        message: 'Email verified successfully!',
+        token: jwtToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          isEmailVerified: true
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error verifying email:', error);
+      return res.status(500).json({ message: 'Server error during email verification.' });
+    }
+  });
+
+  // Resend verification email
+  app.post('/api/auth/resend-verification', async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required.' });
+      }
+
+      // Check if user exists
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+
+      // Check if email is already verified
+      if (user.isEmailVerified) {
+        return res.status(400).json({ message: 'Email is already verified.' });
+      }
+
+      // Generate new verification token
+      const verificationToken = generateVerificationToken();
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+
+      // Store new verification token (delete old ones first)
+      await storage.deleteEmailVerificationToken(verificationToken); // Clean up any existing tokens
+      await storage.createEmailVerificationToken({
+        userId: user.id,
+        token: verificationToken,
+        expiresAt
+      });
+
+      // Send verification email
+      await sendVerificationEmail(email, verificationToken, user.firstName || undefined);
+
+      console.log('✅ Verification email resent successfully to:', email);
+
+      return res.status(200).json({ 
+        message: 'Verification email sent successfully. Please check your email.'
+      });
+    } catch (error) {
+      console.error('❌ Error resending verification email:', error);
+      return res.status(500).json({ message: 'Server error while resending verification email.' });
     }
   });
 
@@ -242,6 +379,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch)
         return res.status(401).json({ message: 'Invalid password' });
+
+      // Check if email is verified
+      if (!user.isEmailVerified) {
+        return res.status(403).json({ 
+          message: 'Please verify your email before logging in.',
+          requiresEmailVerification: true,
+          email: user.email
+        });
+      }
 
       const token = jwt.sign(
         { id: user.id, role: user.role },

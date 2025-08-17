@@ -43,6 +43,7 @@ export const users = pgTable('users', {
   level: varchar('level').default('مبتدئ'),
   // role: varchar("role").default("student"),
   role: userRoleEnum('role').notNull(),
+  isEmailVerified: boolean('is_email_verified').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -447,6 +448,20 @@ export const certificateImages = pgTable('certificate_images', {
 
 export type CertificateImage = typeof certificateImages.$inferSelect;
 export type InsertCertificateImage = typeof certificateImages.$inferInsert;
+
+// Email verification tokens table
+export const emailVerificationTokens = pgTable('email_verification_tokens', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  token: varchar('token').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export type EmailVerificationToken = typeof emailVerificationTokens.$inferSelect;
+export type InsertEmailVerificationToken = typeof emailVerificationTokens.$inferInsert;
 
 // Types
 export type UpsertUser = typeof users.$inferInsert;
