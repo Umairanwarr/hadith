@@ -88,6 +88,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/health', (req, res) => res.send('ok'));
 
+  // Debug route to check database tables
+  app.get('/api/debug/tables', async (req, res) => {
+    try {
+      console.log('🔍 Debug: Checking database tables...');
+      
+      // Check if certificate_images table exists by trying to query it
+      try {
+        const images = await storage.getCertificateImages('test-id');
+        console.log('✅ certificate_images table exists and is queryable');
+        console.log('📊 Sample query result:', images);
+      } catch (error) {
+        console.log('❌ certificate_images table error:', error);
+      }
+      
+      // Check if certificates table exists
+      try {
+        const certificates = await storage.getUserCertificates('test-user-id');
+        console.log('✅ certificates table exists and is queryable');
+        console.log('📊 Certificates count:', certificates.length);
+      } catch (error) {
+        console.log('❌ certificates table error:', error);
+      }
+      
+      // Check if diploma_templates table exists
+      try {
+        const templates = await storage.getDiplomaTemplates();
+        console.log('✅ diploma_templates table exists and is queryable');
+        console.log('📊 Templates count:', templates.length);
+      } catch (error) {
+        console.log('❌ diploma_templates table error:', error);
+      }
+      
+      res.json({ 
+        message: 'Database tables checked',
+        timestamp: new Date().toISOString()
+      });
+          } catch (error) {
+        console.error('💥 Debug route error:', error);
+        res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+      }
+  });
+
   // Configure multer for file uploads
   const storage_config = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -270,17 +312,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('✅ Verification email sent successfully to:', email);
 
         // Return success message
-        return res.status(201).json({ 
+        return res.status(201).json({
           message: 'Registration initiated. Please check your email to verify your account and complete registration.',
           requiresEmailVerification: true
         });
       } catch (emailError) {
         console.error('❌ Error sending verification email:', emailError);
-        
+
         // If email fails, delete the pending registration
         await storage.deletePendingRegistration(verificationToken);
-        
-        return res.status(500).json({ 
+
+        return res.status(500).json({
           message: 'Failed to send verification email. Please try again.',
           emailError: true
         });
@@ -346,7 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get pending registration from database
       const pendingRegistration = await storage.getPendingRegistration(token);
-      
+
       if (!pendingRegistration) {
         return res.status(400).json({ message: 'Invalid verification token.' });
       }
@@ -396,7 +438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ Email verified and user created successfully:', user.email);
 
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Email verified successfully! Your account has been created.',
         token: jwtToken,
         user: {
@@ -495,7 +537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ Verification email resent successfully to:', email);
 
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Verification email sent successfully. Please check your email.'
       });
     } catch (error) {
@@ -539,7 +581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *       500:
    *         description: Server error
    */
-  
+
   // Forgot password
   app.post('/api/auth/forgot-password', async (req, res) => {
     try {
@@ -581,7 +623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ Password reset email sent successfully to:', email);
 
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Password reset email sent successfully. Please check your email.'
       });
     } catch (error) {
@@ -621,7 +663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *       500:
    *         description: Server error
    */
-  
+
   // Reset password
   app.post('/api/auth/reset-password', async (req, res) => {
     try {
@@ -637,7 +679,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get password reset token from database
       const resetToken = await storage.getPasswordResetToken(token);
-      
+
       if (!resetToken) {
         return res.status(400).json({ message: 'Invalid password reset token.' });
       }
@@ -660,7 +702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ Password reset successfully for user ID:', resetToken.userId);
 
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Password reset successfully! You can now login with your new password.'
       });
     } catch (error) {
@@ -722,7 +764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if email is verified
       if (!user.isEmailVerified) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           message: 'Please verify your email before logging in.',
           requiresEmailVerification: true,
           email: user.email
@@ -4178,8 +4220,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
    */
   app.post('/api/certificates/generate', isAuthenticated, async (req: any, res) => {
     try {
+      console.log('🔍 Starting certificate generation...');
+      console.log('📝 Request body:', req.body);
+      
       // const userId = req.user?.id;
       const userId = req.user?.id || req.user?.sub;
+      console.log('👤 User ID:', userId);
+      
       if (!userId) {
         console.warn('⚠️ Missing sub in JWT payload');
         return res.status(401).json({ message: 'Unauthorized: Invalid token payload' });
@@ -4192,8 +4239,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         certificateData
       } = req.body;
 
+      console.log('📋 Extracted data:', { certificateId, templateId, canvasDataLength: canvasData?.length, certificateData });
+
       // Validate required fields
       if (!certificateId || !templateId || !canvasData) {
+        console.log('❌ Missing required fields');
         return res.status(400).json({
           message: 'Certificate ID, template ID, and canvas data are required'
         });
@@ -4201,51 +4251,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate UUID format for certificateId and templateId
       if (!isValidUUID(certificateId)) {
+        console.log('❌ Invalid certificate ID format:', certificateId);
         return res.status(400).json({
           message: 'Invalid certificate ID format. Must be a valid UUID.'
         });
       }
       if (!isValidUUID(templateId)) {
+        console.log('❌ Invalid template ID format:', templateId);
         return res.status(400).json({
           message: 'Invalid template ID format. Must be a valid UUID.'
         });
       }
 
+      console.log('✅ UUID validation passed');
+
       // Get certificate and template data
+      console.log('🔍 Fetching certificate with ID:', certificateId);
       const certificate = await storage.getCertificateById(certificateId);
+      console.log('📜 Certificate found:', certificate ? 'Yes' : 'No');
+      
       if (!certificate) {
+        console.log('❌ Certificate not found');
         return res.status(404).json({ message: 'Certificate not found' });
       }
 
+      console.log('🔍 Fetching template with ID:', templateId);
       const template = await storage.getDiplomaTemplate(templateId);
+      console.log('🎨 Template found:', template ? 'Yes' : 'No');
+      
       if (!template) {
+        console.log('❌ Template not found');
         return res.status(404).json({ message: 'Template not found' });
       }
 
       // Verify user owns the certificate
+      console.log('🔐 Checking ownership - Certificate userId:', certificate.userId, 'Current userId:', userId);
       if (certificate.userId !== userId) {
+        console.log('❌ Access denied - user does not own certificate');
         return res.status(403).json({ message: 'Access denied to this certificate' });
       }
+
+      console.log('✅ Ownership verified');
 
       // Generate unique filename for the certificate image
       const timestamp = Date.now();
       const filename = `certificate_${certificate.certificateNumber}_${timestamp}.png`;
       const filePath = path.join(__dirname, '../public/uploads/certificates/', filename);
+      console.log('📁 File path:', filePath);
 
       // Ensure certificates directory exists
       const certificatesDir = path.dirname(filePath);
-      if (!require('fs').existsSync(certificatesDir)) {
-        require('fs').mkdirSync(certificatesDir, { recursive: true });
+      console.log('📂 Certificates directory:', certificatesDir);
+      
+      const fs = await import('fs');
+      if (!fs.existsSync(certificatesDir)) {
+        console.log('📁 Creating certificates directory...');
+        fs.mkdirSync(certificatesDir, { recursive: true });
+        console.log('✅ Directory created');
       }
 
       // Save canvas data as image file
       // Remove data:image/png;base64, prefix if present
       const base64Data = canvasData.replace(/^data:image\/png;base64,/, '');
       const imageBuffer = Buffer.from(base64Data, 'base64');
+      console.log('🖼️ Image buffer size:', imageBuffer.length, 'bytes');
 
-      require('fs').writeFileSync(filePath, imageBuffer);
+      console.log('💾 Writing image file...');
+      fs.writeFileSync(filePath, imageBuffer);
+      console.log('✅ Image file written successfully');
 
       // Save certificate generation record
+      console.log('💾 Saving certificate image record to database...');
       const certificateImage = await storage.createCertificateImage({
         certificateId,
         templateId,
@@ -4254,6 +4330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         generatedBy: userId,
         metadata: certificateData || {}
       });
+      console.log('✅ Certificate image record saved:', certificateImage);
 
       res.json({
         message: 'Certificate generated successfully',
@@ -4262,7 +4339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
     } catch (error) {
-      console.error('Error generating certificate:', error);
+      console.error('💥 Error generating certificate:', error);
       res.status(500).json({ message: 'Failed to generate certificate' });
     }
   });
@@ -4412,8 +4489,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Delete the image file
       if (certificateImage.imageUrl) {
         const filePath = path.join(__dirname, '../public', certificateImage.imageUrl);
-        if (require('fs').existsSync(filePath)) {
-          require('fs').unlinkSync(filePath);
+        const fs = await import('fs');
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
         }
       }
 
@@ -4452,14 +4530,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *           type: string
    *           format: uuid
    *         description: Certificate image ID to download
-   *     responses:
-   *       200:
-   *         description: Certificate image file
-   *         content:
-   *           image/png:
-   *             schema:
-   *               type: string
-   *               format: binary
+    *     responses:
+ *       200:
+ *         description: Certificate PDF file
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
    *       400:
    *         description: Bad request - invalid UUID format
    *         content:
@@ -4505,9 +4583,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Access denied to this certificate' });
       }
 
+      // Get the image file path
+      const filePath = path.join(__dirname, '../public', certificateImage.imageUrl);
+      const fs = await import('fs');
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: 'Certificate image file not found' });
+      }
+
+      // Import required modules for PDF conversion
+      const Jimp = await import('jimp');
+      const { PDFDocument } = await import('pdf-lib');
+
+      // Load the image using Jimp
+      const image = await Jimp.Jimp.read(filePath);
+      
+      // Convert image to buffer
+      const imageBuffer = await image.getBuffer(Jimp.JimpMime.png);
+      
+      // Create a new PDF document
+      const pdfDoc = await PDFDocument.create();
+      
+      // Embed the image in the PDF
+      const imageEmbed = await pdfDoc.embedPng(imageBuffer);
+      
+      // Get image dimensions
+      const { width, height } = imageEmbed.scale(1);
+      
+      // Add a page with the same dimensions as the image
+      const page = pdfDoc.addPage([width, height]);
+      
+      // Draw the image on the page
+      page.drawImage(imageEmbed, {
+        x: 0,
+        y: 0,
+        width: width,
+        height: height,
+      });
+      
+      // Generate PDF bytes
+      const pdfBytes = await pdfDoc.save();
+      
+      // Set response headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="certificate_${certificate.certificateNumber}.pdf"`);
+      res.setHeader('Content-Length', pdfBytes.length);
+      
+      // Send the PDF
+      res.send(Buffer.from(pdfBytes));
+
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+      res.status(500).json({ message: 'Failed to download certificate' });
+    }
+  });
+
+  // backupcertificate down
+  app.get('/api/certificates/:id/download/:imageId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const certificateId = req.params.id;
+      const imageId = req.params.imageId;
+
+      // Validate UUID format for both IDs
+      if (!isValidUUID(certificateId)) {
+        return res.status(400).json({
+          message: 'Invalid certificate ID format. Must be a valid UUID.'
+        });
+      }
+      if (!isValidUUID(imageId)) {
+        return res.status(400).json({
+          message: 'Invalid image ID format. Must be a valid UUID.'
+        });
+      }
+
+      // Get certificate image
+      const certificateImage = await storage.getCertificateImage(imageId);
+      if (!certificateImage || certificateImage.certificateId !== certificateId) {
+        return res.status(404).json({ message: 'Certificate image not found' });
+      }
+
+      // Get certificate to verify ownership
+      const certificate = await storage.getCertificateById(certificateId);
+      if (!certificate || certificate.userId !== userId) {
+        return res.status(403).json({ message: 'Access denied to this certificate' });
+      }
+
       // Serve the file
       const filePath = path.join(__dirname, '../public', certificateImage.imageUrl);
-      if (!require('fs').existsSync(filePath)) {
+      const fs = await import('fs');
+      if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: 'Certificate image file not found' });
       }
 
