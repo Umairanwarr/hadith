@@ -376,8 +376,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         specialization: pendingRegistration.specialization,
         level: pendingRegistration.level,
         role: pendingRegistration.role,
-        phone: pendingRegistration.phone,
-        nationalId: pendingRegistration.nationalId,
         isEmailVerified: true, // Email is verified since they clicked the link
       });
 
