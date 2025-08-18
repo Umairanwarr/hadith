@@ -30,7 +30,7 @@ export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
       title: "",
       description: "",
       duration: 30,
-      passingGrade: "70",
+      passingGrade: "",
       courseId: courseId || "",
     },
   });
@@ -183,7 +183,7 @@ export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
                 <FormItem>
                   <FormLabel>درجة النجاح المطلوبة (%)</FormLabel>
                   <Select
-                    value={String(field.value ?? "70")}
+                    value={String(field.value ?? "")}
                     onValueChange={(value) => field.onChange(Number(value))}
                   >
                     <FormControl>

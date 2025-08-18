@@ -3,7 +3,10 @@ import { Footer } from "@/components/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Course {
   id: string;
@@ -20,13 +23,47 @@ interface Course {
 }
 
 export function DiplomaBachelorPage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
   // Fetch courses for bachelor level
   const { data: courses = [], isLoading } = useQuery<Course[]>({
     queryKey: ["api", "courses"],
   });
 
+  // Fetch user enrollments to check which courses are enrolled
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ["api", "my-enrollments"],
+    enabled: !!user,
+  });
+
+  // Get enrolled course IDs
+  const enrolledCourseIds = enrollments.map((e: any) => e.courseId) || [];
+
   // Filter courses for bachelor level
   const bachelorCourses = courses.filter(course => course.level === "بكالوريوس");
+
+  // Enrollment mutation for individual courses
+  const enrollMutation = useMutation({
+    mutationFn: async (courseId: string) => {
+      await apiRequest('POST', `/api/courses/${courseId}/enroll`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["api", "my-enrollments"] });
+      toast({
+        title: "تم التسجيل بنجاح",
+        description: "تم تسجيلك في المادة بنجاح",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ في التسجيل",
+        description: error.message || "حدث خطأ أثناء التسجيل",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Calculate total hours from courses
   const totalHours = bachelorCourses.reduce((sum, course) => sum + Math.ceil((course.duration || 0) / 60), 0);
@@ -95,9 +132,13 @@ export function DiplomaBachelorPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {bachelorCourses.map((course) => (
-                <Link key={course.id} href={`/course/${course.id}`}>
-                  <Card className="hover-scale overflow-hidden cursor-pointer">
+              {bachelorCourses.map((course) => {
+                const isEnrolled = enrolledCourseIds.includes(course.id);
+                const enrolledCourse = enrollments.find((e: any) => e.courseId === course.id);
+                const progress = enrolledCourse ? Number(enrolledCourse.progress) : 0;
+                
+                return (
+                  <Card key={course.id} className="hover-scale overflow-hidden">
                     <div className="h-20 bg-gradient-to-br from-purple-400 to-purple-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
                       <div className="absolute inset-0 bg-black/10"></div>
                       <div className="relative z-10 text-center">
@@ -106,6 +147,11 @@ export function DiplomaBachelorPage() {
                           {course.title.length > 25 ? course.title.substring(0, 25) + '...' : course.title}
                         </h4>
                       </div>
+                      {isEnrolled && (
+                        <div className="absolute top-2 right-2">
+                          <i className="fas fa-check-circle text-white text-sm"></i>
+                        </div>
+                      )}
                     </div>
                     <CardContent className="p-3">
                       <h4 className="font-amiri font-bold text-sm mb-2 truncate">
@@ -117,20 +163,36 @@ export function DiplomaBachelorPage() {
                       </div>
                       <div className="mb-3">
                         <div className="flex justify-between text-xs text-gray-600 mb-1">
-                          <span>المدرس</span>
-                          <span>{course.instructor}</span>
+                          <span>التقدم</span>
+                          <span>{Math.round(progress)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1">
+                          <div className="bg-purple-600 h-1 rounded-full" style={{ width: `${progress}%` }}></div>
                         </div>
                       </div>
-                      <Button 
-                        size="sm"
-                        className="w-full bg-purple-500 text-white hover:bg-purple-600 text-xs py-1 h-6"
-                      >
-                        بدء الدراسة
-                      </Button>
+                      {isEnrolled ? (
+                        <Link href={`/course/${course.id}`}>
+                          <Button 
+                            size="sm"
+                            className="w-full bg-purple-500 text-white hover:bg-purple-600 text-xs py-1 h-6"
+                          >
+                            متابعة الدراسة
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button 
+                          size="sm"
+                          onClick={() => enrollMutation.mutate(course.id)}
+                          disabled={enrollMutation.isPending}
+                          className="w-full bg-purple-600 text-white hover:bg-purple-700 text-xs py-1 h-6"
+                        >
+                          {enrollMutation.isPending ? "جاري التسجيل..." : "سجل الآن"}
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
-                </Link>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

@@ -69,18 +69,25 @@ export default function ExamPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const [examStarted, setExamStarted] = useState(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const courseIdStr = courseId!;
+  
+  const [examStarted, setExamStarted] = useState(() => {
+    // Check if there's an active exam session in localStorage
+    const activeExam = localStorage.getItem(`activeExam_${courseIdStr}`);
+    return activeExam ? JSON.parse(activeExam).isActive : false;
+  });
+  
+  // Debug examStarted state changes
+  useEffect(() => {
+    console.log('examStarted changed to:', examStarted);
+  }, [examStarted]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [timeLeft, setTimeLeft] = useState(0);
   const [examAttempt, setExamAttempt] = useState<ExamAttempt | null>(null);
-  const [flaggedQuestions, setFlaggedQuestions] = useState<Set<number>>(new Set());
   const [examSubmitted, setExamSubmitted] = useState(false);
   const [examResult, setExamResult] = useState<ExamResult | null>(null);
   const [showAnswers, setShowAnswers] = useState(false);
   const [correctAnswers, setCorrectAnswers] = useState<Record<number, string>>({});
-
-  const courseIdStr = courseId!;
   
   // Get examId from URL parameters if provided
   const urlParams = new URLSearchParams(window.location.search);
@@ -89,8 +96,30 @@ export default function ExamPage() {
   const { data: examData, isLoading: examLoading, error: examError } = useQuery<ExamData>({
     queryKey: examId ? ["api", "exams", examId, "details"] : ["api", "courses", courseIdStr, "exam"],
     retry: false,
-    enabled: !examStarted,
+    enabled: true, // Always enable to allow data loading for active sessions
   });
+  
+  // Restore exam session on component mount
+  useEffect(() => {
+    const activeExam = localStorage.getItem(`activeExam_${courseIdStr}`);
+    if (activeExam && examData) {
+      const examSession = JSON.parse(activeExam);
+      if (examSession.isActive && examSession.examId === examData.exam.id) {
+        setExamAttempt({
+          id: examSession.attemptId,
+          startedAt: examSession.startedAt
+        });
+        setExamStarted(true);
+        
+        // Calculate remaining time based on start time
+        const startTime = new Date(examSession.startedAt).getTime();
+        const currentTime = new Date().getTime();
+        const elapsedMinutes = (currentTime - startTime) / (1000 * 60);
+        const remainingTime = Math.max(0, (examData.exam.duration * 60) - (elapsedMinutes * 60));
+        setTimeLeft(Math.floor(remainingTime));
+      }
+    }
+  }, [examData, courseIdStr]);
 
   const startExamMutation = useMutation({
     mutationFn: async () => {
@@ -101,6 +130,14 @@ export default function ExamPage() {
       setExamAttempt(attempt);
       setExamStarted(true);
       setTimeLeft(examData!.exam.duration * 60); // Convert minutes to seconds
+      
+      // Persist exam session to localStorage
+      localStorage.setItem(`activeExam_${courseIdStr}`, JSON.stringify({
+        isActive: true,
+        attemptId: attempt.id,
+        startedAt: attempt.startedAt,
+        examId: examData!.exam.id
+      }));
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -134,6 +171,9 @@ export default function ExamPage() {
       setExamResult(result);
       setExamSubmitted(true);
       setShowAnswers(true);
+      
+      // Clear exam session from localStorage
+      localStorage.removeItem(`activeExam_${courseIdStr}`);
       
       // Get correct answers from the server response
       if (result.questionsWithAnswers) {
@@ -182,6 +222,7 @@ export default function ExamPage() {
         setTimeLeft(prev => {
           if (prev <= 1) {
             // Auto submit when time is up
+            localStorage.removeItem(`activeExam_${courseIdStr}`);
             submitExamMutation.mutate();
             return 0;
           }
@@ -191,7 +232,7 @@ export default function ExamPage() {
 
       return () => clearInterval(timer);
     }
-  }, [examStarted, timeLeft, submitExamMutation]);
+  }, [examStarted, timeLeft]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -204,37 +245,6 @@ export default function ExamPage() {
       ...prev,
       [questionId]: answer,
     }));
-  };
-
-  const handleQuestionNavigation = (index: number) => {
-    setCurrentQuestionIndex(index);
-  };
-
-  const toggleQuestionFlag = (questionId: number) => {
-    setFlaggedQuestions(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(questionId)) {
-        newSet.delete(questionId);
-      } else {
-        newSet.add(questionId);
-      }
-      return newSet;
-    });
-  };
-
-  const getQuestionStatus = (questionId: number) => {
-    if (answers[questionId]) return 'answered';
-    return 'unanswered';
-  };
-
-  const getStatusColor = (status: string, isCurrent: boolean) => {
-    if (isCurrent) return 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg ring-2 ring-emerald-300';
-    switch (status) {
-      case 'answered':
-        return 'bg-gradient-to-r from-green-500 to-emerald-500 text-white';
-      default:
-        return 'bg-gray-200 text-gray-700 hover:bg-gray-300';
-    }
   };
 
   const canSubmitExam = () => {
@@ -553,8 +563,7 @@ export default function ExamPage() {
     );
   }
 
-  const currentQuestion = examData.questions[currentQuestionIndex];
-  const progressPercentage = ((currentQuestionIndex + 1) / examData.questions.length) * 100;
+  const progressPercentage = (Object.keys(answers).length / examData.questions.length) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50" dir="rtl">
@@ -572,7 +581,7 @@ export default function ExamPage() {
                 <div className="flex items-center gap-4 text-sm text-gray-600">
                   <span className="flex items-center">
                     <i className="fas fa-question-circle text-emerald-600 ml-1"></i>
-                    السؤال {currentQuestionIndex + 1} من {examData.questions.length}
+                    تم الإجابة على {Object.keys(answers).length} من {examData.questions.length} سؤال
                   </span>
                 </div>
               </div>
@@ -603,141 +612,98 @@ export default function ExamPage() {
           </CardContent>
         </Card>
 
-        {/* Question Card */}
+        {/* All Questions Card */}
         <Card className="mb-6 shadow-xl border-0 bg-white/95 backdrop-blur-sm">
           <CardContent className="p-8">
             
-            {/* Current Question */}
-            <div className="mb-8">
-              <div className="flex items-center mb-6">
-                <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center ml-4">
-                  <span className="text-white font-bold">{currentQuestionIndex + 1}</span>
-                </div>
-                <h2 className="font-bold text-xl text-gray-800 leading-relaxed">
-                {currentQuestion.question}
-              </h2>
-              </div>
-              
-              <RadioGroup
-                value={answers[currentQuestion.id] || ""}
-                onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
-                className="space-y-5"
-              >
-                {currentQuestion.options.map((option, index) => {
-                  const isSelected = answers[currentQuestion.id] === option;
-                  const optionLetter = String.fromCharCode(65 + index); // A, B, C, D...
-                  
-                  return (
-                    <div 
-                      key={index} 
-                      className={`group relative flex items-center py-5 px-6 border-2 rounded-2xl transition-all duration-300 cursor-pointer transform hover:scale-[1.01] ${
-                        isSelected 
-                          ? 'border-emerald-500 bg-gradient-to-r from-emerald-50 to-teal-50 shadow-lg ring-1 ring-emerald-200' 
-                          : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/30 hover:shadow-md'
-                      }`}
-                    >
-                      {/* Letter Circle */}
-                      <div className={`w-11 h-11 rounded-full border-2 flex items-center justify-center transition-all duration-300 flex-shrink-0 ${
-                        isSelected 
-                          ? 'border-emerald-500 bg-emerald-500 text-white shadow-md' 
-                          : 'border-gray-300 group-hover:border-emerald-400 bg-white'
-                      }`}>
-                        {isSelected ? (
-                          <i className="fas fa-check text-sm font-bold"></i>
-                        ) : (
-                          <span className="text-sm font-bold text-gray-600 group-hover:text-emerald-600">{optionLetter}</span>
-                        )}
-                      </div>
-                      
-                      {/* Spacer */}
-                      <div className="w-5"></div>
-                      
-                      <RadioGroupItem 
-                        value={option} 
-                        id={`option-${index}`}
-                        className="sr-only"
-                      />
-                      
-                      {/* Option Text */}
-                      <Label 
-                        htmlFor={`option-${index}`} 
-                        className="flex-1 cursor-pointer text-gray-800 font-medium leading-relaxed text-lg py-2"
-                      >
-                        {option}
-                      </Label>
+            {/* All Questions */}
+            <div className="space-y-12">
+              {examData.questions.map((question, questionIndex) => (
+                <div key={question.id} className="border-b border-gray-100 pb-8 last:border-b-0">
+                  <div className="flex items-center mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center ml-4">
+                      <span className="text-white font-bold">{questionIndex + 1}</span>
                     </div>
-                  );
-                })}
-              </RadioGroup>
-            </div>
-            
-            {/* Navigation Buttons */}
-            <div className="flex justify-between items-center">
-              <Button
-                variant="outline"
-                onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
-                disabled={currentQuestionIndex === 0}
-                className="px-6 py-3 border-2 hover:bg-gray-50 disabled:opacity-40"
-              >
-                <i className="fas fa-chevron-right ml-2"></i>
-                السؤال السابق
-              </Button>
-              
-              <div className="flex gap-3">
-                {currentQuestionIndex < examData.questions.length - 1 ? (
-                  <Button
-                    onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
-                    className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-3 font-medium"
-                  >
-                    السؤال التالي
-                    <i className="fas fa-chevron-left mr-2"></i>
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => submitExamMutation.mutate()}
-                    disabled={!canSubmitExam() || submitExamMutation.isPending}
-                    className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-8 py-3 font-bold shadow-lg"
-                  >
-                    {submitExamMutation.isPending ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin ml-2"></i>
-                        جاري التسليم...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-paper-plane ml-2"></i>
-                        تسليم الاختبار
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
-            </div>
-            
-            {/* Question Navigator */}
-            <div className="mt-8 pt-6 border-t border-gray-100">
-              <div className="flex items-center mb-4">
-                <i className="fas fa-list-ol text-emerald-600 ml-2"></i>
-                <h3 className="font-bold text-lg text-gray-800">خريطة الأسئلة</h3>
-              </div>
-              <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-3 mb-6">
-                {examData.questions.map((question, index) => {
-                  const status = getQuestionStatus(question.id);
-                  const isCurrent = index === currentQuestionIndex;
+                    <h2 className="font-bold text-xl text-gray-800 leading-relaxed">
+                      {question.question}
+                    </h2>
+                  </div>
                   
-                  return (
-                    <button
-                      key={question.id}
-                      onClick={() => handleQuestionNavigation(index)}
-                      className={`w-12 h-12 rounded-xl text-sm font-bold transition-all duration-200 transform hover:scale-105 shadow-sm ${getStatusColor(status, isCurrent)}`}
-                    >
-                      {index + 1}
-                    </button>
-                  );
-                })}
-              </div>
-              
-
+                  <RadioGroup
+                    value={answers[question.id] || ""}
+                    onValueChange={(value) => handleAnswerChange(question.id, value)}
+                    className="space-y-4 mr-16"
+                  >
+                    {question.options.map((option, optionIndex) => {
+                      const isSelected = answers[question.id] === option;
+                      const optionLetter = String.fromCharCode(65 + optionIndex); // A, B, C, D...
+                      
+                      return (
+                        <div 
+                          key={optionIndex} 
+                          className={`group relative flex items-center py-4 px-6 border-2 rounded-xl transition-all duration-300 cursor-pointer transform hover:scale-[1.01] ${
+                            isSelected 
+                              ? 'border-emerald-500 bg-gradient-to-r from-emerald-50 to-teal-50 shadow-lg ring-1 ring-emerald-200' 
+                              : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/30 hover:shadow-md'
+                          }`}
+                        >
+                          {/* Letter Circle */}
+                          <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 flex-shrink-0 ${
+                            isSelected 
+                              ? 'border-emerald-500 bg-emerald-500 text-white shadow-md' 
+                              : 'border-gray-300 group-hover:border-emerald-400 bg-white'
+                          }`}>
+                            {isSelected ? (
+                              <i className="fas fa-check text-sm font-bold"></i>
+                            ) : (
+                              <span className="text-sm font-bold text-gray-600 group-hover:text-emerald-600">{optionLetter}</span>
+                            )}
+                          </div>
+                          
+                          {/* Spacer */}
+                          <div className="w-4"></div>
+                          
+                          <RadioGroupItem 
+                            value={option} 
+                            id={`option-${question.id}-${optionIndex}`}
+                            className="sr-only"
+                          />
+                          
+                          {/* Option Text */}
+                          <Label 
+                            htmlFor={`option-${question.id}-${optionIndex}`} 
+                            className="flex-1 cursor-pointer text-gray-800 font-medium leading-relaxed text-lg py-2"
+                          >
+                            {option}
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </RadioGroup>
+                </div>
+              ))}
+            </div>
+            
+            {/* Submit Button */}
+            <div className="flex justify-center mt-8 pt-6 border-t border-gray-100">
+              <Button
+                onClick={() => submitExamMutation.mutate()}
+                disabled={!canSubmitExam() || submitExamMutation.isPending}
+                size="lg"
+                className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-12 py-4 font-bold shadow-lg text-lg"
+              >
+                {submitExamMutation.isPending ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin ml-2"></i>
+                    جاري التسليم...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-paper-plane ml-2"></i>
+                    تسليم الاختبار
+                  </>
+                )}
+              </Button>
             </div>
             
             {!canSubmitExam() && (

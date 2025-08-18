@@ -435,7 +435,8 @@ export default function AdminDashboard() {
                         <div className="flex gap-2 pt-4">
                           <Link href={`/admin/edit-exam/${exam.id}`}>
                             <Button size="sm" variant="outline">
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-4 w-4 ml-1" />
+                              Manage Questions
                             </Button>
                           </Link>
                           <Button

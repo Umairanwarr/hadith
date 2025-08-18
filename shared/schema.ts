@@ -94,6 +94,19 @@ export const enrollments = pgTable('enrollments', {
   progress: decimal('progress', { precision: 5, scale: 2 }).default('0'),
 });
 
+// Diploma enrollments - controls access to diploma categories
+export const diplomaEnrollments = pgTable('diploma_enrollments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .references(() => users.id)
+    .notNull(),
+  diplomaLevel: varchar('diploma_level').notNull(), // تمهيدي، متوسط، متقدم، بكالوريوس، ماجستير، دكتوراه
+  enrolledAt: timestamp('enrolled_at').defaultNow(),
+  completedAt: timestamp('completed_at'),
+  isActive: boolean('is_active').default(true),
+  progress: decimal('progress', { precision: 5, scale: 2 }).default('0'),
+});
+
 // User lesson progress
 export const lessonProgress = pgTable('lesson_progress', {
   id: uuid('id').primaryKey().defaultRandom(),

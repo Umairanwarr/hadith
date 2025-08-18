@@ -3,17 +3,51 @@ import { Footer } from "@/components/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { useGetDiplomaCourses } from "@/hooks/useCourses";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export function DiplomaPreparatoryPage() {
   console.log('📚 DiplomaPreparatoryPage rendered at:', new Date().toISOString());
   
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { data: courses, loading, error, execute: fetchCourses } = useGetDiplomaCourses('تمهيدي');
+
+  // Fetch user enrollments to check which courses are enrolled
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ["api", "my-enrollments"],
+    enabled: !!user,
+  });
+
+  // Get enrolled course IDs
+  const enrolledCourseIds = enrollments.map((e: any) => e.courseId) || [];
+  
+  // Enrollment mutation for individual courses
+  const enrollMutation = useMutation({
+    mutationFn: async (courseId: string) => {
+      await apiRequest('POST', `/api/courses/${courseId}/enroll`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["api", "my-enrollments"] });
+      toast({
+        title: "تم التسجيل بنجاح",
+        description: "تم تسجيلك في المادة بنجاح",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ في التسجيل",
+        description: error.message || "حدث خطأ أثناء التسجيل",
+        variant: "destructive",
+      });
+    },
+  });
 
   useEffect(() => {
     console.log('📚 DiplomaPreparatoryPage useEffect triggered, calling fetchCourses');
@@ -129,6 +163,7 @@ export function DiplomaPreparatoryPage() {
           </div>
         </div>
 
+
         {/* Subjects Grid */}
         <div className="mb-8">
           <h2 className="text-xl font-amiri font-bold text-gray-800 mb-6">
@@ -137,9 +172,13 @@ export function DiplomaPreparatoryPage() {
           
           {Array.isArray(courses) && courses.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {courses.map((course) => (
-                <Link key={course.id} href={`/course/${course.id}`}>
-                  <Card className="hover-scale overflow-hidden cursor-pointer">
+              {courses.map((course) => {
+                const isEnrolled = enrolledCourseIds.includes(course.id);
+                const enrolledCourse = enrollments.find((e: any) => e.courseId === course.id);
+                const progress = enrolledCourse ? Number(enrolledCourse.progress) : 0;
+                
+                return (
+                  <Card key={course.id} className="hover-scale overflow-hidden">
                     <div className="h-20 bg-gradient-to-br from-green-400 to-green-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
                       <div className="absolute inset-0 bg-black/10"></div>
                       <div className="relative z-10 text-center">
@@ -148,6 +187,11 @@ export function DiplomaPreparatoryPage() {
                           {course.title.length > 25 ? course.title.substring(0, 25) + '...' : course.title}
                         </h4>
                       </div>
+                      {isEnrolled && (
+                        <div className="absolute top-2 right-2">
+                          <i className="fas fa-check-circle text-white text-sm"></i>
+                        </div>
+                      )}
                     </div>
                     <CardContent className="p-3">
                       <h4 className="font-amiri font-bold text-sm mb-2 truncate">
@@ -160,22 +204,35 @@ export function DiplomaPreparatoryPage() {
                       <div className="mb-3">
                         <div className="flex justify-between text-xs text-gray-600 mb-1">
                           <span>التقدم</span>
-                          <span>0%</span>
+                          <span>{Math.round(progress)}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-1">
-                          <div className="bg-green-600 h-1 rounded-full" style={{ width: '0%' }}></div>
+                          <div className="bg-green-600 h-1 rounded-full" style={{ width: `${progress}%` }}></div>
                         </div>
                       </div>
-                      <Button 
-                        size="sm"
-                        className="w-full bg-green-600 text-white hover:bg-green-700 text-xs py-1 h-6"
-                      >
-                        بدء الدراسة
-                      </Button>
+                      {isEnrolled ? (
+                        <Link href={`/course/${course.id}`}>
+                          <Button 
+                            size="sm"
+                            className="w-full bg-green-600 text-white hover:bg-green-700 text-xs py-1 h-6"
+                          >
+                            متابعة الدراسة
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button 
+                          size="sm"
+                          onClick={() => enrollMutation.mutate(course.id)}
+                          disabled={enrollMutation.isPending}
+                          className="w-full bg-green-600 text-white hover:bg-green-700 text-xs py-1 h-6"
+                        >
+                          {enrollMutation.isPending ? "جاري التسجيل..." : "سجل الآن"}
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
-                </Link>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12">
