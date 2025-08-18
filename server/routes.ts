@@ -270,17 +270,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('✅ Verification email sent successfully to:', email);
 
         // Return success message
-        return res.status(201).json({ 
+        return res.status(201).json({
           message: 'Registration initiated. Please check your email to verify your account and complete registration.',
           requiresEmailVerification: true
         });
       } catch (emailError) {
         console.error('❌ Error sending verification email:', emailError);
-        
+
         // If email fails, delete the pending registration
         await storage.deletePendingRegistration(verificationToken);
-        
-        return res.status(500).json({ 
+
+        return res.status(500).json({
           message: 'Failed to send verification email. Please try again.',
           emailError: true
         });
@@ -346,7 +346,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get pending registration from database
       const pendingRegistration = await storage.getPendingRegistration(token);
-      
+
       if (!pendingRegistration) {
         return res.status(400).json({ message: 'Invalid verification token.' });
       }
@@ -396,7 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ Email verified and user created successfully:', user.email);
 
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Email verified successfully! Your account has been created.',
         token: jwtToken,
         user: {
@@ -495,7 +495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ Verification email resent successfully to:', email);
 
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Verification email sent successfully. Please check your email.'
       });
     } catch (error) {
@@ -539,7 +539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *       500:
    *         description: Server error
    */
-  
+
   // Forgot password
   app.post('/api/auth/forgot-password', async (req, res) => {
     try {
@@ -581,7 +581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ Password reset email sent successfully to:', email);
 
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Password reset email sent successfully. Please check your email.'
       });
     } catch (error) {
@@ -621,7 +621,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *       500:
    *         description: Server error
    */
-  
+
   // Reset password
   app.post('/api/auth/reset-password', async (req, res) => {
     try {
@@ -637,7 +637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get password reset token from database
       const resetToken = await storage.getPasswordResetToken(token);
-      
+
       if (!resetToken) {
         return res.status(400).json({ message: 'Invalid password reset token.' });
       }
@@ -660,7 +660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('✅ Password reset successfully for user ID:', resetToken.userId);
 
-      return res.status(200).json({ 
+      return res.status(200).json({
         message: 'Password reset successfully! You can now login with your new password.'
       });
     } catch (error) {
@@ -722,7 +722,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Check if email is verified
       if (!user.isEmailVerified) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           message: 'Please verify your email before logging in.',
           requiresEmailVerification: true,
           email: user.email
@@ -1739,13 +1739,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // PERMANENT FIX: Use the exam ID from the attempt (which matches frontend)
       const examId = attempt.examId;
       console.log('🔍 Using exam ID from attempt:', examId);
-      
+
       const exam = await storage.getExam(examId);
       if (!exam) {
         console.log('❌ Exam not found with attempt ID, trying course method...');
         return res.status(404).json({ message: 'Exam not found' });
       }
-      
+
       console.log('✅ Found exam:', exam.id);
 
       const questions = await storage.getExamQuestions(examId);
@@ -1759,22 +1759,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('📊 Total questions to check:', questions.length);
       console.log('🆔 Question IDs in database:', questions.map(q => q.id));
       console.log('🆔 Question IDs in answers:', Object.keys(answers));
-      
+
       // Fix the question ID mismatch issue by using the submitted answer keys
       const answeredQuestionIds = Object.keys(answers);
       console.log(`📋 Total questions in exam: ${questions.length}`);
       console.log(`📝 Questions with submitted answers: ${answeredQuestionIds.length}`);
-      
+
       // Now that we're using the correct exam ID, questions should match
       if (questions.length === 0) {
-        console.log('⚠️ No questions found for exam:', urlExamId);
+        console.log('⚠️ No questions found for exam:', examId);
         return res.status(404).json({ message: 'No questions found for this exam' });
       }
-      
+
       // Create a map of questions by ID for faster lookup
       const questionMap = new Map();
       questions.forEach(q => questionMap.set(q.id, q));
-      
+
       // Score based on submitted answers
       answeredQuestionIds.forEach((questionId) => {
         const question = questionMap.get(questionId);
@@ -1783,12 +1783,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const userAnswer = answers[questionId];
           const correctAnswer = question.correctAnswer;
           const isCorrect = userAnswer === correctAnswer;
-          
+
           console.log(`❓ Question ${questionId}:`);
           console.log(`   User answer: "${userAnswer}" (type: ${typeof userAnswer})`);
           console.log(`   Correct answer: "${correctAnswer}" (type: ${typeof correctAnswer})`);
           console.log(`   Match: ${isCorrect}`);
-          
+
           if (isCorrect) {
             correctAnswers++;
           }
@@ -1798,7 +1798,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalPoints += 1;
         }
       });
-      
+
       console.log('🎯 FINAL SCORE CALCULATION:');
       console.log(`✅ Correct answers: ${correctAnswers} out of ${questions.length}`);
       console.log('🔍🔍🔍 EXAM SCORING DEBUG END 🔍🔍🔍');
