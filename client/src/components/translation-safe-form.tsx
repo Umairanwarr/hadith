@@ -81,6 +81,8 @@ export const TranslationSafeForm: React.FC<TranslationSafeFormProps> = ({
 
   // Handle form submission with translation safety
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Prevent default form submission to stop page refresh
+
     // Check if translation is interfering
     if (isBrowserTranslating()) {
       console.warn('Form submission attempted during browser translation - this may cause issues');

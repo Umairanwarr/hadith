@@ -51,4 +51,47 @@ export const sendVerificationEmail = async (
   });
 };
 
+// Send password reset email
+export const sendPasswordResetEmail = async (
+  email: string, 
+  token: string, 
+  firstName?: string
+) => {
+  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
+  
+  const html = `
+    <p>Hello${firstName ? ` ${firstName}` : ''},</p>
+    
+    <p>We received a request to reset your password for your Hadith Learning Platform account.</p>
+    
+    <p>To reset your password, please click the link below:</p>
+    
+    <p><a href="${resetUrl}">${resetUrl}</a></p>
+    
+    <p>This password reset link will expire in 1 hour.</p>
+    
+    <p>If you didn't request a password reset, you can safely ignore this email.</p>
+    
+    <p>Best regards,<br>Hadith Learning Platform Team</p>
+  `;
+
+  await sendEmail({
+    to: email,
+    subject: "Reset Your Password - Hadith Learning Platform",
+    text: `Hello${firstName ? ` ${firstName}` : ''},
+
+We received a request to reset your password for your Hadith Learning Platform account.
+
+To reset your password, please visit: ${resetUrl}
+
+This password reset link will expire in 1 hour.
+
+If you didn't request a password reset, you can safely ignore this email.
+
+Best regards,
+Hadith Learning Platform Team`,
+    html
+  });
+};
+
 export default sendEmail;

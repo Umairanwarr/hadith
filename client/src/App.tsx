@@ -47,6 +47,7 @@ import AboutUniversity from '@/pages/about-university';
 import { TestCertificateGenerationPage } from '@/pages/test-certificate-generation';
 import Auth from './pages/auth';
 import VerifyEmail from './pages/verify-email';
+import ResetPassword from './pages/reset-password';
 import { AppContextProvider } from './contexts/AppContext';
 import { AuthProvider } from './contexts/AuthContext';
 import TranslationErrorBoundary from '@/components/translation-error-boundary';
@@ -73,8 +74,9 @@ function Router() {
 
   return (
     <Switch>
-      {/* Email verification should be accessible regardless of auth state */}
+      {/* Email verification and password reset should be accessible regardless of auth state */}
       <Route path='/verify-email' component={VerifyEmail} />
+      <Route path='/reset-password' component={ResetPassword} />
       
       {!isAuthenticated ? (
         <>

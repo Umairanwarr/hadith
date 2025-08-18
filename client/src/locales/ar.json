@@ -31,7 +31,21 @@
     "sending": "جاري الإرسال...",
     "sendResetLink": "إرسال رابط إعادة التعيين",
     "backToLogin": "العودة لتسجيل الدخول",
-    "student": "طالب"
+    "student": "طالب",
+    "resetPassword": "إعادة تعيين كلمة المرور",
+    "newPassword": "كلمة المرور الجديدة",
+    "enterNewPassword": "أدخل كلمة المرور الجديدة",
+    "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+    "passwordResetSuccess": "تم إعادة تعيين كلمة المرور بنجاح!",
+    "passwordResetSuccessMessage": "تم إعادة تعيين كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.",
+    "passwordResetError": "فشل في إعادة تعيين كلمة المرور",
+    "passwordResetErrorMessage": "فشل في إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى أو طلب رابط جديد.",
+    "invalidToken": "رابط إعادة التعيين غير صالح",
+    "invalidTokenMessage": "رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد.",
+    "resettingPassword": "جاري إعادة تعيين كلمة المرور...",
+    "resetPasswordDescription": "أدخل كلمة المرور الجديدة أدناه",
+    "goToLogin": "الذهاب لتسجيل الدخول",
+    "redirectingToLogin": "جاري التوجه لصفحة تسجيل الدخول..."
   },
   "validation": {
     "emailRequired": "البريد الإلكتروني مطلوب",

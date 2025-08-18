@@ -31,7 +31,21 @@
     "sending": "Sending...",
     "sendResetLink": "Send Reset Link",
     "backToLogin": "Back to Login",
-    "student": "Student"
+    "student": "Student",
+    "resetPassword": "Reset Password",
+    "newPassword": "New Password",
+    "enterNewPassword": "Enter your new password",
+    "confirmNewPassword": "Confirm your new password",
+    "passwordResetSuccess": "Password Reset Successful!",
+    "passwordResetSuccessMessage": "Your password has been reset successfully. You can now login with your new password.",
+    "passwordResetError": "Password Reset Failed",
+    "passwordResetErrorMessage": "Failed to reset password. Please try again or request a new reset link.",
+    "invalidToken": "Invalid Reset Link",
+    "invalidTokenMessage": "This password reset link is invalid or has expired. Please request a new one.",
+    "resettingPassword": "Resetting Password...",
+    "resetPasswordDescription": "Enter your new password below",
+    "goToLogin": "Go to Login",
+    "redirectingToLogin": "Redirecting to login page..."
   },
   "validation": {
     "emailRequired": "Email is required",

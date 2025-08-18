@@ -34,7 +34,7 @@ import { TranslationSafeForm } from '@/components/translation-safe-form';
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-// Forgot password API function (keeping this since AuthContext doesn't have it)
+// Forgot password API function
 const forgotPasswordApi = async (data: any) => {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
@@ -143,7 +143,8 @@ const Auth = () => {
     if (error.message === 'NETWORK_ERROR') {
       return t('toast.networkError');
     }
-    return error.message || t('toast.unexpectedError');
+    // Prioritize backend message, then Axios error message, then generic unexpected error
+    return error.response?.data?.message || error.message || t('toast.unexpectedError');
   };
 
   // TanStack Query Mutations
@@ -170,7 +171,7 @@ const Auth = () => {
         variant: 'destructive',
         title: t('toast.loginError'),
         description: getErrorMessage(error),
-        duration: 4000,
+        duration: 3000,
       });
     },
   });

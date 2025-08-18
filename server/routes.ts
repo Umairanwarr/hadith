@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { sendVerificationEmail, generateVerificationToken } from './lib/emailService.js';
+import { sendVerificationEmail, generateVerificationToken, sendPasswordResetEmail } from './lib/emailService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -501,6 +501,171 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('❌ Error resending verification email:', error);
       return res.status(500).json({ message: 'Server error while resending verification email.' });
+    }
+  });
+
+  /**
+   * @swagger
+   * /api/auth/forgot-password:
+   *   post:
+   *     summary: Request password reset
+   *     description: Sends password reset email to user
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - email
+   *             properties:
+   *               email:
+   *                 type: string
+   *                 format: email
+   *                 description: User's email address
+   *     responses:
+   *       200:
+   *         description: Password reset email sent successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   description: Success message
+   *       404:
+   *         description: User not found
+   *       500:
+   *         description: Server error
+   */
+  
+  // Forgot password
+  app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required.' });
+      }
+
+      // Check if user exists and is verified
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ message: 'No account found with this email address.' });
+      }
+
+      if (!user.isEmailVerified) {
+        return res.status(400).json({ message: 'Please verify your email address first.' });
+      }
+
+      // Generate password reset token
+      const resetToken = generateVerificationToken();
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+
+      // Delete any existing reset tokens for this user
+      const existingTokens = await storage.getPasswordResetToken(resetToken);
+      if (existingTokens) {
+        await storage.deletePasswordResetToken(resetToken);
+      }
+
+      // Store password reset token
+      await storage.createPasswordResetToken({
+        userId: user.id,
+        token: resetToken,
+        expiresAt
+      });
+
+      // Send password reset email
+      await sendPasswordResetEmail(email, resetToken, user.firstName || undefined);
+
+      console.log('✅ Password reset email sent successfully to:', email);
+
+      return res.status(200).json({ 
+        message: 'Password reset email sent successfully. Please check your email.'
+      });
+    } catch (error) {
+      console.error('❌ Error sending password reset email:', error);
+      return res.status(500).json({ message: 'Server error while sending password reset email.' });
+    }
+  });
+
+  /**
+   * @swagger
+   * /api/auth/reset-password:
+   *   post:
+   *     summary: Reset password with token
+   *     description: Resets user password using reset token
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - token
+   *               - password
+   *             properties:
+   *               token:
+   *                 type: string
+   *                 description: Password reset token
+   *               password:
+   *                 type: string
+   *                 minLength: 8
+   *                 description: New password
+   *     responses:
+   *       200:
+   *         description: Password reset successful
+   *       400:
+   *         description: Invalid or expired token
+   *       500:
+   *         description: Server error
+   */
+  
+  // Reset password
+  app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      if (!token || !password) {
+        return res.status(400).json({ message: 'Token and password are required.' });
+      }
+
+      if (password.length < 8) {
+        return res.status(400).json({ message: 'Password must be at least 8 characters long.' });
+      }
+
+      // Get password reset token from database
+      const resetToken = await storage.getPasswordResetToken(token);
+      
+      if (!resetToken) {
+        return res.status(400).json({ message: 'Invalid password reset token.' });
+      }
+
+      // Check if token has expired
+      if (new Date() > resetToken.expiresAt) {
+        // Delete expired token
+        await storage.deletePasswordResetToken(token);
+        return res.status(400).json({ message: 'Password reset token has expired. Please request a new one.' });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Update user password
+      await storage.updateUserPassword(resetToken.userId, hashedPassword);
+
+      // Delete the used token
+      await storage.deletePasswordResetToken(token);
+
+      console.log('✅ Password reset successfully for user ID:', resetToken.userId);
+
+      return res.status(200).json({ 
+        message: 'Password reset successfully! You can now login with your new password.'
+      });
+    } catch (error) {
+      console.error('❌ Error resetting password:', error);
+      return res.status(500).json({ message: 'Server error during password reset.' });
     }
   });
 

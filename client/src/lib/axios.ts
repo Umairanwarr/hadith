@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
 // Create axios instance with default configuration
 const api: AxiosInstance = axios.create({
@@ -12,30 +12,17 @@ const api: AxiosInstance = axios.create({
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     // Get token from localStorage or sessionStorage
     const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
 
     if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
+      config.headers.Authorization = `Bearer ${token}`;
     }
-
-    console.log('🔧 Axios request interceptor:', {
-      method: config.method,
-      url: config.url,
-      baseURL: config.baseURL,
-      fullURL: config.baseURL + config.url,
-      hasToken: !!token,
-      timestamp: new Date().toISOString()
-    });
 
     return config;
   },
   (error) => {
-    console.log('❌ Axios request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -68,36 +55,33 @@ api.interceptors.response.use(
 // API methods
 export const apiService = {
   // GET request
-  get: <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
-    console.log('🌐 apiService.get called with URL:', url, 'at:', new Date().toISOString());
+  get: <T>(url: string, config?: InternalAxiosRequestConfig): Promise<T> => {
     return api.get(url, config).then(response => {
-      console.log('✅ apiService.get success for URL:', url, 'data length:', Array.isArray(response.data) ? response.data.length : 'not array');
       return response.data;
     }).catch(error => {
-      console.log('❌ apiService.get error for URL:', url, 'error:', error.message);
       throw error;
     });
   },
 
   // POST request
-  post: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+  post: <T>(url: string, data?: any, config?: InternalAxiosRequestConfig): Promise<T> => {
     return api.post(url, data, config).then(response => response.data);
   },
 
   // PUT request
-  put: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+  put: <T>(url: string, data?: any, config?: InternalAxiosRequestConfig): Promise<T> => {
     return api.put(url, data, config).then(response => response.data);
   },
 
   // DELETE request
-  delete: <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
+  delete: <T>(url: string, config?: InternalAxiosRequestConfig): Promise<T> => {
     return api.delete(url, config).then(response => response.data);
   },
 
   // PATCH request
-  patch: <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+  patch: <T>(url: string, data?: any, config?: InternalAxiosRequestConfig): Promise<T> => {
     return api.patch(url, data, config).then(response => response.data);
   },
 };
 
-export default api; 
+export default api;

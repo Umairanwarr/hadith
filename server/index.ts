@@ -18,7 +18,6 @@ const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) {
-      console.log('CORS: No origin - allowing');
       return callback(null, true);
     }
 
@@ -35,19 +34,14 @@ const corsOptions = {
       'https://hadith-learning.netlify.app/',
     ];
 
-    // Log the origin for debugging
-    console.log('CORS origin check:', origin);
-
     // Check if origin is in allowed list or is a deployment platform
     if (allowedOrigins.includes(origin) || 
         origin.includes('.vercel.app') || 
         origin.includes('.netlify.app') ||
         origin.includes('.render.com')) {
-      console.log('CORS: Origin allowed:', origin);
       return callback(null, true);
     }
 
-    console.log('CORS: Origin blocked:', origin);
     return callback(new Error(`Not allowed by CORS: ${origin}`));
   },
   credentials: true,
