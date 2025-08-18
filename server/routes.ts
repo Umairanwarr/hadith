@@ -1736,23 +1736,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Exam attempt not found' });
       }
 
-      const exam = await storage.getExamByCourse(attempt.courseId);
+      // PERMANENT FIX: Use the exam ID from the attempt (which matches frontend)
+      const examId = attempt.examId;
+      console.log('🔍 Using exam ID from attempt:', examId);
+      
+      const exam = await storage.getExam(examId);
       if (!exam) {
+        console.log('❌ Exam not found with attempt ID, trying course method...');
         return res.status(404).json({ message: 'Exam not found' });
       }
+      
+      console.log('✅ Found exam:', exam.id);
 
-      const questions = await storage.getExamQuestions(exam.id);
+      const questions = await storage.getExamQuestions(examId);
 
       // Calculate score
       let correctAnswers = 0;
       let totalPoints = 0;
 
-      questions.forEach((question) => {
-        totalPoints += Number(question.points);
-        if (answers[question.id] === question.correctAnswer) {
-          correctAnswers++;
+      console.log('🔍🔍🔍 EXAM SCORING DEBUG START 🔍🔍🔍');
+      console.log('📝 Submitted answers:', JSON.stringify(answers, null, 2));
+      console.log('📊 Total questions to check:', questions.length);
+      console.log('🆔 Question IDs in database:', questions.map(q => q.id));
+      console.log('🆔 Question IDs in answers:', Object.keys(answers));
+      
+      // Fix the question ID mismatch issue by using the submitted answer keys
+      const answeredQuestionIds = Object.keys(answers);
+      console.log(`📋 Total questions in exam: ${questions.length}`);
+      console.log(`📝 Questions with submitted answers: ${answeredQuestionIds.length}`);
+      
+      // Now that we're using the correct exam ID, questions should match
+      if (questions.length === 0) {
+        console.log('⚠️ No questions found for exam:', urlExamId);
+        return res.status(404).json({ message: 'No questions found for this exam' });
+      }
+      
+      // Create a map of questions by ID for faster lookup
+      const questionMap = new Map();
+      questions.forEach(q => questionMap.set(q.id, q));
+      
+      // Score based on submitted answers
+      answeredQuestionIds.forEach((questionId) => {
+        const question = questionMap.get(questionId);
+        if (question) {
+          totalPoints += Number(question.points);
+          const userAnswer = answers[questionId];
+          const correctAnswer = question.correctAnswer;
+          const isCorrect = userAnswer === correctAnswer;
+          
+          console.log(`❓ Question ${questionId}:`);
+          console.log(`   User answer: "${userAnswer}" (type: ${typeof userAnswer})`);
+          console.log(`   Correct answer: "${correctAnswer}" (type: ${typeof correctAnswer})`);
+          console.log(`   Match: ${isCorrect}`);
+          
+          if (isCorrect) {
+            correctAnswers++;
+          }
+        } else {
+          console.log(`⚠️ Question ${questionId} not found in exam questions!`);
+          // If question still not found, assume 1 point and mark as incorrect
+          totalPoints += 1;
         }
       });
+      
+      console.log('🎯 FINAL SCORE CALCULATION:');
+      console.log(`✅ Correct answers: ${correctAnswers} out of ${questions.length}`);
+      console.log('🔍🔍🔍 EXAM SCORING DEBUG END 🔍🔍🔍');
 
       const score = (correctAnswers / questions.length) * 100;
       const passed = score >= Number(exam.passingGrade);
