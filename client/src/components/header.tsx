@@ -6,10 +6,9 @@ import { useState } from "react";
 import logo_better from "@assets/logo better.png";
 
 import logo_2 from "@assets/logo 2.png";
-
 function Header() {
   const { user, isAuthenticated, logout } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
 
@@ -223,15 +222,16 @@ function Header() {
                   </span>
                 </div>
                 
-                <button 
-                  onClick={() => {
-                    logout();
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full p-2 text-right bg-red-50 hover:bg-red-100 rounded-md text-red-700 font-medium text-sm"
-                >
-                  تسجيل الخروج
-                </button>
+                <button
+                                  onClick={() => {
+                                    logout();
+                                    setIsMenuOpen(false);
+                                    setLocation('/');
+                                  }}
+                                  className="w-full p-2 text-right bg-red-50 hover:bg-red-100 rounded-md text-red-700 font-medium text-sm"
+                                >
+                                  تسجيل الخروج
+                                </button>
               </div>
             </div>
           </div>

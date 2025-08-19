@@ -23,6 +23,12 @@ interface Course {
   createdAt: string;
 }
 
+interface Enrollment {
+  id: string;
+  courseId: string;
+  progress: number | string;
+}
+
 export function DiplomaIntermediatePage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -34,13 +40,13 @@ export function DiplomaIntermediatePage() {
   });
 
   // Fetch user enrollments to check which courses are enrolled
-  const { data: enrollments = [] } = useQuery({
+  const { data: enrollments = [] } = useQuery<Enrollment[]>({
     queryKey: ["api", "my-enrollments"],
     enabled: !!user,
   });
 
   // Get enrolled course IDs
-  const enrolledCourseIds = enrollments.map((e: any) => e.courseId) || [];
+  const enrolledCourseIds = enrollments.map(e => e.courseId) || [];
 
   // Filter courses for intermediate level
   const intermediateCourses = courses.filter(course => course.level === "متوسط");
@@ -136,7 +142,7 @@ export function DiplomaIntermediatePage() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {intermediateCourses.map((course) => {
                 const isEnrolled = enrolledCourseIds.includes(course.id);
-                const enrolledCourse = enrollments.find((e: any) => e.courseId === course.id);
+                const enrolledCourse = enrollments.find(e => e.courseId === course.id);
                 const progress = enrolledCourse ? Number(enrolledCourse.progress) : 0;
                 
                 return (
@@ -250,19 +256,19 @@ export function DiplomaIntermediatePage() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
-          <Link href="/dashboard" className="flex-1">
-            <Button variant="outline" className="w-full">
-              <i className="fas fa-arrow-right ml-2"></i>
-              العودة للصفحة الرئيسية
-            </Button>
-          </Link>
-          <Link href="/diplomas" className="flex-1">
-            <Button className="w-full bg-orange-600 hover:bg-orange-700">
-              <i className="fas fa-certificate ml-2"></i>
-              عرض جميع الديبلومات
-            </Button>
-          </Link>
-        </div>
+                  <Link href="/" className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      <i className="fas fa-arrow-right ml-2"></i>
+                      العودة للصفحة الرئيسية
+                    </Button>
+                  </Link>
+                  <Link href="/diplomas" className="flex-1">
+                    <Button className="w-full bg-orange-600 hover:bg-orange-700">
+                      <i className="fas fa-certificate ml-2"></i>
+                      عرض جميع الديبلومات
+                    </Button>
+                  </Link>
+                </div>
       </main>
 
       <Footer />

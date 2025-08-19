@@ -188,19 +188,19 @@ export function DiplomaCertificatePage() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
-          <Link href="/dashboard" className="flex-1">
-            <Button variant="outline" className="w-full">
-              <i className="fas fa-arrow-right ml-2"></i>
-              العودة للصفحة الرئيسية
-            </Button>
-          </Link>
-          <Link href="/diplomas" className="flex-1">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700">
-              <i className="fas fa-certificate ml-2"></i>
-              عرض جميع الديبلومات
-            </Button>
-          </Link>
-        </div>
+                  <Link href="/" className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      <i className="fas fa-arrow-right ml-2"></i>
+                      العودة للصفحة الرئيسية
+                    </Button>
+                  </Link>
+                  <Link href="/diplomas" className="flex-1">
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                      <i className="fas fa-certificate ml-2"></i>
+                      عرض جميع الديبلومات
+                    </Button>
+                  </Link>
+                </div>
       </main>
 
       <Footer />
