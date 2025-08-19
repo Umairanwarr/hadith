@@ -173,7 +173,8 @@ export function CertificateGeneratorPage() {
         let validTemplateId = selectedCertificate.diplomaTemplateId;
         if (!validTemplateId) {
           try {
-            const templatesResponse = await fetch('/api/diploma-templates');
+            const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const templatesResponse = await fetch(`${API_BASE_URL}/api/diploma-templates`);
             if (templatesResponse.ok) {
               const templates = await templatesResponse.json();
               if (templates && templates.length > 0) {
@@ -210,7 +211,8 @@ export function CertificateGeneratorPage() {
         const canvasData = canvas.toDataURL('image/png');
         
         // Generate certificate on server
-        const response = await fetch('/api/certificates/generate', {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const response = await fetch(`${API_BASE_URL}/api/certificates/generate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -236,7 +238,7 @@ export function CertificateGeneratorPage() {
           
           // Download as PDF
           if (result.certificateImage && result.certificateImage.id) {
-            const downloadResponse = await fetch(`/api/certificates/${selectedCertificate.id}/download/${result.certificateImage.id}`, {
+            const downloadResponse = await fetch(`${API_BASE_URL}/api/certificates/${selectedCertificate.id}/download/${result.certificateImage.id}`, {
               method: 'GET',
               headers: {
                 'Authorization': `Bearer ${localStorage.getItem('authToken')}`

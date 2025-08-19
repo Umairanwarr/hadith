@@ -134,11 +134,14 @@ export default function CertificateGenerator({
       return;
     }
 
+    // Get API base URL
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
     // Get available templates first
     let validTemplateId = templateId;
     if (!templateId || templateId === 1) {
       try {
-        const templatesResponse = await fetch('/api/diploma-templates');
+        const templatesResponse = await fetch(`${API_BASE_URL}/api/diploma-templates`);
         if (templatesResponse.ok) {
           const templates = await templatesResponse.json();
           if (templates && templates.length > 0) {
@@ -268,7 +271,7 @@ export default function CertificateGenerator({
       };
 
       // Send to backend to generate and save certificate image
-      const response = await fetch('/api/certificates/generate', {
+      const response = await fetch(`${API_BASE_URL}/api/certificates/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -290,7 +293,7 @@ export default function CertificateGenerator({
 
       // Now download as PDF using the server's PDF conversion endpoint
       if (result.certificateImage && result.certificateImage.id) {
-        const downloadResponse = await fetch(`/api/certificates/${certificateId}/download/${result.certificateImage.id}`, {
+        const downloadResponse = await fetch(`${API_BASE_URL}/api/certificates/${certificateId}/download/${result.certificateImage.id}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
