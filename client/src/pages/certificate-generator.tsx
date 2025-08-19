@@ -244,18 +244,29 @@ export function CertificateGeneratorPage() {
             });
 
             if (downloadResponse.ok) {
-              const pdfBlob = await downloadResponse.blob();
-              const downloadUrl = window.URL.createObjectURL(pdfBlob);
+              const contentType = downloadResponse.headers.get('content-type');
+              const blob = await downloadResponse.blob();
+              const downloadUrl = window.URL.createObjectURL(blob);
               const downloadLink = document.createElement('a');
               downloadLink.href = downloadUrl;
-              downloadLink.download = `certificate_${selectedCertificate.certificateNumber}.pdf`;
+              
+              // Check if we got a PDF or PNG based on content type
+              if (contentType?.includes('application/pdf')) {
+                downloadLink.download = `certificate_${selectedCertificate.certificateNumber}.pdf`;
+                toast({
+                  title: "تم تحميل الشهادة",
+                  description: "تم حفظ الشهادة بصيغة PDF بنجاح",
+                });
+              } else {
+                downloadLink.download = `certificate_${selectedCertificate.certificateNumber}.png`;
+                toast({
+                  title: "تم تحميل الشهادة",
+                  description: "تم حفظ الشهادة بصيغة PNG بنجاح",
+                });
+              }
+              
               downloadLink.click();
               window.URL.revokeObjectURL(downloadUrl);
-
-              toast({
-                title: "تم تحميل الشهادة",
-                description: "تم حفظ الشهادة بصيغة PDF بنجاح",
-              });
               return;
             }
           }

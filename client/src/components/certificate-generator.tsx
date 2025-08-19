@@ -298,20 +298,27 @@ export default function CertificateGenerator({
         });
 
         if (downloadResponse.ok) {
-          // Get the PDF blob
-          const pdfBlob = await downloadResponse.blob();
+          const contentType = downloadResponse.headers.get('content-type');
+          const blob = await downloadResponse.blob();
           
-          // Create download link for PDF
-          const downloadUrl = window.URL.createObjectURL(pdfBlob);
+          // Create download link
+          const downloadUrl = window.URL.createObjectURL(blob);
           const downloadLink = document.createElement('a');
           downloadLink.href = downloadUrl;
-          downloadLink.download = `certificate_${certificateNumber}.pdf`;
+          
+          // Set filename based on actual content type
+          if (contentType?.includes('application/pdf')) {
+            downloadLink.download = `certificate_${certificateNumber}.pdf`;
+          } else {
+            downloadLink.download = `certificate_${certificateNumber}.png`;
+          }
+          
           downloadLink.click();
           
           // Clean up
           window.URL.revokeObjectURL(downloadUrl);
         } else {
-          throw new Error('Failed to download certificate as PDF');
+          throw new Error('Failed to download certificate');
         }
       }
 

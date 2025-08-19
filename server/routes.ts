@@ -4627,46 +4627,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Certificate image file not found' });
       }
 
-      // Import required modules for PDF conversion
-      const Jimp = await import('jimp');
-      const { PDFDocument } = await import('pdf-lib');
+      // Check if we're in a serverless environment (like Vercel)
+      const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY;
+      
+      // Try to convert to PDF, fallback to PNG if it fails
+      try {
+        console.log('Environment check - Serverless:', !!isServerless);
+        console.log('Attempting PDF conversion for certificate:', certificate.certificateNumber);
+        console.log('File path:', filePath);
+        
+        // Read the file as buffer first to ensure it exists and is readable
+        const imageBuffer = fs.readFileSync(filePath);
+        console.log('Image file read successfully, size:', imageBuffer.length, 'bytes');
 
-      // Load the image using Jimp
-      const image = await Jimp.Jimp.read(filePath);
-      
-      // Convert image to buffer
-      const imageBuffer = await image.getBuffer(Jimp.JimpMime.png);
-      
-      // Create a new PDF document
-      const pdfDoc = await PDFDocument.create();
-      
-      // Embed the image in the PDF
-      const imageEmbed = await pdfDoc.embedPng(imageBuffer);
-      
-      // Get image dimensions
-      const { width, height } = imageEmbed.scale(1);
-      
-      // Add a page with the same dimensions as the image
-      const page = pdfDoc.addPage([width, height]);
-      
-      // Draw the image on the page
-      page.drawImage(imageEmbed, {
-        x: 0,
-        y: 0,
-        width: width,
-        height: height,
-      });
-      
-      // Generate PDF bytes
-      const pdfBytes = await pdfDoc.save();
-      
-      // Set response headers for PDF download
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="certificate_${certificate.certificateNumber}.pdf"`);
-      res.setHeader('Content-Length', pdfBytes.length);
-      
-      // Send the PDF
-      res.send(Buffer.from(pdfBytes));
+        // Import PDF library
+        const { PDFDocument } = await import('pdf-lib');
+
+        // Create a new PDF document
+        const pdfDoc = await PDFDocument.create();
+        
+        // Try to embed the PNG directly without Jimp processing
+        let imageEmbed;
+        try {
+          imageEmbed = await pdfDoc.embedPng(imageBuffer);
+          console.log('PNG embedded directly in PDF');
+        } catch (embedError: any) {
+          console.log('Direct PNG embed failed, trying with Jimp processing:', embedError.message);
+          
+          // Fallback to Jimp processing if direct embed fails
+          const Jimp = await import('jimp');
+          const image = await Jimp.Jimp.read(imageBuffer);
+          console.log('Image loaded with Jimp, dimensions:', image.width, 'x', image.height);
+          
+          // Convert image to PNG buffer (ensure it's PNG format)
+          const pngBuffer = await image.getBuffer(Jimp.JimpMime.png);
+          console.log('PNG buffer created with Jimp, size:', pngBuffer.length, 'bytes');
+          
+          imageEmbed = await pdfDoc.embedPng(pngBuffer);
+          console.log('Image embedded in PDF after Jimp processing');
+        }
+        
+        // Get image dimensions and scale appropriately for PDF
+        const { width, height } = imageEmbed.scale(1);
+        console.log('PDF page dimensions:', width, 'x', height);
+        
+        // Add a page with the same dimensions as the image
+        const page = pdfDoc.addPage([width, height]);
+        
+        // Draw the image on the page
+        page.drawImage(imageEmbed, {
+          x: 0,
+          y: 0,
+          width: width,
+          height: height,
+        });
+        
+        // Generate PDF bytes
+        const pdfBytes = await pdfDoc.save();
+        console.log('PDF generated successfully, size:', pdfBytes.length, 'bytes');
+        
+        // Set response headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="certificate_${certificate.certificateNumber}.pdf"`);
+        res.setHeader('Content-Length', pdfBytes.length);
+        
+        // Send the PDF
+        res.send(Buffer.from(pdfBytes));
+
+      } catch (pdfError: any) {
+        console.error('PDF conversion failed, error details:', pdfError);
+        console.error('Error name:', pdfError.name);
+        console.error('Error message:', pdfError.message);
+        if (pdfError.stack) {
+          console.error('Error stack:', pdfError.stack);
+        }
+        console.log('Falling back to PNG download');
+        
+        // Fallback to PNG download
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Content-Disposition', `attachment; filename="certificate_${certificate.certificateNumber}.png"`);
+        res.download(filePath, `certificate_${certificate.certificateNumber}.png`);
+      }
 
     } catch (error) {
       console.error('Error downloading certificate:', error);
@@ -4674,23 +4715,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // backupcertificate down
-  app.get('/api/certificates/:id/download/:imageId', isAuthenticated, async (req: any, res) => {
+  // Separate endpoint for PNG downloads (for debugging)
+  app.get('/api/certificates/:id/download/:imageId/png', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       const certificateId = req.params.id;
       const imageId = req.params.imageId;
 
       // Validate UUID format for both IDs
-      if (!isValidUUID(certificateId)) {
-        return res.status(400).json({
-          message: 'Invalid certificate ID format. Must be a valid UUID.'
-        });
-      }
-      if (!isValidUUID(imageId)) {
-        return res.status(400).json({
-          message: 'Invalid image ID format. Must be a valid UUID.'
-        });
+      if (!isValidUUID(certificateId) || !isValidUUID(imageId)) {
+        return res.status(400).json({ message: 'Invalid ID format' });
       }
 
       // Get certificate image
@@ -4705,18 +4739,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Access denied to this certificate' });
       }
 
-      // Serve the file
+      // Serve the PNG file directly
       const filePath = path.join(__dirname, '../public', certificateImage.imageUrl);
       const fs = await import('fs');
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: 'Certificate image file not found' });
       }
 
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', `attachment; filename="certificate_${certificate.certificateNumber}.png"`);
       res.download(filePath, `certificate_${certificate.certificateNumber}.png`);
 
     } catch (error) {
-      console.error('Error downloading certificate:', error);
-      res.status(500).json({ message: 'Failed to download certificate' });
+      console.error('Error downloading PNG certificate:', error);
+      res.status(500).json({ message: 'Failed to download PNG certificate' });
+    }
+  });
+
+  // Debug endpoint to check environment and dependencies
+  app.get('/api/debug/pdf-support', isAuthenticated, async (req: any, res) => {
+    try {
+      const debugInfo = {
+        environment: {
+          nodeVersion: process.version,
+          platform: process.platform,
+          isVercel: !!process.env.VERCEL,
+          isNetlify: !!process.env.NETLIFY,
+          isAWS: !!process.env.AWS_LAMBDA_FUNCTION_NAME,
+          cwd: process.cwd(),
+          dirname: __dirname
+        },
+        dependencies: {
+          jimp: false,
+          pdfLib: false
+        },
+        errors: [] as string[]
+      };
+
+      // Test Jimp
+      try {
+        const Jimp = await import('jimp');
+        debugInfo.dependencies.jimp = true;
+      } catch (error: any) {
+        debugInfo.dependencies.jimp = false;
+        debugInfo.errors.push(`Jimp error: ${error.message}`);
+      }
+
+      // Test pdf-lib
+      try {
+        const { PDFDocument } = await import('pdf-lib');
+        debugInfo.dependencies.pdfLib = true;
+      } catch (error: any) {
+        debugInfo.dependencies.pdfLib = false;
+        debugInfo.errors.push(`pdf-lib error: ${error.message}`);
+      }
+
+      res.json(debugInfo);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 
