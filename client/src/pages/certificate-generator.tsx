@@ -161,10 +161,111 @@ export function CertificateGeneratorPage() {
     }
   };
 
-  const downloadCertificate = () => {
+  const downloadCertificate = async () => {
     if (!selectedCertificate || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
+    
+    try {
+      // First try to download as PDF if we have certificate ID
+      if (selectedCertificate.id) {
+        // Get available templates first
+        let validTemplateId = selectedCertificate.diplomaTemplateId;
+        if (!validTemplateId) {
+          try {
+            const templatesResponse = await fetch('/api/diploma-templates');
+            if (templatesResponse.ok) {
+              const templates = await templatesResponse.json();
+              if (templates && templates.length > 0) {
+                validTemplateId = templates[0].id; // Use first available template
+              } else {
+                // Fall back to PNG download
+                const link = document.createElement('a');
+                link.download = `certificate_${selectedCertificate.certificateNumber}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+                toast({
+                  title: "تم تحميل الشهادة",
+                  description: "تم حفظ الشهادة بصيغة PNG بنجاح",
+                });
+                return;
+              }
+            } else {
+              throw new Error('Failed to fetch templates');
+            }
+          } catch (error) {
+            // Fall back to PNG download
+            const link = document.createElement('a');
+            link.download = `certificate_${selectedCertificate.certificateNumber}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            toast({
+              title: "تم تحميل الشهادة",
+              description: "تم حفظ الشهادة بصيغة PNG بنجاح",
+            });
+            return;
+          }
+        }
+        // Get canvas data
+        const canvasData = canvas.toDataURL('image/png');
+        
+        // Generate certificate on server
+        const response = await fetch('/api/certificates/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({
+            certificateId: selectedCertificate.id,
+            templateId: validTemplateId,
+            canvasData,
+            certificateData: {
+              studentName: selectedCertificate.studentName,
+              courseName: selectedCertificate.course.title,
+              grade: selectedCertificate.grade,
+              date: format(new Date(selectedCertificate.issuedAt), "dd/MM/yyyy"),
+              certificateNumber: selectedCertificate.certificateNumber,
+              generatedAt: new Date().toISOString()
+            }
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          
+          // Download as PDF
+          if (result.certificateImage && result.certificateImage.id) {
+            const downloadResponse = await fetch(`/api/certificates/${selectedCertificate.id}/download/${result.certificateImage.id}`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+              }
+            });
+
+            if (downloadResponse.ok) {
+              const pdfBlob = await downloadResponse.blob();
+              const downloadUrl = window.URL.createObjectURL(pdfBlob);
+              const downloadLink = document.createElement('a');
+              downloadLink.href = downloadUrl;
+              downloadLink.download = `certificate_${selectedCertificate.certificateNumber}.pdf`;
+              downloadLink.click();
+              window.URL.revokeObjectURL(downloadUrl);
+
+              toast({
+                title: "تم تحميل الشهادة",
+                description: "تم حفظ الشهادة بصيغة PDF بنجاح",
+              });
+              return;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Silently handle error
+    }
+
+    // Fallback to PNG download
     const link = document.createElement('a');
     link.download = `certificate_${selectedCertificate.certificateNumber}.png`;
     link.href = canvas.toDataURL();
@@ -172,7 +273,7 @@ export function CertificateGeneratorPage() {
 
     toast({
       title: "تم تحميل الشهادة",
-      description: "تم حفظ الشهادة بنجاح",
+      description: "تم حفظ الشهادة بصيغة PNG بنجاح",
     });
   };
 

@@ -19,6 +19,7 @@ interface Certificate {
   certificateNumber: string;
   issuedAt: string;
   grade: string;
+  diplomaTemplateId?: number;
   course: Course;
 }
 
@@ -238,6 +239,8 @@ export default function Certificates() {
                           grade={Math.round(Number(certificate.grade))}
                           date={formatDate(certificate.issuedAt)}
                           certificateNumber={certificate.certificateNumber}
+                          certificateId={certificate.id}
+                          templateId={certificate.diplomaTemplateId || 1}
                         />
                       </div>
                     </div>

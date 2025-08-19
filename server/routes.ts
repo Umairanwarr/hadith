@@ -4269,12 +4269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    */
   app.post('/api/certificates/generate', isAuthenticated, async (req: any, res) => {
     try {
-      console.log('🔍 Starting certificate generation...');
-      console.log('📝 Request body:', req.body);
-      
-      // const userId = req.user?.id;
       const userId = req.user?.id || req.user?.sub;
-      console.log('👤 User ID:', userId);
       
       if (!userId) {
         console.warn('⚠️ Missing sub in JWT payload');
@@ -4288,11 +4283,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         certificateData
       } = req.body;
 
-      console.log('📋 Extracted data:', { certificateId, templateId, canvasDataLength: canvasData?.length, certificateData });
-
       // Validate required fields
       if (!certificateId || !templateId || !canvasData) {
-        console.log('❌ Missing required fields');
         return res.status(400).json({
           message: 'Certificate ID, template ID, and canvas data are required'
         });
@@ -4300,19 +4292,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate UUID format for certificateId and templateId
       if (!isValidUUID(certificateId)) {
-        console.log('❌ Invalid certificate ID format:', certificateId);
         return res.status(400).json({
           message: 'Invalid certificate ID format. Must be a valid UUID.'
         });
       }
       if (!isValidUUID(templateId)) {
-        console.log('❌ Invalid template ID format:', templateId);
         return res.status(400).json({
           message: 'Invalid template ID format. Must be a valid UUID.'
         });
       }
-
-      console.log('✅ UUID validation passed');
 
       // Get certificate and template data
       console.log('🔍 Fetching certificate with ID:', certificateId);
