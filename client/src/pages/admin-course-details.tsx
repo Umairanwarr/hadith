@@ -89,12 +89,12 @@ export default function AdminCourseDetails() {
     updateLessonMutation.mutate({ id: editingLesson!.id, data: payload });
   };
 
-  const { data: course, isLoading: courseLoading } = useQuery({
+  const { data: course, isLoading: courseLoading } = useQuery<Course>({
     queryKey: ["api", "courses", courseId],
     retry: false,
   });
 
-  const { data: lessons, isLoading: lessonsLoading } = useQuery({
+  const { data: lessons, isLoading: lessonsLoading } = useQuery<Lesson[]>({
     queryKey: ["api", "courses", courseId, "lessons"],
     retry: false,
   });
@@ -151,7 +151,7 @@ export default function AdminCourseDetails() {
   });
 
   const deleteLessonMutation = useMutation({
-    mutationFn: async (lessonId: number) => {
+    mutationFn: async (lessonId: string) => {
       await apiRequest("DELETE", `/api/admin/lessons/${lessonId}`);
     },
     onSuccess: () => {

@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "wouter";
 import { useState, useEffect, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -45,6 +45,19 @@ interface CourseProgress {
 }
 
 export default function VideoPlayer() {
+  // Utility function to extract YouTube video ID from URL
+  const getYouTubeId = (url?: string | null) => {
+    if (!url) return null;
+    // Robust extraction: supports various formats
+    const short = url.match(/youtu\.be\/([^?&#/]+)/);
+    if (short?.[1]) return short[1];
+    const long = url.match(/[?&]v=([^?&#/]+)/);
+    if (long?.[1]) return long[1];
+    const embed = url.match(/embed\/([^?&#/]+)/);
+    if (embed?.[1]) return embed[1];
+    return null;
+  };
+
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -52,9 +65,12 @@ export default function VideoPlayer() {
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isYouTubePlayerReady, setIsYouTubePlayerReady] = useState(false);
+  const [hasVideoEnded, setHasVideoEnded] = useState(false);
+  const [currentVideoId, setCurrentVideoId] = useState<string | null>(null);
   const videoElRef = useRef<HTMLVideoElement | null>(null);
   const ytPlayerRef = useRef<any>(null);
   const ytIntervalRef = useRef<number | null>(null);
+  const hasSetInitialPosition = useRef<boolean>(false);
 
   // We avoid destroying the YT player between lessons to prevent DOM errors.
   // Instead we keep a single instance and call loadVideoById when lesson changes.
@@ -95,7 +111,10 @@ export default function VideoPlayer() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["api", "courses", courseIdStr, "progress"] });
+      // Only invalidate queries if video hasn't ended to prevent reload loops
+      if (!hasVideoEnded) {
+        queryClient.invalidateQueries({ queryKey: ["api", "courses", courseIdStr, "progress"] });
+      }
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -118,6 +137,9 @@ export default function VideoPlayer() {
     if (currentLesson) {
       setDuration(currentLesson.duration);
       setCurrentTime(currentProgress?.watchedDuration || 0);
+      setHasVideoEnded(false); // Reset video ended state when switching lessons
+      hasSetInitialPosition.current = false; // Reset initial position flag
+      setCurrentVideoId(null); // Reset current video ID
       // Reset any existing timers so new lesson tracking can attach cleanly
       if (ytIntervalRef.current) {
         window.clearInterval(ytIntervalRef.current);
@@ -177,6 +199,7 @@ export default function VideoPlayer() {
       const total = Math.floor(video.duration || 0);
       setCurrentTime(total);
       setIsPlaying(false);
+      setHasVideoEnded(true); // Mark video as ended
       updateProgressMutation.mutate({
         watchedDuration: total,
         isCompleted: true,
@@ -234,6 +257,11 @@ export default function VideoPlayer() {
   // YouTube embed tracking (requires enablejsapi=1). Keep a single player instance.
   useEffect(() => {
     if (!currentLesson?.videoUrl || !/(youtube\.com|youtu\.be)/.test(currentLesson.videoUrl)) {
+      return;
+    }
+
+    // Don't initialize if video has ended - let it stay paused
+    if (hasVideoEnded) {
       return;
     }
 
@@ -324,19 +352,10 @@ export default function VideoPlayer() {
           return;
         }
 
-        // If player already exists, just load the new video
+        // If player already exists, don't load here - let the separate effect handle it
         if (ytPlayerRef.current && typeof ytPlayerRef.current.loadVideoById === 'function') {
-          try {
-            console.log('Loading new video in existing player:', videoId);
-            ytPlayerRef.current.loadVideoById({
-              videoId: videoId,
-              startSeconds: currentProgress?.watchedDuration || 0
-            });
-            return;
-          } catch (e) {
-            console.warn('Error loading video in existing player, recreating:', e);
-            // Fall through to recreate player
-          }
+          console.log('Player already exists, skipping duplicate load');
+          return;
         }
 
         // Destroy existing player if it exists
@@ -361,20 +380,45 @@ export default function VideoPlayer() {
             enablejsapi: 1,
             origin: window.location.origin,
             modestbranding: 1,
-            rel: 0
+            rel: 0, // Don't show related videos at the end
+            showinfo: 0, // Hide video title and uploader info
+            iv_load_policy: 3, // Hide video annotations
+            disablekb: 1, // Disable keyboard controls
+            fs: 1, // Allow fullscreen
+            cc_load_policy: 0, // Don't show captions by default
+            autoplay: 0, // Don't autoplay
+            controls: 1, // Show player controls
+            // Additional parameters to prevent recommendations
+            playsinline: 1, // Play inline on mobile
+            widget_referrer: window.location.origin, // Set referrer
+            // Force embedding mode to reduce recommendations
+            host: 'https://www.youtube-nocookie.com'
           },
           events: {
             onReady: (event: any) => {
               console.log('YouTube player ready for video:', videoId);
               setIsYouTubePlayerReady(true);
-              // Set initial position if available
-              if (currentProgress?.watchedDuration && currentProgress.watchedDuration > 0) {
-                try {
-                  event.target.seekTo(currentProgress.watchedDuration, true);
-                } catch (e) {
-                  console.warn('Error setting initial position:', e);
+              setCurrentVideoId(videoId); // Track current video ID
+              
+              // Add CSS to hide YouTube overlays and recommendations
+              const style = document.createElement('style');
+              style.textContent = `
+                .ytp-endscreen-content,
+                .ytp-ce-element,
+                .ytp-cards-teaser,
+                .ytp-endscreen-previous,
+                .ytp-endscreen-next,
+                .html5-endscreen,
+                .ytp-pause-overlay {
+                  display: none !important;
                 }
-              }
+                .ytp-show-cards-title {
+                  display: none !important;
+                }
+              `;
+              document.head.appendChild(style);
+              
+              // Initial position will be set by the separate effect
             },
             onStateChange: (event: any) => {
               // Start/stop interval when playing/paused
@@ -382,6 +426,7 @@ export default function VideoPlayer() {
                 if (ytIntervalRef.current) window.clearInterval(ytIntervalRef.current);
                 ytIntervalRef.current = window.setInterval(() => {
                   try {
+                    if (hasVideoEnded) return; // Don't update if video has ended
                     const watched = Math.floor(ytPlayerRef.current?.getCurrentTime() || 0);
                     const total = Math.floor(ytPlayerRef.current?.getDuration() || 0);
                     const isCompleted = total > 0 && watched >= total * 0.9;
@@ -408,6 +453,19 @@ export default function VideoPlayer() {
                     const total = Math.floor(ytPlayerRef.current?.getDuration() || 0);
                     setCurrentTime(watched);
                     setDuration(total || duration);
+                    setHasVideoEnded(true); // Mark video as ended to prevent reload
+                    
+                    // Hide any YouTube recommendation overlays
+                    setTimeout(() => {
+                      const endScreenElements = document.querySelectorAll(
+                        '.ytp-endscreen-content, .ytp-ce-element, .ytp-cards-teaser, .html5-endscreen, .ytp-pause-overlay'
+                      );
+                      endScreenElements.forEach(element => {
+                        (element as HTMLElement).style.display = 'none';
+                      });
+                    }, 100);
+                    
+                    // Final progress update when video ends
                     updateProgressMutation.mutate({ watchedDuration: watched, isCompleted: true });
                   } catch (e) {
                     console.warn('Error handling video end:', e);
@@ -459,7 +517,7 @@ export default function VideoPlayer() {
       }
       // Don't destroy player here - let the cleanup effect handle it
     };
-  }, [currentLesson?.videoUrl, currentLesson?.id, updateProgressMutation]);
+  }, [currentLesson?.videoUrl, currentLesson?.id, updateProgressMutation, hasVideoEnded]);
 
   // Cleanup effect to destroy YouTube player when component unmounts
   useEffect(() => {
@@ -486,21 +544,60 @@ export default function VideoPlayer() {
       return;
     }
 
+    // Don't reload video if it has ended - let it stay paused at the end
+    if (hasVideoEnded) {
+      return;
+    }
+
+    const videoId = getYouTubeId(currentLesson.videoUrl);
+    if (!videoId) {
+      return;
+    }
+
+    // Don't reload if it's the same video
+    if (currentVideoId === videoId) {
+      console.log('Same video already loaded, skipping reload:', videoId);
+      return;
+    }
+
     if (isYouTubePlayerReady && ytPlayerRef.current && typeof ytPlayerRef.current.loadVideoById === 'function') {
-      const videoId = getYouTubeId(currentLesson.videoUrl);
-      if (videoId) {
-        try {
-          console.log('Loading video in ready player:', videoId);
-          ytPlayerRef.current.loadVideoById({
-            videoId: videoId,
-            startSeconds: currentProgress?.watchedDuration || 0
-          });
-        } catch (e) {
-          console.warn('Error loading video in ready player:', e);
-        }
+      try {
+        console.log('Loading video in ready player:', videoId);
+        ytPlayerRef.current.loadVideoById({
+          videoId: videoId,
+          startSeconds: 0 // Always start from beginning to avoid reload loops
+        });
+        setCurrentVideoId(videoId); // Update current video ID
+      } catch (e) {
+        console.warn('Error loading video in ready player:', e);
       }
     }
-  }, [currentLesson?.id, currentLesson?.videoUrl, isYouTubePlayerReady, currentProgress?.watchedDuration]);
+  }, [currentLesson?.id, currentLesson?.videoUrl, isYouTubePlayerReady, hasVideoEnded, currentVideoId]);
+
+  // Set initial video position for YouTube videos (separate from loading)
+  useEffect(() => {
+    if (!currentLesson?.videoUrl || !/(youtube\.com|youtu\.be)/.test(currentLesson.videoUrl)) {
+      return;
+    }
+
+    if (hasVideoEnded || hasSetInitialPosition.current) {
+      return; // Don't set position if video has ended or already set
+    }
+
+    if (isYouTubePlayerReady && ytPlayerRef.current && currentProgress?.watchedDuration && currentProgress.watchedDuration > 0) {
+      try {
+        // Small delay to ensure video is loaded
+        setTimeout(() => {
+          if (ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === 'function' && !hasSetInitialPosition.current) {
+            ytPlayerRef.current.seekTo(currentProgress.watchedDuration, true);
+            hasSetInitialPosition.current = true;
+          }
+        }, 1000);
+      } catch (e) {
+        console.warn('Error setting initial video position:', e);
+      }
+    }
+  }, [currentLesson?.id, isYouTubePlayerReady, currentProgress?.watchedDuration, hasVideoEnded]);
 
   // Reset YouTube player state when switching to non-YouTube videos
   useEffect(() => {
@@ -637,17 +734,6 @@ export default function VideoPlayer() {
 
   const isYouTubeUrl = (url?: string | null) => !!url && /(youtube\.com|youtu\.be)/.test(url);
   const isVimeoUrl = (url?: string | null) => !!url && /vimeo\.com/.test(url);
-  const getYouTubeId = (url?: string | null) => {
-    if (!url) return null;
-    // Robust extraction: supports various formats
-    const short = url.match(/youtu\.be\/([^?&#/]+)/);
-    if (short?.[1]) return short[1];
-    const long = url.match(/[?&]v=([^?&#/]+)/);
-    if (long?.[1]) return long[1];
-    const embed = url.match(/embed\/([^?&#/]+)/);
-    if (embed?.[1]) return embed[1];
-    return null;
-  };
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
@@ -660,6 +746,22 @@ export default function VideoPlayer() {
             {currentLesson?.videoUrl ? (
               isYouTubeUrl(currentLesson.videoUrl) ? (
                 <div className="relative w-full h-full min-h-[400px]" style={{ aspectRatio: '16/9' }}>
+                  <style dangerouslySetInnerHTML={{
+                    __html: `
+                      .ytp-endscreen-content,
+                      .ytp-ce-element,
+                      .ytp-cards-teaser,
+                      .ytp-endscreen-previous,
+                      .ytp-endscreen-next,
+                      .html5-endscreen,
+                      .ytp-pause-overlay,
+                      .ytp-show-cards-title {
+                        display: none !important;
+                        visibility: hidden !important;
+                        opacity: 0 !important;
+                      }
+                    `
+                  }} />
                   <div 
                     id="yt-player" 
                     className="w-full h-full"

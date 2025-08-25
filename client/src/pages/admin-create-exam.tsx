@@ -29,7 +29,7 @@ export default function AdminCreateExam() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
-  const { data: courses, isLoading: coursesLoading } = useQuery({
+  const { data: courses, isLoading: coursesLoading } = useQuery<Course[]>({
     queryKey: ["api", "courses"],
     retry: false,
   });
@@ -41,7 +41,9 @@ export default function AdminCreateExam() {
       description: "",
       duration: 60,
       passingGrade: 70,
-      courseId: 0,
+      courseId: "",
+      totalQuestions: 0,
+      isActive: true,
     },
   });
 
@@ -51,11 +53,7 @@ export default function AdminCreateExam() {
       const examData = { ...data };
       delete (examData as any).courseId; // Remove courseId from body as it goes in URL
       
-      return await apiRequest(`/admin/courses/${courseId}/exams`, {
-        method: "POST",
-        body: JSON.stringify(examData),
-        headers: { "Content-Type": "application/json" },
-      });
+      return await apiRequest("POST", `/api/admin/courses/${courseId}/exams`, examData);
     },
     onSuccess: () => {
       toast({
@@ -133,7 +131,7 @@ export default function AdminCreateExam() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>المادة الدراسية *</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(Number(value))}>
+                      <Select onValueChange={(value) => field.onChange(value)}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="اختر المادة الدراسية" />

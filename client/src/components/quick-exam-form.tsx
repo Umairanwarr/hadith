@@ -30,8 +30,10 @@ export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
       title: "",
       description: "",
       duration: 30,
-      passingGrade: "",
+      passingGrade: 70,
       courseId: courseId || "",
+      totalQuestions: 0,
+      isActive: true,
     },
   });
 
@@ -51,8 +53,9 @@ export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
         title: "تم إنشاء الامتحان بنجاح",
         description: "تم إنشاء الامتحان الجديد بنجاح. يمكنك الآن إضافة الأسئلة",
       });
-      queryClient.invalidateQueries({ queryKey: ["/exams"] });
-      queryClient.invalidateQueries({ queryKey: ["/admin/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["exams"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "courses"] });
       form.reset();
       if (onSuccess) onSuccess();
     },
@@ -66,13 +69,14 @@ export function QuickExamForm({ courseId, onSuccess }: QuickExamFormProps) {
   });
 
   const onSubmit = (data: CreateExam) => {
-    const finalData = {
+    const finalData: CreateExam = {
       ...data,
       courseId: selectedCourse || data.courseId,
-      // Ensure correct numeric types before validation/submit
       duration: Number(data.duration),
-      passingGrade: Number((data as any).passingGrade) as unknown as any,
-    } as CreateExam;
+      passingGrade: Number(data.passingGrade),
+      totalQuestions: data.totalQuestions || 0,
+      isActive: data.isActive !== false,
+    };
     createExamMutation.mutate(finalData);
   };
 

@@ -26,7 +26,7 @@ const courseSchema = z.object({
   title: z.string().min(5, "عنوان الكورس يجب أن يكون 5 أحرف على الأقل"),
   description: z.string().min(10, "وصف الكورس يجب أن يكون 10 أحرف على الأقل"),
   instructor: z.string().min(3, "اسم المدرس مطلوب"),
-  level: z.enum(["تمهيدي", "متوسط", "إجازة", "بكالوريوس", "ماجستير", "دكتوراه"]),
+  level: z.enum(["مبتدئ", "تمهيدي", "متوسط", "متقدم", "إجازة", "بكالوريوس", "ماجستير", "دكتوراه"]),
   duration: z.number().min(1, "مدة الكورس مطلوبة").optional(),
   thumbnailUrl: z.string().optional(),
   imageUrl: z.string().optional(),
@@ -157,8 +157,10 @@ function CourseFormDialogComponent({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                      <SelectItem value="مبتدئ">مبتدئ - Beginner</SelectItem>
                       <SelectItem value="تمهيدي">الديبلوم التمهيدي - Preparatory Diploma</SelectItem>
                       <SelectItem value="متوسط">الدبلوم المتوسط - Intermediate Diploma</SelectItem>
+                      <SelectItem value="متقدم">متقدم - Advanced</SelectItem>
                       <SelectItem value="إجازة">الإجازة - Vacation</SelectItem>
                       <SelectItem value="بكالوريوس">البكالوريوس - Bachelor's Degree</SelectItem>
                       <SelectItem value="ماجستير">الماجستير - Master's Degree</SelectItem>
@@ -733,8 +735,10 @@ export function CourseManagementPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">جميع المستويات - All Levels</SelectItem>
+                <SelectItem value="مبتدئ">مبتدئ - Beginner</SelectItem>
                 <SelectItem value="تمهيدي">الديبلوم التمهيدي - Preparatory Diploma</SelectItem>
                 <SelectItem value="متوسط">الدبلوم المتوسط - Intermediate Diploma</SelectItem>
+                <SelectItem value="متقدم">متقدم - Advanced</SelectItem>
                 <SelectItem value="إجازة">الإجازة - Vacation</SelectItem>
                 <SelectItem value="بكالوريوس">البكالوريوس - Bachelor's Degree</SelectItem>
                 <SelectItem value="ماجستير">الماجستير - Master's Degree</SelectItem>

@@ -792,7 +792,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *         name: level
    *         schema:
    *           type: string
-   *           enum: ['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه']
+   *           enum: ['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'إجازة', 'بكالوريوس', 'ماجستير', 'دكتوراه']
    *         description: Filter courses by difficulty level (optional)
    *         example: "مبتدئ"
    *     responses:
@@ -1088,7 +1088,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *                 example: "د. أحمد محمد"
    *               level:
    *                 type: string
-   *                 enum: ['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه']
+   *                 enum: ['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'إجازة', 'بكالوريوس', 'ماجستير', 'دكتوراه']
    *                 description: Course difficulty level
    *                 example: "مبتدئ"
    *               duration:
@@ -1422,7 +1422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *                 example: "د. أحمد محمد"
    *               level:
    *                 type: string
-   *                 enum: ['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه']
+   *                 enum: ['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'إجازة', 'بكالوريوس', 'ماجستير', 'دكتوراه']
    *                 description: Course difficulty level (optional)
    *                 example: "متوسط"
    *               duration:
