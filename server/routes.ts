@@ -9,7 +9,9 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import fs from 'fs';
 import { sendVerificationEmail, generateVerificationToken, sendPasswordResetEmail } from './lib/emailService.js';
+import { uploadOnCloudinary, deleteFromCloudinary } from './lib/cloudinary.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -130,56 +132,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
   });
 
-  // Configure multer for file uploads
-  const storage_config = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, path.join(__dirname, '../public/uploads/'));
-    },
-    filename: function (req, file, cb) {
-      // Generate unique filename
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      cb(
-        null,
-        file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname)
-      );
-    },
-  });
-
+  // Configure multer for file uploads using memory storage for Cloudinary
   const upload = multer({
-    storage: storage_config,
+    storage: multer.memoryStorage(),
     limits: {
-      fileSize: 5 * 1024 * 1024, // 5MB limit
+      fileSize: 10 * 1024 * 1024, // 10MB limit to accommodate documents
     },
     fileFilter: function (req, file, cb) {
-      // Accept only image files
-      if (file.mimetype.startsWith('image/')) {
+      // Allow images for thumbnail and image fields
+      if ((file.fieldname === 'thumbnail' || file.fieldname === 'image') && file.mimetype.startsWith('image/')) {
         cb(null, true);
-      } else {
-        cb(new Error('Only image files are allowed'));
+      }
+      // Allow PDFs and text files for syllabus field
+      else if (file.fieldname === 'syllabus' && (file.mimetype.startsWith('application/pdf') || file.mimetype.startsWith('text/'))) {
+        cb(null, true);
+      }
+      // Reject other file types
+      else {
+        cb(new Error(`Invalid file type for ${file.fieldname}. Thumbnail/Image must be an image, syllabus must be PDF or text.`));
       }
     },
   });
 
-  // Document upload configuration
-  const documentUpload = multer({
-    storage: storage_config,
-    limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB limit for documents
-    },
-    fileFilter: function (req, file, cb) {
-      // Accept PDFs and Word documents
-      const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      ];
-      if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-      } else {
-        cb(new Error('Only PDF and Word documents are allowed'));
-      }
-    },
-  });
+
 
   // Serve uploaded files statically
   app.use(
@@ -799,6 +774,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Course routes
+  /**
+   * @swagger
+   * /api/courses:
+   *   get:
+   *     summary: Get all courses or filter by level
+   *     description: Retrieves all courses or filters them by difficulty level. Authentication required.
+   *     tags: [Course Management]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: level
+   *         schema:
+   *           type: string
+   *           enum: ['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه']
+   *         description: Filter courses by difficulty level (optional)
+   *         example: "مبتدئ"
+   *     responses:
+   *       200:
+   *         description: Courses retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Course'
+   *       401:
+   *         description: Unauthorized - authentication required
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get('/api/courses', isAuthenticated, async (req, res) => {
     try {
       const { level } = req.query;
@@ -819,6 +833,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/courses/{id}:
+   *   get:
+   *     summary: Get course by ID
+   *     description: Retrieves a specific course by its ID. Authentication required.
+   *     tags: [Course Management]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Course ID
+   *         example: "123e4567-e89b-12d3-a456-426614174000"
+   *     responses:
+   *       200:
+   *         description: Course retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Course'
+   *       401:
+   *         description: Unauthorized - authentication required
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       404:
+   *         description: Course not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get('/api/courses/:id', isAuthenticated, async (req, res) => {
     try {
       const courseId = req.params.id;
@@ -837,6 +895,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * @swagger
+   * /api/courses/{id}/lessons:
+   *   get:
+   *     summary: Get lessons for a course
+   *     description: Retrieves all lessons for a specific course. Authentication required.
+   *     tags: [Course Management]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Course ID
+   *         example: "123e4567-e89b-12d3-a456-426614174000"
+   *     responses:
+   *       200:
+   *         description: Lessons retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Lesson'
+   *       401:
+   *         description: Unauthorized - authentication required
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.get('/api/courses/:id/lessons', isAuthenticated, async (req, res) => {
     try {
       const courseId = req.params.id as string;
@@ -851,21 +949,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // File upload endpoint for course syllabi
   app.post('/api/upload/syllabus', isAuthenticated, isAdmin,
-    documentUpload.single('syllabus'),
-    (req: any, res) => {
+    upload.single('syllabus'),
+    async (req: any, res) => {
       try {
         if (!req.file) {
           return res.status(400).json({ message: 'No file uploaded' });
         }
 
-        const fileUrl = `/uploads/${req.file.filename}`;
-        const fileName = req.file.originalname;
+        // Create a temporary file path for Cloudinary upload
+        const tempFilePath = path.join(__dirname, '../temp', `temp-${Date.now()}-${req.file.originalname}`);
+        
+        // Ensure temp directory exists
+        const tempDir = path.dirname(tempFilePath);
+        if (!fs.existsSync(tempDir)) {
+          fs.mkdirSync(tempDir, { recursive: true });
+        }
+
+        // Write buffer to temporary file
+        fs.writeFileSync(tempFilePath, req.file.buffer);
+
+        // Upload to Cloudinary
+        const cloudinaryResponse = await uploadOnCloudinary(tempFilePath);
+        
+        // Clean up temporary file
+        if (fs.existsSync(tempFilePath)) {
+          fs.unlinkSync(tempFilePath);
+        }
+
+        if (!cloudinaryResponse) {
+          return res.status(500).json({ message: 'Failed to upload to Cloudinary' });
+        }
 
         res.json({
-          url: fileUrl,
-          fileName: fileName,
+          url: cloudinaryResponse.secure_url,
+          fileName: req.file.originalname,
           size: req.file.size,
-          message: 'File uploaded successfully',
+          cloudinaryId: cloudinaryResponse.public_id,
+          message: 'File uploaded successfully to Cloudinary',
         });
       } catch (error) {
         console.error('Error uploading file:', error);
@@ -875,46 +995,572 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Course management (admin only)
-  app.post('/api/courses', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      console.log('🔍 Request body received:', req.body);
+  /**
+   * @swagger
+   * /api/courses:
+   *   post:
+   *     summary: Create a new course
+   *     description: Creates a new course with optional file uploads (thumbnail, image, syllabus). Admin only.
+   *     tags: [Course Management]
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         multipart/form-data:
+   *           schema:
+   *             type: object
+   *             required:
+   *               - title
+   *               - description
+   *               - instructor
+   *               - level
+   *               - duration
+   *             properties:
+   *               title:
+   *                 type: string
+   *                 minLength: 1
+   *                 maxLength: 200
+   *                 description: Course title
+   *                 example: "أصول الفقه للمبتدئين"
+   *               description:
+   *                 type: string
+   *                 minLength: 1
+   *                 maxLength: 2000
+   *                 description: Course description
+   *                 example: "مقدمة شاملة في أصول الفقه الإسلامي"
+   *               instructor:
+   *                 type: string
+   *                 minLength: 1
+   *                 maxLength: 100
+   *                 description: Instructor name
+   *                 example: "د. أحمد محمد"
+   *               level:
+   *                 type: string
+   *                 enum: ['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه']
+   *                 description: Course difficulty level
+   *                 example: "مبتدئ"
+   *               duration:
+   *                 type: integer
+   *                 minimum: 1
+   *                 maximum: 10080
+   *                 description: Course duration in minutes
+   *                 example: 480
+   *               thumbnail:
+   *                 type: string
+   *                 format: binary
+   *                 description: Course thumbnail image (optional)
+   *               image:
+   *                 type: string
+   *                 format: binary
+   *                 description: Course main image (optional)
+   *               syllabus:
+   *                 type: string
+   *                 format: binary
+   *                 description: Course syllabus document - PDF or text (optional)
+   *               thumbnailUrl:
+   *                 type: string
+   *                 format: uri
+   *                 description: Direct URL for thumbnail (alternative to file upload)
+   *               imageUrl:
+   *                 type: string
+   *                 format: uri
+   *                 description: Direct URL for main image (alternative to file upload)
+   *               syllabusUrl:
+   *                 type: string
+   *                 format: uri
+   *                 description: Direct URL for syllabus (alternative to file upload)
+   *               syllabusFileName:
+   *                 type: string
+   *                 maxLength: 255
+   *                 description: Name of the syllabus file
+   *     responses:
+   *       200:
+   *         description: Course created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Course'
+   *       400:
+   *         description: Bad request - validation error or missing fields
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Invalid data"
+   *                 errors:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       field:
+   *                         type: string
+   *                         example: "title"
+   *                       message:
+   *                         type: string
+   *                         example: "Title is required"
+   *       401:
+   *         description: Unauthorized - authentication required
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       403:
+   *         description: Forbidden - admin access required
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  app.post('/api/courses', isAuthenticated, isAdmin,
+    upload.fields([
+      { name: 'thumbnail', maxCount: 1 },
+      { name: 'image', maxCount: 1 },
+      { name: 'syllabus', maxCount: 1 }
+    ]),
+    async (req: any, res) => {
+      try {
+        console.log('🔍 Request body received:', req.body);
+        console.log('📁 Files received:', req.files);
 
-      // Validate the request body using the schema
-      const validationResult = createCourseSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        console.error('❌ Validation failed:', validationResult.error);
-        return res.status(400).json({
-          message: 'Invalid data',
-          errors: validationResult.error.issues.map((issue) => ({
-            field: issue.path.join('.'),
-            message: issue.message,
-          })),
+        // Handle thumbnail upload if provided
+        let thumbnailUrl = req.body.thumbnailUrl;
+        let imageUrl = req.body.imageUrl;
+        
+        if (req.files && req.files.thumbnail && req.files.thumbnail[0]) {
+          const thumbnailFile = req.files.thumbnail[0];
+          
+          // Create a temporary file path for Cloudinary upload
+          const tempThumbnailPath = path.join(__dirname, '../temp', `temp-thumbnail-${Date.now()}-${thumbnailFile.originalname}`);
+          
+          // Ensure temp directory exists
+          const tempDir = path.dirname(tempThumbnailPath);
+          if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+          }
+          
+          // Write buffer to temporary file
+          fs.writeFileSync(tempThumbnailPath, thumbnailFile.buffer);
+          
+          // Upload to Cloudinary as image
+          const thumbnailResponse = await uploadOnCloudinary(tempThumbnailPath, 'image');
+          
+          // Clean up temporary file
+          if (fs.existsSync(tempThumbnailPath)) {
+            fs.unlinkSync(tempThumbnailPath);
+          }
+          
+          if (thumbnailResponse) {
+            thumbnailUrl = thumbnailResponse.secure_url;
+            console.log('✅ Thumbnail uploaded to Cloudinary:', thumbnailUrl);
+          } else {
+            console.error('❌ Failed to upload thumbnail to Cloudinary');
+            return res.status(500).json({ message: 'Failed to upload thumbnail to Cloudinary' });
+          }
+        }
+
+        // Handle image upload if provided (separate from thumbnail)
+        if (req.files && req.files.image && req.files.image[0]) {
+          const imageFile = req.files.image[0];
+          
+          // Create a temporary file path for Cloudinary upload
+          const tempImagePath = path.join(__dirname, '../temp', `temp-image-${Date.now()}-${imageFile.originalname}`);
+          
+          // Ensure temp directory exists
+          const tempDir = path.dirname(tempImagePath);
+          if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+          }
+          
+          // Write buffer to temporary file
+          fs.writeFileSync(tempImagePath, imageFile.buffer);
+          
+          // Upload to Cloudinary as image
+          const imageResponse = await uploadOnCloudinary(tempImagePath, 'image');
+          
+          // Clean up temporary file
+          if (fs.existsSync(tempImagePath)) {
+            fs.unlinkSync(tempImagePath);
+          }
+          
+          if (imageResponse) {
+            imageUrl = imageResponse.secure_url;
+            console.log('✅ Image uploaded to Cloudinary:', imageUrl);
+          } else {
+            console.error('❌ Failed to upload image to Cloudinary');
+            return res.status(500).json({ message: 'Failed to upload image to Cloudinary' });
+          }
+        }
+
+        // Handle syllabus upload if provided
+        let syllabusUrl = req.body.syllabusUrl;
+        let syllabusFileName = req.body.syllabusFileName;
+        
+        if (req.files && req.files.syllabus && req.files.syllabus[0]) {
+          const syllabusFile = req.files.syllabus[0];
+          
+          // Create a temporary file path for Cloudinary upload
+          const tempSyllabusPath = path.join(__dirname, '../temp', `temp-syllabus-${Date.now()}-${syllabusFile.originalname}`);
+          
+          // Ensure temp directory exists
+          const tempDir = path.dirname(tempSyllabusPath);
+          if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+          }
+          
+          // Write buffer to temporary file
+          fs.writeFileSync(tempSyllabusPath, syllabusFile.buffer);
+          
+          // Upload to Cloudinary as auto (for PDFs and documents - let Cloudinary detect the type)
+          const syllabusResponse = await uploadOnCloudinary(tempSyllabusPath, 'auto');
+          
+          // Clean up temporary file
+          if (fs.existsSync(tempSyllabusPath)) {
+            fs.unlinkSync(tempSyllabusPath);
+          }
+          
+          if (syllabusResponse) {
+            syllabusUrl = syllabusResponse.secure_url;
+            syllabusFileName = syllabusFile.originalname;
+            console.log('✅ Syllabus uploaded to Cloudinary:', syllabusUrl);
+          } else {
+            console.error('❌ Failed to upload syllabus to Cloudinary');
+            return res.status(500).json({ message: 'Failed to upload syllabus to Cloudinary' });
+          }
+        }
+
+        // Prepare course data with uploaded URLs
+        const courseDataToValidate = {
+          ...req.body,
+          thumbnailUrl: thumbnailUrl || req.body.thumbnailUrl,
+          imageUrl: imageUrl || req.body.imageUrl,
+          syllabusUrl: syllabusUrl || req.body.syllabusUrl,
+          syllabusFileName: syllabusFileName || req.body.syllabusFileName,
+        };
+
+        // Convert string fields to numbers before validation
+        if (courseDataToValidate.duration && typeof courseDataToValidate.duration === 'string') {
+          courseDataToValidate.duration = parseInt(courseDataToValidate.duration, 10);
+        }
+        if (courseDataToValidate.passingGrade && typeof courseDataToValidate.passingGrade === 'string') {
+          courseDataToValidate.passingGrade = parseInt(courseDataToValidate.passingGrade, 10);
+        }
+
+        // Validate the request body using the schema
+        const validationResult = createCourseSchema.safeParse(courseDataToValidate);
+        if (!validationResult.success) {
+          console.error('❌ Validation failed:', validationResult.error);
+          return res.status(400).json({
+            message: 'Invalid data',
+            errors: validationResult.error.issues.map((issue) => ({
+              field: issue.path.join('.'),
+              message: issue.message,
+            })),
+          });
+        }
+
+        const courseData = validationResult.data;
+        console.log('✅ Validated course data:', courseData);
+
+        const course = await storage.createCourse({
+          ...courseData,
+          totalLessons: 0,
+          isActive: true,
         });
+
+        res.json(course);
+      } catch (error) {
+        console.error('Error creating course:', error);
+        res.status(500).json({ message: 'Failed to create course' });
       }
-
-      const courseData = validationResult.data;
-      console.log('✅ Validated course data:', courseData);
-
-      const course = await storage.createCourse({
-        ...courseData,
-        totalLessons: 0,
-        isActive: true,
-      });
-
-      res.json(course);
-    } catch (error) {
-      console.error('Error creating course:', error);
-      res.status(500).json({ message: 'Failed to create course' });
     }
-  });
+  );
 
+  /**
+   * @swagger
+   * /api/courses/{id}:
+   *   patch:
+   *     summary: Update an existing course
+   *     description: Updates an existing course with optional file uploads (thumbnail, image, syllabus). Admin only.
+   *     tags: [Course Management]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Course ID
+   *         example: "123e4567-e89b-12d3-a456-426614174000"
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         multipart/form-data:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               title:
+   *                 type: string
+   *                 minLength: 1
+   *                 maxLength: 200
+   *                 description: Course title (optional)
+   *                 example: "أصول الفقه للمبتدئين - محدث"
+   *               description:
+   *                 type: string
+   *                 minLength: 1
+   *                 maxLength: 2000
+   *                 description: Course description (optional)
+   *                 example: "مقدمة شاملة ومحدثة في أصول الفقه الإسلامي"
+   *               instructor:
+   *                 type: string
+   *                 minLength: 1
+   *                 maxLength: 100
+   *                 description: Instructor name (optional)
+   *                 example: "د. أحمد محمد"
+   *               level:
+   *                 type: string
+   *                 enum: ['مبتدئ', 'تمهيدي', 'متوسط', 'متقدم', 'بكالوريوس', 'ماجستير', 'دكتوراه']
+   *                 description: Course difficulty level (optional)
+   *                 example: "متوسط"
+   *               duration:
+   *                 type: integer
+   *                 minimum: 1
+   *                 maximum: 10080
+   *                 description: Course duration in minutes (optional)
+   *                 example: 600
+   *               thumbnail:
+   *                 type: string
+   *                 format: binary
+   *                 description: Course thumbnail image (optional)
+   *               image:
+   *                 type: string
+   *                 format: binary
+   *                 description: Course main image (optional)
+   *               syllabus:
+   *                 type: string
+   *                 format: binary
+   *                 description: Course syllabus document - PDF or text (optional)
+   *               thumbnailUrl:
+   *                 type: string
+   *                 format: uri
+   *                 description: Direct URL for thumbnail (alternative to file upload)
+   *               imageUrl:
+   *                 type: string
+   *                 format: uri
+   *                 description: Direct URL for main image (alternative to file upload)
+   *               syllabusUrl:
+   *                 type: string
+   *                 format: uri
+   *                 description: Direct URL for syllabus (alternative to file upload)
+   *               syllabusFileName:
+   *                 type: string
+   *                 maxLength: 255
+   *                 description: Name of the syllabus file
+   *               isActive:
+   *                 type: boolean
+   *                 description: Whether the course is active (optional)
+   *                 example: true
+   *     responses:
+   *       200:
+   *         description: Course updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Course'
+   *       400:
+   *         description: Bad request - validation error or missing fields
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Invalid data"
+   *                 errors:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       field:
+   *                         type: string
+   *                         example: "title"
+   *                       message:
+   *                         type: string
+   *                         example: "Title is required"
+   *       401:
+   *         description: Unauthorized - authentication required
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       403:
+   *         description: Forbidden - admin access required
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       404:
+   *         description: Course not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.patch('/api/courses/:id', isAuthenticated, isAdmin,
+    upload.fields([
+      { name: 'thumbnail', maxCount: 1 },
+      { name: 'image', maxCount: 1 },
+      { name: 'syllabus', maxCount: 1 }
+    ]),
     async (req: any, res) => {
       try {
         const courseId = req.params.id; // Pass UUID string directly
+        console.log('🔍 Update request body received:', req.body);
+        console.log('📁 Update files received:', req.files);
+
+        // Handle thumbnail upload if provided
+        let thumbnailUrl = req.body.thumbnailUrl;
+        let imageUrl = req.body.imageUrl;
+        
+        if (req.files && req.files.thumbnail && req.files.thumbnail[0]) {
+          const thumbnailFile = req.files.thumbnail[0];
+          
+          // Create a temporary file path for Cloudinary upload
+          const tempThumbnailPath = path.join(__dirname, '../temp', `temp-thumbnail-update-${Date.now()}-${thumbnailFile.originalname}`);
+          
+          // Ensure temp directory exists
+          const tempDir = path.dirname(tempThumbnailPath);
+          if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+          }
+          
+          // Write buffer to temporary file
+          fs.writeFileSync(tempThumbnailPath, thumbnailFile.buffer);
+          
+          // Upload to Cloudinary as image
+          const thumbnailResponse = await uploadOnCloudinary(tempThumbnailPath, 'image');
+          
+          // Clean up temporary file
+          if (fs.existsSync(tempThumbnailPath)) {
+            fs.unlinkSync(tempThumbnailPath);
+          }
+          
+          if (thumbnailResponse) {
+            thumbnailUrl = thumbnailResponse.secure_url;
+            console.log('✅ Thumbnail updated on Cloudinary:', thumbnailUrl);
+          } else {
+            console.error('❌ Failed to upload thumbnail to Cloudinary');
+            return res.status(500).json({ message: 'Failed to upload thumbnail to Cloudinary' });
+          }
+        }
+
+        // Handle image upload if provided (separate from thumbnail)
+        if (req.files && req.files.image && req.files.image[0]) {
+          const imageFile = req.files.image[0];
+          
+          // Create a temporary file path for Cloudinary upload
+          const tempImagePath = path.join(__dirname, '../temp', `temp-image-update-${Date.now()}-${imageFile.originalname}`);
+          
+          // Ensure temp directory exists
+          const tempDir = path.dirname(tempImagePath);
+          if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+          }
+          
+          // Write buffer to temporary file
+          fs.writeFileSync(tempImagePath, imageFile.buffer);
+          
+          // Upload to Cloudinary as image
+          const imageResponse = await uploadOnCloudinary(tempImagePath, 'image');
+          
+          // Clean up temporary file
+          if (fs.existsSync(tempImagePath)) {
+            fs.unlinkSync(tempImagePath);
+          }
+          
+          if (imageResponse) {
+            imageUrl = imageResponse.secure_url;
+            console.log('✅ Image updated on Cloudinary:', imageUrl);
+          } else {
+            console.error('❌ Failed to upload image to Cloudinary');
+            return res.status(500).json({ message: 'Failed to upload image to Cloudinary' });
+          }
+        }
+
+        // Handle syllabus upload if provided
+        let syllabusUrl = req.body.syllabusUrl;
+        let syllabusFileName = req.body.syllabusFileName;
+        
+        if (req.files && req.files.syllabus && req.files.syllabus[0]) {
+          const syllabusFile = req.files.syllabus[0];
+          
+          // Create a temporary file path for Cloudinary upload
+          const tempSyllabusPath = path.join(__dirname, '../temp', `temp-syllabus-update-${Date.now()}-${syllabusFile.originalname}`);
+          
+          // Ensure temp directory exists
+          const tempDir = path.dirname(tempSyllabusPath);
+          if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+          }
+          
+          // Write buffer to temporary file
+          fs.writeFileSync(tempSyllabusPath, syllabusFile.buffer);
+          
+          // Upload to Cloudinary as auto (for PDFs and documents - let Cloudinary detect the type)
+          const syllabusResponse = await uploadOnCloudinary(tempSyllabusPath, 'auto');
+          
+          // Clean up temporary file
+          if (fs.existsSync(tempSyllabusPath)) {
+            fs.unlinkSync(tempSyllabusPath);
+          }
+          
+          if (syllabusResponse) {
+            syllabusUrl = syllabusResponse.secure_url;
+            syllabusFileName = syllabusFile.originalname;
+            console.log('✅ Syllabus updated on Cloudinary:', syllabusUrl);
+          } else {
+            console.error('❌ Failed to upload syllabus to Cloudinary');
+            return res.status(500).json({ message: 'Failed to upload syllabus to Cloudinary' });
+          }
+        }
+
+        // Prepare course data with uploaded URLs
+        const courseDataToValidate = {
+          ...req.body,
+          thumbnailUrl: thumbnailUrl || req.body.thumbnailUrl,
+          imageUrl: imageUrl || req.body.imageUrl,
+          syllabusUrl: syllabusUrl || req.body.syllabusUrl,
+          syllabusFileName: syllabusFileName || req.body.syllabusFileName,
+        };
+
+        // Convert string fields to numbers before validation
+        if (courseDataToValidate.duration && typeof courseDataToValidate.duration === 'string') {
+          courseDataToValidate.duration = parseInt(courseDataToValidate.duration, 10);
+        }
+        if (courseDataToValidate.passingGrade && typeof courseDataToValidate.passingGrade === 'string') {
+          courseDataToValidate.passingGrade = parseInt(courseDataToValidate.passingGrade, 10);
+        }
 
         // Validate the request body using the schema
-        const validationResult = updateCourseSchema.safeParse(req.body);
+        const validationResult = updateCourseSchema.safeParse(courseDataToValidate);
         if (!validationResult.success) {
           console.error('❌ Course update validation failed:', validationResult.error);
           return res.status(400).json({
@@ -943,6 +1589,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  /**
+   * @swagger
+   * /api/courses/{id}:
+   *   delete:
+   *     summary: Delete a course (soft delete)
+   *     description: Soft deletes a course by setting isActive to false. Admin only.
+   *     tags: [Course Management]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Course ID
+   *         example: "123e4567-e89b-12d3-a456-426614174000"
+   *     responses:
+   *       200:
+   *         description: Course deleted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                   example: "Course deleted successfully"
+   *       401:
+   *         description: Unauthorized - authentication required
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       403:
+   *         description: Forbidden - admin access required
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       404:
+   *         description: Course not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
   app.delete('/api/courses/:id', isAuthenticated, isAdmin,
     async (req: any, res) => {
       try {
@@ -1632,6 +2332,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
    *               $ref: '#/components/schemas/Error'
    *       500:
    *         description: Internal server error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   */
+  /**
+   * @swagger
+   * /api/courses/{courseId}/progress:
+   *   get:
+   *     summary: Get user progress for a course
+   *     description: Retrieves detailed progress information for a user in a specific course. Authentication required.
+   *     tags: [Course Management]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: courseId
+   *         required: true
+   *         schema:
+   *           type: string
+   *           format: uuid
+   *         description: Course ID
+   *         example: "123e4567-e89b-12d3-a456-426614174000"
+   *     responses:
+   *       200:
+   *         description: Course progress retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 courseId:
+   *                   type: string
+   *                   format: uuid
+   *                   description: Course ID
+   *                 totalLessons:
+   *                   type: integer
+   *                   description: Total number of lessons in the course
+   *                   example: 10
+   *                 completedLessons:
+   *                   type: integer
+   *                   description: Number of completed lessons
+   *                   example: 7
+   *                 progressPercentage:
+   *                   type: number
+   *                   format: float
+   *                   description: Progress percentage (0-100)
+   *                   example: 70.0
+   *                 isCourseCompleted:
+   *                   type: boolean
+   *                   description: Whether the course is completed
+   *                   example: false
+   *                 lessonProgress:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       lessonId:
+   *                         type: string
+   *                         format: uuid
+   *                       lessonTitle:
+   *                         type: string
+   *                       lessonOrder:
+   *                         type: integer
+   *                       isCompleted:
+   *                         type: boolean
+   *                       watchedDuration:
+   *                         type: integer
+   *                       completedAt:
+   *                         type: string
+   *                         format: date-time
+   *                         nullable: true
+   *                       lastWatchedAt:
+   *                         type: string
+   *                         format: date-time
+   *                         nullable: true
+   *       401:
+   *         description: Unauthorized - authentication required
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Error'
+   *       500:
+   *         description: Server error
    *         content:
    *           application/json:
    *             schema:

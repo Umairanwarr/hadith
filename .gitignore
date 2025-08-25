@@ -9,3 +9,6 @@ vite.config.ts.*
 
 # Local Netlify folder
 .netlify
+
+# Temporary files for Cloudinary uploads
+server/temp/
