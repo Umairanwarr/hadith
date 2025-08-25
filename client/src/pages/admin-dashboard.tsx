@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useEffect } from "react";
+import { CourseImageGallery } from "@/components/course-image-gallery";
 
 function InitializeCoursesButton() {
   const { toast } = useToast();
@@ -18,7 +19,7 @@ function InitializeCoursesButton() {
 
   const initializeMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("/admin/initialize-courses", { method: "POST" });
+      await apiRequest("POST", "/admin/initialize-courses");
     },
     onSuccess: () => {
       toast({
@@ -73,29 +74,35 @@ interface AdminStats {
   totalCourses: number;
   totalExams: number;
   totalEnrollments: number;
+  totalDiplomaTemplates: number;
+  activeDiplomaTemplates: number;
+  totalCertificates: number;
+  certificatesThisMonth: number;
 }
 
 interface Course {
-  id: number;
+  id: string;
   title: string;
   description: string;
   instructor: string;
   level: string;
   duration: number;
   totalLessons: number;
+  thumbnailUrl?: string;
+  imageUrl?: string;
   isActive: boolean;
   createdAt: string;
 }
 
 interface Exam {
-  id: number;
+  id: string;
   title: string;
   description: string;
   duration: number;
   passingGrade: string;
   totalQuestions: number;
   isActive: boolean;
-  courseId: number;
+  courseId: string;
 }
 
 export default function AdminDashboard() {
@@ -119,17 +126,17 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, isLoading, user, toast, setLocation]);
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
     queryKey: ["admin", "dashboard"],
     retry: false,
   });
 
-  const { data: courses, isLoading: coursesLoading } = useQuery({
+  const { data: courses, isLoading: coursesLoading } = useQuery<Course[]>({
     queryKey: ["api", "courses"],
     retry: false,
   });
 
-  const { data: exams, isLoading: examsLoading } = useQuery({
+  const { data: exams, isLoading: examsLoading } = useQuery<Exam[]>({
     queryKey: ["exams"],
     retry: false,
   });
@@ -315,9 +322,14 @@ export default function AdminDashboard() {
                     </CardContent>
                   </Card>
                 ))
-              ) : courses?.length > 0 ? (
+              ) : courses && courses.length > 0 ? (
                 courses.map((course: Course) => (
                   <Card key={course.id} className="hover:shadow-lg transition-shadow">
+                    {/* Course Image Gallery */}
+                    <CourseImageGallery 
+                      course={course}
+                      className="h-40 overflow-hidden"
+                    />
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
@@ -347,7 +359,7 @@ export default function AdminDashboard() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleDelete("course", course.id, course.title)}
+                            onClick={() => handleDelete("course", course.id.toString(), course.title)}
                             disabled={deleteMutation.isPending}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -407,7 +419,7 @@ export default function AdminDashboard() {
                     </CardContent>
                   </Card>
                 ))
-              ) : exams?.length > 0 ? (
+              ) : exams && exams.length > 0 ? (
                 exams.map((exam: Exam) => (
                   <Card key={exam.id} className="hover:shadow-lg transition-shadow">
                     <CardHeader>
@@ -442,7 +454,7 @@ export default function AdminDashboard() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleDelete("exam", exam.id, exam.title)}
+                            onClick={() => handleDelete("exam", exam.id.toString(), exam.title)}
                             disabled={deleteMutation.isPending}
                           >
                             <Trash2 className="h-4 w-4" />

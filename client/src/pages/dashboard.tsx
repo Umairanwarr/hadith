@@ -9,6 +9,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { CourseImageGallery } from "@/components/course-image-gallery";
 
 
 interface Course {
@@ -346,27 +347,32 @@ export default function Dashboard() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {availableCourses.map((course) => (
-                <Card key={course.id} className="hover-scale overflow-hidden">
-                  <div className="h-32 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-800">
-                    <div className="text-center">
-                      <i className="fas fa-book-open text-2xl mb-2"></i>
-                      <h4 className="font-amiri text-sm font-bold">{course.title}</h4>
-                    </div>
+                <Card key={course.id} className="hover-scale overflow-hidden flex flex-col">
+                  <div className="h-40 overflow-hidden">
+                    <CourseImageGallery 
+                      course={course}
+                      className="h-full w-full"
+                    />
                   </div>
-                  <CardContent className="p-3">
+                  <CardContent className="p-3 flex-1 flex flex-col">
+                    <h4 className="font-amiri font-bold text-sm mb-2 line-clamp-2">
+                      {course.title}
+                    </h4>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-gray-600">{course.instructor}</span>
-                      <Badge className={getLevelColor(course.level)}>{course.level}</Badge>
+                      <span className="text-xs text-gray-600 truncate">{course.instructor}</span>
+                      <Badge className={`${getLevelColor(course.level)} text-xs`}>{course.level}</Badge>
                     </div>
                     <div className="text-xs text-gray-500 mb-3">{course.duration} دقيقة</div>
-                    <Button
-                      size="sm"
-                      className="w-full bg-green-600 hover:bg-green-700 text-white text-xs"
-                      disabled={enrollMutation.isPending}
-                      onClick={() => handleEnroll(course.id)}
-                    >
-                      {enrollMutation.isPending ? "...جاري التسجيل" : "سجل الآن"}
-                    </Button>
+                    <div className="mt-auto">
+                      <Button
+                        size="sm"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white text-xs"
+                        disabled={enrollMutation.isPending}
+                        onClick={() => handleEnroll(course.id)}
+                      >
+                        {enrollMutation.isPending ? "جاري التسجيل..." : "سجل الآن"}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -382,22 +388,19 @@ export default function Dashboard() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {enrollments.map((enrollment) => (
-                <Card key={enrollment.id} className="hover-scale overflow-hidden">
-                  <div className="h-32 bg-gradient-to-br from-green-500 to-green-600 flex flex-col items-center justify-center text-white relative overflow-hidden">
-                    <div className="absolute inset-0 bg-black/10"></div>
-                    <div className="relative z-10 text-center">
-                      <i className="fas fa-quran text-3xl mb-2"></i>
-                      <h4 className="font-amiri text-sm font-bold opacity-95">
-                        {enrollment.course.title}
-                      </h4>
-                    </div>
+                <Card key={enrollment.id} className="hover-scale overflow-hidden flex flex-col">
+                  <div className="h-40 overflow-hidden">
+                    <CourseImageGallery 
+                      course={enrollment.course}
+                      className="h-full w-full"
+                    />
                   </div>
-                  <CardContent className="p-3">
-                    <h4 className="font-amiri font-bold text-sm mb-2">
+                  <CardContent className="p-3 flex-1 flex flex-col">
+                    <h4 className="font-amiri font-bold text-sm mb-2 line-clamp-2">
                       {enrollment.course.title}
                     </h4>
-                    <p className="text-gray-600 mb-3 text-xs">{enrollment.course.instructor}</p>
-                    <div className="mb-3">
+                    <p className="text-gray-600 mb-3 text-xs truncate">{enrollment.course.instructor}</p>
+                    <div className="mb-3 flex-1">
                       <div className="flex justify-between text-xs text-gray-600 mb-1">
                         <span>التقدم</span>
                         <span>{Math.round(Number(enrollment.progress))}%</span>
@@ -409,15 +412,13 @@ export default function Dashboard() {
                         ></div>
                       </div>
                     </div>
-                    <div className="flex gap-1">
-                      <Link href={`/course/${enrollment.courseId}`} className="flex-1">
+                    <div className="mt-auto">
+                      <Link href={`/course/${enrollment.courseId}`} className="block">
                         <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white text-xs">
                           متابعة
                         </Button>
                       </Link>
                     </div>
-
-                    {/* Lessons preview removed */}
                   </CardContent>
                 </Card>
               ))}

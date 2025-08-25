@@ -14,7 +14,22 @@ const uploadOnCloudinary = async (
     resourceType: 'image' | 'video' | 'raw' | 'auto' = 'auto'
   ) => {
     try {
-      if (!localFilePath) return null;
+      if (!localFilePath) {
+        console.log('❌ No local file path provided');
+        return null;
+      }
+  
+      // Check if Cloudinary is configured
+      if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+        console.error('❌ Cloudinary environment variables not set:', {
+          cloud_name: !!process.env.CLOUDINARY_CLOUD_NAME,
+          api_key: !!process.env.CLOUDINARY_API_KEY,
+          api_secret: !!process.env.CLOUDINARY_API_SECRET
+        });
+        return null;
+      }
+  
+      console.log('☁️ Cloudinary config check passed, uploading file:', localFilePath);
   
       // Force PDFs to use raw resource type
       if (localFilePath.toLowerCase().endsWith('.pdf')) {
@@ -22,6 +37,7 @@ const uploadOnCloudinary = async (
           resource_type: 'raw',
           public_id: `pdf_${Date.now()}_${path.basename(localFilePath, '.pdf')}`,
         });
+        console.log('✅ PDF uploaded to Cloudinary:', response.secure_url);
         return response;
       }
   
@@ -29,9 +45,13 @@ const uploadOnCloudinary = async (
       const response = await cloudinary.uploader.upload(localFilePath, {
         resource_type: resourceType,
       });
+      console.log('✅ File uploaded to Cloudinary:', response.secure_url);
       return response;
     } catch (error) {
-      fs.unlinkSync(localFilePath);
+      console.error('❌ Cloudinary upload error:', error);
+      if (fs.existsSync(localFilePath)) {
+        fs.unlinkSync(localFilePath);
+      }
       return null;
     }
   };

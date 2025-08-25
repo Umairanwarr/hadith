@@ -120,7 +120,7 @@ export function TestRemindersPage() {
     <div className="min-h-screen bg-gray-50 pb-20 pt-24" dir="rtl">
       <Header />
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 mt-12">
         <div className="mb-8">
           <div className="bg-gradient-to-l from-blue-600 to-blue-700 rounded-2xl text-white p-6 shadow-lg">
             <div className="flex items-center gap-4 mb-4">

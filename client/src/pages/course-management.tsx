@@ -19,6 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ImageUpload } from "@/components/image-upload";
 import { FileUpload } from "@/components/file-upload";
+import { CourseImageGallery } from "@/components/course-image-gallery";
 
 // Schema for course creation/editing
 const courseSchema = z.object({
@@ -31,6 +32,8 @@ const courseSchema = z.object({
   imageUrl: z.string().optional(),
   syllabusUrl: z.string().optional(),
   syllabusFileName: z.string().optional(),
+  curriculumUrl: z.string().optional(),
+  curriculumFileName: z.string().optional(),
 });
 
 type CourseFormData = z.infer<typeof courseSchema>;
@@ -47,6 +50,8 @@ interface Course {
   imageUrl?: string;
   syllabusUrl?: string;
   syllabusFileName?: string;
+  curriculumUrl?: string;
+  curriculumFileName?: string;
   isActive: boolean;
   createdAt: string;
 }
@@ -60,7 +65,11 @@ function CourseFormDialogComponent({
   form,
   onSubmit,
   isUploadingSyllabus,
+  isUploadingCurriculum,
   handleSyllabusUpload,
+  handleCurriculumUpload,
+  handleSyllabusDelete,
+  handleCurriculumDelete,
   selectedCourse,
   setSelectedCourse,
   isSaving,
@@ -72,7 +81,11 @@ function CourseFormDialogComponent({
   form: UseFormReturn<CourseFormData>;
   onSubmit: (data: CourseFormData) => void;
   isUploadingSyllabus: boolean;
+  isUploadingCurriculum: boolean;
   handleSyllabusUpload: (file: File) => void | Promise<void>;
+  handleCurriculumUpload: (file: File) => void | Promise<void>;
+  handleSyllabusDelete: () => void;
+  handleCurriculumDelete: () => void;
   selectedCourse: Course | null;
   setSelectedCourse: (c: Course | null) => void;
   isSaving: boolean;
@@ -215,18 +228,38 @@ function CourseFormDialogComponent({
 
             {/* Syllabus File Upload */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">مقرر المادة (ملف PDF/Word)</label>
+              <label className="text-sm font-medium">مقرر المادة - Course Syllabus (PDF/Word)</label>
               <FileUpload
                 onFileSelect={handleSyllabusUpload}
+                onFileDelete={handleSyllabusDelete}
                 accept=".pdf,.doc,.docx"
                 maxSize={10}
-                buttonText="رفع مقرر المادة"
+                buttonText="رفع مقرر المادة - Upload Course Syllabus"
                 currentFileName={form.watch('syllabusFileName')}
               />
               {isUploadingSyllabus && (
                 <div className="flex items-center gap-2 text-sm text-blue-600">
                   <i className="fas fa-spinner fa-spin"></i>
-                  جاري رفع الملف...
+                  جاري رفع مقرر المادة...
+                </div>
+              )}
+            </div>
+
+            {/* Curriculum File Upload */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">منهج المادة - Course Curriculum (PDF/Word)</label>
+              <FileUpload
+                onFileSelect={handleCurriculumUpload}
+                onFileDelete={handleCurriculumDelete}
+                accept=".pdf,.doc,.docx"
+                maxSize={10}
+                buttonText="رفع منهج المادة - Upload Course Curriculum"
+                currentFileName={form.watch('curriculumFileName')}
+              />
+              {isUploadingCurriculum && (
+                <div className="flex items-center gap-2 text-sm text-green-600">
+                  <i className="fas fa-spinner fa-spin"></i>
+                  جاري رفع منهج المادة...
                 </div>
               )}
             </div>
@@ -267,6 +300,7 @@ export function CourseManagementPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [syllabusFile, setSyllabusFile] = useState<File | null>(null);
   const [isUploadingSyllabus, setIsUploadingSyllabus] = useState(false);
+  const [isUploadingCurriculum, setIsUploadingCurriculum] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<string>("all");
   const { toast } = useToast();
 
@@ -282,6 +316,8 @@ export function CourseManagementPage() {
       imageUrl: "",
       syllabusUrl: "",
       syllabusFileName: "",
+      curriculumUrl: "",
+      curriculumFileName: "",
     },
   });
 
@@ -297,6 +333,7 @@ export function CourseManagementPage() {
       'thumbnailUrl',
       'imageUrl',
       'syllabusUrl',
+      'curriculumUrl',
     ];
     urlFields.forEach((key) => {
       const value = payload[key];
@@ -316,8 +353,9 @@ export function CourseManagementPage() {
         delete payload[key];
       }
     });
-    // Also drop empty syllabusFileName
+    // Also drop empty file names
     if (!payload.syllabusFileName) delete payload.syllabusFileName;
+    if (!payload.curriculumFileName) delete payload.curriculumFileName;
     return payload as CourseFormData;
   };
 
@@ -412,6 +450,8 @@ export function CourseManagementPage() {
       imageUrl: course.imageUrl || "",
       syllabusUrl: course.syllabusUrl || "",
       syllabusFileName: course.syllabusFileName || "",
+      curriculumUrl: course.curriculumUrl || "",
+      curriculumFileName: course.curriculumFileName || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -464,8 +504,77 @@ export function CourseManagementPage() {
     }
   };
 
+  // Handle curriculum file upload
+  const handleCurriculumUpload = async (file: File) => {
+    setIsUploadingCurriculum(true);
+    try {
+      const formData = new FormData();
+      formData.append('curriculum', file);
+
+      // Include Authorization header and use configured API base URL
+      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${baseURL}/upload/curriculum`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+
+      // Update form values
+      form.setValue('curriculumUrl', result.url);
+      form.setValue('curriculumFileName', result.fileName);
+
+      toast({
+        title: "تم رفع الملف",
+        description: "تم رفع ملف المنهج بنجاح",
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ في رفع الملف",
+        description: "حدث خطأ أثناء رفع ملف المنهج",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingCurriculum(false);
+    }
+  };
+
+  // Delete handlers for syllabus and curriculum files
+  const handleSyllabusDelete = () => {
+    form.setValue('syllabusUrl', '');
+    form.setValue('syllabusFileName', '');
+    setSyllabusFile(null);
+    
+    toast({
+      title: "تم حذف الملف",
+      description: "تم حذف ملف مقرر المادة بنجاح",
+    });
+  };
+
+  const handleCurriculumDelete = () => {
+    form.setValue('curriculumUrl', '');
+    form.setValue('curriculumFileName', '');
+    
+    toast({
+      title: "تم حذف الملف",
+      description: "تم حذف ملف منهج المادة بنجاح",
+    });
+  };
+
   const CourseCard = ({ course }: { course: Course }) => (
     <Card className="hover:shadow-lg transition-shadow">
+      {/* Course Image Gallery */}
+      <CourseImageGallery 
+        course={course}
+        className="h-48 overflow-hidden"
+      />
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div className="flex-1">
@@ -503,6 +612,28 @@ export function CourseManagementPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:text-blue-700"
+                >
+                  <i className="fas fa-download ml-1"></i>
+                  تحميل
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Curriculum file info */}
+        {course.curriculumFileName && (
+          <div className="mb-3 p-2 bg-green-50 rounded-md">
+            <div className="flex items-center gap-2 text-sm">
+              <i className="fas fa-file-pdf text-green-500"></i>
+              <span className="text-green-700 font-medium">منهج المادة:</span>
+              <span className="text-green-600">{course.curriculumFileName}</span>
+              {course.curriculumUrl && (
+                <a
+                  href={course.curriculumUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-500 hover:text-green-700"
                 >
                   <i className="fas fa-download ml-1"></i>
                   تحميل
@@ -654,7 +785,11 @@ export function CourseManagementPage() {
           form={form}
           onSubmit={onSubmit}
           isUploadingSyllabus={isUploadingSyllabus}
+          isUploadingCurriculum={isUploadingCurriculum}
           handleSyllabusUpload={handleSyllabusUpload}
+          handleCurriculumUpload={handleCurriculumUpload}
+          handleSyllabusDelete={handleSyllabusDelete}
+          handleCurriculumDelete={handleCurriculumDelete}
           selectedCourse={selectedCourse}
           setSelectedCourse={setSelectedCourse}
           isSaving={createCourseMutation.isPending || updateCourseMutation.isPending}
@@ -669,7 +804,11 @@ export function CourseManagementPage() {
           form={form}
           onSubmit={onSubmit}
           isUploadingSyllabus={isUploadingSyllabus}
+          isUploadingCurriculum={isUploadingCurriculum}
           handleSyllabusUpload={handleSyllabusUpload}
+          handleCurriculumUpload={handleCurriculumUpload}
+          handleSyllabusDelete={handleSyllabusDelete}
+          handleCurriculumDelete={handleCurriculumDelete}
           selectedCourse={selectedCourse}
           setSelectedCourse={setSelectedCourse}
           isSaving={createCourseMutation.isPending || updateCourseMutation.isPending}

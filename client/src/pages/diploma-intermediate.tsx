@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { CourseImageGallery } from "@/components/course-image-gallery";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -147,20 +148,15 @@ export function DiplomaIntermediatePage() {
                 
                 return (
                   <Card key={course.id} className="hover-scale overflow-hidden">
-                    <div className="h-20 bg-gradient-to-br from-orange-400 to-orange-500 flex flex-col items-center justify-center text-white relative overflow-hidden">
-                      <div className="absolute inset-0 bg-black/10"></div>
-                      <div className="relative z-10 text-center">
-                        <i className={`${getCourseIcon(course.title)} text-sm mb-1`}></i>
-                        <h4 className="font-amiri text-xs font-bold opacity-95 px-1 leading-tight">
-                          {course.title.length > 25 ? course.title.substring(0, 25) + '...' : course.title}
-                        </h4>
+                    <CourseImageGallery 
+                      course={course}
+                      className="h-20 relative"
+                    />
+                    {isEnrolled && (
+                      <div className="absolute top-2 right-2">
+                        <i className="fas fa-check-circle text-white text-sm"></i>
                       </div>
-                      {isEnrolled && (
-                        <div className="absolute top-2 right-2">
-                          <i className="fas fa-check-circle text-white text-sm"></i>
-                        </div>
-                      )}
-                    </div>
+                    )}
                     <CardContent className="p-3">
                       <h4 className="font-amiri font-bold text-sm mb-2 truncate">
                         {course.title}

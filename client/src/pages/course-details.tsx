@@ -14,6 +14,10 @@ interface Course {
   level: string;
   duration: number;
   totalLessons: number;
+  syllabusUrl?: string;
+  syllabusFileName?: string;
+  curriculumUrl?: string;
+  curriculumFileName?: string;
 }
 
 interface Lesson {
@@ -154,24 +158,24 @@ export default function CourseDetails() {
     <div className="min-h-screen bg-gray-50" dir="rtl">
       <Header />
       
-      <main className="container mx-auto px-4 py-8 mt-6">
+      <main className="container mx-auto px-4 py-8 mt-12">
         {/* Course Header - compact like the screenshot */}
         <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-amiri font-bold text-gray-900">{course.title}</h1>
+          <CardContent className="p-4 md:p-6">
+            <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+              <div className="flex-1">
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+                  <h1 className="text-xl md:text-2xl font-amiri font-bold text-gray-900">{course.title}</h1>
                   <Badge className={getLevelColor(course.level)}>{course.level}</Badge>
                 </div>
-                <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
+                <div className="mt-2 flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-600">
                   <span><i className="fas fa-user ml-1"></i>{course.instructor}</span>
                   <span><i className="fas fa-video ml-1"></i>{course.totalLessons} درس</span>
                   <span><i className="fas fa-clock ml-1"></i>{totalMinutes} دقيقة</span>
                 </div>
               </div>
               <Link href="/">
-                <Button variant="outline" className="text-xs">
+                <Button variant="outline" className="text-xs w-full md:w-auto">
                   العودة للوحة التحكم
                   <i className="fas fa-arrow-left mr-2"></i>
                 </Button>
@@ -181,10 +185,10 @@ export default function CourseDetails() {
         </Card>
 
         {/* Course Content */}
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-4 lg:gap-8">
           {/* Lessons List - match requested design */}
-          <div className="md:col-span-3">
-            <h2 className="text-2xl font-amiri font-bold text-gray-900 mb-4">عناوين المادة</h2>
+          <div className="lg:col-span-3 order-2 lg:order-1">
+            <h2 className="text-xl md:text-2xl font-amiri font-bold text-gray-900 mb-4">عناوين المادة</h2>
             {!lessons || lessons.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">
@@ -202,17 +206,17 @@ export default function CourseDetails() {
                     const completed = isLessonCompleted(lesson.id);
                     return (
                       <Link key={lesson.id} href={`/course/${courseId}/lessons/${lesson.id}`}>
-                        <div className={`flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50 cursor-pointer ${completed ? 'border-green-300' : 'border-gray-200'}`}>
-                          <i className="fas fa-chevron-left text-gray-400"></i>
-                          <div className="flex-1 mx-4">
-                            <div className="font-amiri font-bold text-gray-800">{lesson.title}</div>
-                            <div className="text-xs text-gray-500 mt-1 flex items-center gap-4">
+                        <div className={`flex items-center justify-between rounded-lg border p-3 md:p-4 hover:bg-gray-50 cursor-pointer ${completed ? 'border-green-300' : 'border-gray-200'}`}>
+                          <i className="fas fa-chevron-left text-gray-400 flex-shrink-0"></i>
+                          <div className="flex-1 mx-2 md:mx-4 min-w-0">
+                            <div className="font-amiri font-bold text-gray-800 text-sm md:text-base truncate">{lesson.title}</div>
+                            <div className="text-xs text-gray-500 mt-1 flex flex-wrap items-center gap-2 md:gap-4">
                               <span><i className="fas fa-video ml-1"></i>فيديو</span>
                               <span><i className="fas fa-clock ml-1"></i>{toMinutes(lesson.duration)} دقيقة</span>
                               {completed && <span className="text-green-600"><i className="fas fa-check ml-1"></i>مكتمل</span>}
                             </div>
                           </div>
-                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 text-sm">{idx + 1}</div>
+                          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 text-xs md:text-sm flex-shrink-0">{idx + 1}</div>
                         </div>
                       </Link>
                     );
@@ -222,10 +226,10 @@ export default function CourseDetails() {
 
             {/* Exams Section */}
             <div className="mt-8">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900">اختبارات المادة</h2>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-4">
+                <h2 className="text-lg md:text-xl font-bold text-gray-900">اختبارات المادة</h2>
                 <Link href={`/course/${courseId}/exams`}>
-                  <Button className="bg-emerald-600 hover:bg-emerald-700">
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 w-full md:w-auto">
                     <i className="fas fa-list ml-2"></i>
                     عرض جميع الاختبارات
                   </Button>
@@ -250,28 +254,28 @@ export default function CourseDetails() {
           </div>
 
           {/* Course Info Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6 order-1 lg:order-2">
             <Card>
-              <CardContent className="p-6">
-                <h3 className="font-amiri font-bold text-lg mb-4">
+              <CardContent className="p-4 md:p-6">
+                <h3 className="font-amiri font-bold text-base md:text-lg mb-3 md:mb-4">
                   معلومات المادة
                 </h3>
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">المستوى:</span>
                     <Badge className={getLevelColor(course.level)}>
                       {course.level}
                     </Badge>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">المدة الإجمالية:</span>
-                    <span>{totalHours} ساعة {remainingMinutes} دقيقة</span>
+                    <span className="text-right">{totalHours} ساعة {remainingMinutes} دقيقة</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">عدد المحاضرات:</span>
                     <span>{course.totalLessons}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-gray-600">التقدم:</span>
                     <span>
                       {courseProgress?.completedLessons || 0} / {lessons?.length || 0}
@@ -281,23 +285,87 @@ export default function CourseDetails() {
               </CardContent>
             </Card>
 
+            {/* Course Materials Section */}
+            {(course.syllabusUrl || course.curriculumUrl) && (
+              <Card>
+                <CardContent className="p-4 md:p-6">
+                  <h3 className="font-amiri font-bold text-base md:text-lg mb-3 md:mb-4">
+                    مواد المقرر
+                  </h3>
+                  <div className="space-y-3">
+                    {/* Syllabus file */}
+                    {course.syllabusUrl && (
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <i className="fas fa-file-alt text-blue-500 text-lg mt-1 flex-shrink-0"></i>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium text-blue-800 text-sm md:text-base">مقرر المادة</div>
+                              {course.syllabusFileName && (
+                                <div className="text-xs md:text-sm text-blue-600 break-words">{course.syllabusFileName}</div>
+                              )}
+                            </div>
+                          </div>
+                          <a
+                            href={course.syllabusUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-md text-sm transition-colors flex-shrink-0 w-full md:w-auto"
+                          >
+                            <i className="fas fa-download"></i>
+                            تحميل
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Curriculum file */}
+                    {course.curriculumUrl && (
+                      <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <i className="fas fa-file-pdf text-green-500 text-lg mt-1 flex-shrink-0"></i>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium text-green-800 text-sm md:text-base">منهج المادة</div>
+                              {course.curriculumFileName && (
+                                <div className="text-xs md:text-sm text-green-600 break-words">{course.curriculumFileName}</div>
+                              )}
+                            </div>
+                          </div>
+                          <a
+                            href={course.curriculumUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-md text-sm transition-colors flex-shrink-0 w-full md:w-auto"
+                          >
+                            <i className="fas fa-download"></i>
+                            تحميل
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
-              <CardContent className="p-6">
-                <h3 className="font-amiri font-bold text-lg mb-4">
+              <CardContent className="p-4 md:p-6">
+                <h3 className="font-amiri font-bold text-base md:text-lg mb-3 md:mb-4">
                   متطلبات الإتمام
                 </h3>
-                <ul className="space-y-2 text-sm">
+                <ul className="space-y-2 text-xs md:text-sm">
                   <li className="flex items-center gap-2">
-                    <i className="fas fa-check-circle text-[hsl(158,40%,34%)]"></i>
-                    مشاهدة جميع المحاضرات
+                    <i className="fas fa-check-circle text-[hsl(158,40%,34%)] flex-shrink-0"></i>
+                    <span>مشاهدة جميع المحاضرات</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <i className={`fas fa-check-circle ${canAccessExam() ? 'text-[hsl(158,40%,34%)]' : 'text-gray-400'}`}></i>
-                    اجتياز الاختبار النهائي
+                    <i className={`fas fa-check-circle flex-shrink-0 ${canAccessExam() ? 'text-[hsl(158,40%,34%)]' : 'text-gray-400'}`}></i>
+                    <span>اجتياز الاختبار النهائي</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <i className="fas fa-certificate text-[hsl(45,76%,58%)]"></i>
-                    الحصول على الشهادة
+                    <i className="fas fa-certificate text-[hsl(45,76%,58%)] flex-shrink-0"></i>
+                    <span>الحصول على الشهادة</span>
                   </li>
                 </ul>
               </CardContent>

@@ -208,6 +208,26 @@ export interface IStorage {
     totalCertificates: number;
     certificatesThisMonth: number;
   }>;
+
+  // Diploma Templates operations
+  createDiplomaTemplate(data: {
+    title: string;
+    level: string;
+    courseIds?: string[];
+    backgroundColor?: string;
+    textColor?: string;
+    borderColor?: string;
+    logoUrl?: string;
+    institutionName: string;
+    templateStyle?: string;
+    requirements: string;
+  }): Promise<any>;
+  getDiplomaTemplates(): Promise<any[]>;
+  getDiplomaTemplate(id: string): Promise<any | undefined>;
+  updateDiplomaTemplate(id: string, updates: any): Promise<any | undefined>;
+  deleteDiplomaTemplate(id: string): Promise<void>;
+  toggleDiplomaTemplateStatus(id: string, isActive: boolean): Promise<void>;
+  getDiplomaTemplateForCourse(courseId: string): Promise<any | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -840,6 +860,7 @@ export class DatabaseStorage implements IStorage {
   async createDiplomaTemplate(data: {
     title: string;
     level: string;
+    courseIds?: string[]; // Array of course IDs this template applies to
     backgroundColor?: string;
     textColor?: string;
     borderColor?: string;
@@ -850,7 +871,10 @@ export class DatabaseStorage implements IStorage {
   }): Promise<any> {
     const [template] = await db
       .insert(diplomaTemplates)
-      .values(data)
+      .values({
+        ...data,
+        courseIds: data.courseIds || null, // Store as JSON array
+      })
       .returning();
     return template;
   }
@@ -897,6 +921,40 @@ export class DatabaseStorage implements IStorage {
       .update(diplomaTemplates)
       .set({ isActive, updatedAt: new Date() })
       .where(eq(diplomaTemplates.id, id));
+  }
+
+  // Find diploma template for a specific course
+  async getDiplomaTemplateForCourse(courseId: string): Promise<any | undefined> {
+    // First, try to find a template that specifically includes this course
+    const templates = await db
+      .select()
+      .from(diplomaTemplates)
+      .where(eq(diplomaTemplates.isActive, true))
+      .orderBy(desc(diplomaTemplates.createdAt));
+
+    // Find template that includes this specific course
+    const specificTemplate = templates.find(template => {
+      if (!template.courseIds) return false;
+      const courseIds = Array.isArray(template.courseIds) ? template.courseIds : [];
+      return courseIds.includes(courseId);
+    });
+
+    if (specificTemplate) {
+      return specificTemplate;
+    }
+
+    // If no specific template found, find a template with no course restriction (general template)
+    const generalTemplate = templates.find(template => {
+      return !template.courseIds || 
+             (Array.isArray(template.courseIds) && template.courseIds.length === 0);
+    });
+
+    if (generalTemplate) {
+      return generalTemplate;
+    }
+
+    // If no general template found, return the first active template as fallback
+    return templates[0] || null;
   }
 
   async getCertificate(id: string): Promise<Certificate | undefined> {

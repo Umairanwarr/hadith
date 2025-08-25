@@ -260,7 +260,7 @@ export default function ExamPage() {
     return (
       <div className="min-h-screen bg-gray-50" dir="rtl">
         <Header />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8 mt-12">
           <Card>
             <CardContent className="p-8 text-center">
               <i className={`fas ${alreadyCompleted ? 'fa-check-circle' : isAccessDenied ? 'fa-lock' : 'fa-exclamation-triangle'} text-4xl ${alreadyCompleted ? 'text-green-500' : 'text-red-500'} mb-4`}></i>
@@ -289,7 +289,7 @@ export default function ExamPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100" dir="rtl">
         <Header />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8 mt-12">
           <div className="max-w-4xl mx-auto">
           <div className="animate-pulse space-y-6">
               <div className="h-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded-2xl"></div>
@@ -316,7 +316,7 @@ export default function ExamPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-100" dir="rtl">
         <Header />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8 mt-12">
           <div className="max-w-2xl mx-auto">
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
               <CardContent className="p-12 text-center">
@@ -343,7 +343,7 @@ export default function ExamPage() {
     return (
       <div className="min-h-screen bg-gray-50" dir="rtl">
         <Header />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8 mt-12">
           <Card className="max-w-4xl mx-auto">
             <CardContent className="p-8">
               {/* Results Header */}
@@ -467,7 +467,7 @@ export default function ExamPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50" dir="rtl">
         <Header />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8 mt-12">
           <div className="max-w-4xl mx-auto">
             <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm overflow-hidden">
               <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-6">
@@ -569,7 +569,7 @@ export default function ExamPage() {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50" dir="rtl">
       <Header />
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 mt-12">
         {/* Exam Header Card */}
         <Card className="mb-6 shadow-lg border-0 bg-white/90 backdrop-blur-sm">
           <CardContent className="p-6">

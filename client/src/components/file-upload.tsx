@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void;
+  onFileDelete?: () => void;
   accept?: string;
   maxSize?: number; // in MB
   buttonText?: string;
@@ -11,6 +12,7 @@ interface FileUploadProps {
 
 export function FileUpload({ 
   onFileSelect, 
+  onFileDelete,
   accept = ".pdf,.doc,.docx", 
   maxSize = 10,
   buttonText = "رفع ملف",
@@ -89,7 +91,10 @@ export function FileUpload({
         <div className="space-y-2">
           <i className="fas fa-cloud-upload-alt text-3xl text-gray-400"></i>
           <div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm font-medium text-gray-700">
+              {buttonText}
+            </p>
+            <p className="text-xs text-gray-500">
               اسحب الملف هنا أو انقر للاختيار
             </p>
             <p className="text-xs text-gray-500">
@@ -101,31 +106,22 @@ export function FileUpload({
 
       {/* Current File Display */}
       {currentFileName && (
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+        <div className="flex items-center justify-between p-3 bg-green-50 rounded-md border border-green-200">
           <div className="flex items-center space-x-reverse space-x-2">
-            <i className="fas fa-file-alt text-blue-500"></i>
-            <span className="text-sm text-gray-700">{currentFileName}</span>
+            <i className="fas fa-file-alt text-green-500"></i>
+            <span className="text-sm text-green-700 font-medium">{currentFileName}</span>
           </div>
           <Button 
             variant="outline" 
             size="sm"
-            onClick={openFileDialog}
+            onClick={onFileDelete}
+            className="text-red-600 border-red-300 hover:bg-red-100"
           >
-            <i className="fas fa-sync-alt ml-1"></i>
-            استبدال
+            <i className="fas fa-trash ml-1"></i>
+            حذف
           </Button>
         </div>
       )}
-
-      {/* Upload Button */}
-      <Button 
-        onClick={openFileDialog}
-        variant="outline" 
-        className="w-full"
-      >
-        <i className="fas fa-upload ml-2"></i>
-        {buttonText}
-      </Button>
 
       {/* Hidden File Input */}
       <input

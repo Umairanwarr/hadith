@@ -14,7 +14,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
-import { relations } from 'drizzle-orm';
+import { relations, type InferSelectModel, type InferInsertModel } from 'drizzle-orm';
 
 // Session storage table (mandatory for Replit Auth)
 // export const sessions = pgTable(
@@ -61,6 +61,8 @@ export const courses = pgTable('courses', {
   imageUrl: text('image_url'), // صورة الكورس الإضافية
   syllabusUrl: text('syllabus_url'), // رابط ملف مقرر المادة
   syllabusFileName: text('syllabus_file_name'), // اسم ملف مقرر المادة الأصلي
+  curriculumUrl: text('curriculum_url'), // رابط ملف المنهج الدراسي
+  curriculumFileName: text('curriculum_file_name'), // اسم ملف المنهج الأصلي
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at').defaultNow(),
 });
@@ -331,6 +333,8 @@ export const createCourseSchema = z.object({
   imageUrl: z.string().url('Image URL must be valid').optional(),
   syllabusUrl: z.string().url('Syllabus URL must be valid').optional(),
   syllabusFileName: z.string().max(255, 'File name must be less than 255 characters').optional(),
+  curriculumUrl: z.string().url('Curriculum URL must be valid').optional(),
+  curriculumFileName: z.string().max(255, 'File name must be less than 255 characters').optional(),
 });
 
 // Admin course update schema
@@ -344,6 +348,8 @@ export const updateCourseSchema = z.object({
   imageUrl: z.string().url('Image URL must be valid').optional(),
   syllabusUrl: z.string().url('Syllabus URL must be valid').optional(),
   syllabusFileName: z.string().max(255, 'File name must be less than 255 characters').optional(),
+  curriculumUrl: z.string().url('Curriculum URL must be valid').optional(),
+  curriculumFileName: z.string().max(255, 'File name must be less than 255 characters').optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -427,6 +433,7 @@ export const diplomaTemplates = pgTable('diploma_templates', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: varchar('title', { length: 255 }).notNull(), // اسم الديبلوم
   level: varchar('level', { length: 100 }).notNull(), // المستوى (تحضيري، متوسط، إلخ)
+  courseIds: jsonb('course_ids'), // Array of course IDs this template applies to
   backgroundColor: varchar('background_color', { length: 50 }).default(
     '#ffffff'
   ),

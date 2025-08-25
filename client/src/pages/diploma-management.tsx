@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
@@ -23,6 +24,7 @@ import { ImageUpload } from "@/components/image-upload";
 const createDiplomaTemplateSchema = z.object({
   title: z.string().min(5, "عنوان الديبلوم يجب أن يكون 5 أحرف على الأقل"),
   level: z.enum(["تحضيري", "متوسط", "شهادة", "بكالوريوس", "ماجستير", "دكتوراه"]),
+  courseIds: z.array(z.string()).optional(), // Array of course IDs
   backgroundColor: z.string().min(3, "لون الخلفية مطلوب"),
   textColor: z.string().min(3, "لون النص مطلوب"),
   borderColor: z.string().min(3, "لون الحدود مطلوب"),
@@ -39,6 +41,7 @@ interface DiplomaTemplate {
   id: number;
   title: string;
   level: string;
+  courseIds?: string[]; // Array of course IDs this template applies to
   backgroundColor: string;
   textColor: string;
   borderColor: string;
@@ -50,6 +53,20 @@ interface DiplomaTemplate {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  instructor: string;
+  level: string;
+  duration: number;
+  totalLessons: number;
+  thumbnailUrl?: string;
+  imageUrl?: string;
+  isActive: boolean;
+  createdAt: string;
 }
 
 // Certificate Preview Component
@@ -147,6 +164,7 @@ export function DiplomaManagementPage() {
     defaultValues: {
       title: "",
       level: "تحضيري",
+      courseIds: [], // Initialize as empty array
       backgroundColor: "#ffffff",
       textColor: "#000000",
       borderColor: "#d4af37",
@@ -159,8 +177,15 @@ export function DiplomaManagementPage() {
   });
 
   // Fetch diploma templates
-  const { data: templates = [], isLoading, error, refetch } = useQuery({
+  const { data: templates = [], isLoading, error, refetch } = useQuery<DiplomaTemplate[]>({
     queryKey: ["/diploma-templates"],
+    retry: 3,
+    retryDelay: 1000,
+  });
+
+  // Fetch courses for the dropdown
+  const { data: courses = [] } = useQuery<Course[]>({
+    queryKey: ["/courses"],
     retry: 3,
     retryDelay: 1000,
   });
@@ -287,6 +312,7 @@ export function DiplomaManagementPage() {
       form.reset({
         title: template.title,
         level: template.level as any,
+        courseIds: template.courseIds || [], // Include courseIds in edit
         backgroundColor: template.backgroundColor,
         textColor: template.textColor,
         borderColor: template.borderColor,
@@ -457,6 +483,54 @@ export function DiplomaManagementPage() {
                                 <FormControl>
                                   <Input placeholder="جامعة الإمام الزُّهري" {...field} />
                                 </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="courseIds"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>اختيار المواد الدراسية</FormLabel>
+                                <div className="text-sm text-gray-600 mb-3">
+                                  اختر المواد التي سيحصل الطلاب على هذه الشهادة عند إكمالها (اترك فارغاً للتطبيق على جميع المواد)
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-40 overflow-y-auto border rounded-lg p-3">
+                                  {courses.length === 0 ? (
+                                    <div className="text-center text-gray-500 py-4 col-span-full">
+                                      <i className="fas fa-book text-2xl mb-2"></i>
+                                      <p>لا توجد مواد دراسية متاحة</p>
+                                    </div>
+                                  ) : (
+                                    courses.map((course: Course) => (
+                                      <div key={course.id} className="flex items-center space-x-2 space-x-reverse">
+                                        <Checkbox
+                                          id={`course-${course.id}`}
+                                          checked={field.value?.includes(course.id) || false}
+                                          onCheckedChange={(checked) => {
+                                            const currentIds = field.value || [];
+                                            if (checked) {
+                                              field.onChange([...currentIds, course.id]);
+                                            } else {
+                                              field.onChange(currentIds.filter((id: string) => id !== course.id));
+                                            }
+                                          }}
+                                        />
+                                        <label
+                                          htmlFor={`course-${course.id}`}
+                                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                        >
+                                          {course.title}
+                                        </label>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-2">
+                                  المواد المحددة: {field.value?.length || 0} من {courses.length}
+                                </div>
                                 <FormMessage />
                               </FormItem>
                             )}

@@ -51,7 +51,7 @@ export default function VideoPlayer() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const [isYouTubePlayerReady, setIsYouTubePlayerReady] = useState(false);
   const videoElRef = useRef<HTMLVideoElement | null>(null);
   const ytPlayerRef = useRef<any>(null);
   const ytIntervalRef = useRef<number | null>(null);
@@ -62,19 +62,25 @@ export default function VideoPlayer() {
   const courseIdStr = courseId!;
   const lessonIdStr = lessonId!;
 
-  const { data: course } = useQuery<Course>({
+  const { data: course, isLoading: courseLoading, error: courseError } = useQuery<Course>({
     queryKey: ["api", "courses", courseIdStr],
-    retry: false,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
-  const { data: lessons } = useQuery<Lesson[]>({
+  const { data: lessons, isLoading: lessonsLoading, error: lessonsError } = useQuery<Lesson[]>({
     queryKey: ["api", "courses", courseIdStr, "lessons"],
-    retry: false,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
-  const { data: courseProgress } = useQuery<CourseProgress>({
+  const { data: courseProgress, isLoading: progressLoading, error: progressError } = useQuery<CourseProgress>({
     queryKey: ["api", "courses", courseIdStr, "progress"],
-    retry: false,
+    retry: 2,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: false,
   });
 
   const currentLesson = lessons?.find(l => l.id === lessonIdStr);
@@ -120,20 +126,110 @@ export default function VideoPlayer() {
     }
   }, [currentLesson, currentProgress]);
 
-  // Auto-save progress every 10 seconds (native <video> only)
+  // Auto-save progress every 30 seconds (native <video> only) - reduced frequency
   useEffect(() => {
     const video = videoElRef.current;
-    if (!video) return;
+    if (!video || !currentLesson?.videoUrl) return;
+    
     const handler = setInterval(() => {
+      if (video.paused) return; // Don't update when paused
       const watched = Math.floor(video.currentTime || 0);
-      const total = Math.floor(video.duration || duration || currentLesson?.duration || 0);
+      const total = Math.floor(video.duration || currentLesson?.duration || 0);
       const isCompleted = total > 0 && watched >= total * 0.9;
-      setCurrentTime(watched);
-      setDuration(total);
+      // Only update if there's a significant change
+      if (Math.abs(watched - currentTime) >= 1) {
+        setCurrentTime(watched);
+      }
+      if (total > 0 && total !== duration) {
+        setDuration(total);
+      }
       updateProgressMutation.mutate({ watchedDuration: watched, isCompleted });
-    }, 10000);
+    }, 30000); // Increased to 30 seconds
+    
     return () => clearInterval(handler);
-  }, [updateProgressMutation, duration, currentLesson]);
+  }, [currentLesson?.videoUrl, updateProgressMutation]);
+
+  // Handle native video events
+  useEffect(() => {
+    const video = videoElRef.current;
+    if (!video || !currentLesson?.videoUrl) return;
+
+    const handleTimeUpdate = () => {
+      const watched = Math.floor(video.currentTime || 0);
+      // Throttle time updates to prevent excessive re-renders
+      if (Math.abs(watched - currentTime) >= 1) {
+        setCurrentTime(watched);
+      }
+    };
+
+    const handleLoadedMetadata = () => {
+      const total = Math.floor(video.duration || 0);
+      if (total > 0) {
+        setDuration(total);
+      }
+      // REMOVED: Don't set currentTime here as it causes restarts
+      // if (currentProgress?.watchedDuration && currentProgress.watchedDuration > 0) {
+      //   video.currentTime = currentProgress.watchedDuration;
+      // }
+    };
+
+    const handleEnded = () => {
+      const total = Math.floor(video.duration || 0);
+      setCurrentTime(total);
+      setIsPlaying(false);
+      updateProgressMutation.mutate({
+        watchedDuration: total,
+        isCompleted: true,
+      });
+    };
+
+    const handleError = (e: Event) => {
+      console.error('Video error:', e);
+    };
+
+    // Throttle timeupdate events
+    let timeUpdateTimeout: NodeJS.Timeout;
+    const throttledTimeUpdate = () => {
+      clearTimeout(timeUpdateTimeout);
+      timeUpdateTimeout = setTimeout(handleTimeUpdate, 100);
+    };
+
+    video.addEventListener('timeupdate', throttledTimeUpdate);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('ended', handleEnded);
+    video.addEventListener('error', handleError);
+
+    return () => {
+      clearTimeout(timeUpdateTimeout);
+      video.removeEventListener('timeupdate', throttledTimeUpdate);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('error', handleError);
+    };
+  }, [currentLesson?.videoUrl]);
+
+  // Set initial video position when video is ready (separate from events to avoid restart)
+  useEffect(() => {
+    const video = videoElRef.current;
+    if (!video || !currentProgress?.watchedDuration || currentProgress.watchedDuration <= 0) return;
+
+    const setInitialPosition = () => {
+      if (video.readyState >= 2 && video.duration > 0) { // HAVE_CURRENT_DATA or higher
+        video.currentTime = Math.min(currentProgress.watchedDuration, video.duration - 1);
+        video.removeEventListener('loadeddata', setInitialPosition);
+      }
+    };
+
+    if (video.readyState >= 2) {
+      setInitialPosition();
+    } else {
+      video.addEventListener('loadeddata', setInitialPosition);
+    }
+
+    return () => {
+      video.removeEventListener('loadeddata', setInitialPosition);
+    };
+  }, [currentProgress?.watchedDuration, currentLesson?.id]);
 
   // YouTube embed tracking (requires enablejsapi=1). Keep a single player instance.
   useEffect(() => {
@@ -143,121 +239,338 @@ export default function VideoPlayer() {
 
     // Load YT API once
     const loadYouTubeApi = () =>
-      new Promise<void>((resolve) => {
+      new Promise<void>((resolve, reject) => {
+        // Check if API is already loaded
+        if ((window as any).YT && (window as any).YT.Player) {
+          return resolve();
+        }
+
         const existing = document.getElementById("youtube-iframe-api");
-        if (existing) return resolve();
+        if (existing) {
+          // Wait for existing script to load
+          const checkReady = () => {
+            if ((window as any).YT && (window as any).YT.Player) {
+              resolve();
+            } else {
+              setTimeout(checkReady, 100);
+            }
+          };
+          checkReady();
+          return;
+        }
+
         const tag = document.createElement("script");
         tag.id = "youtube-iframe-api";
         tag.src = "https://www.youtube.com/iframe_api";
+        tag.onload = () => {
+          const checkReady = () => {
+            if ((window as any).YT && (window as any).YT.Player) {
+              resolve();
+            } else {
+              setTimeout(checkReady, 100);
+            }
+          };
+          checkReady();
+        };
+        tag.onerror = () => reject(new Error('Failed to load YouTube API'));
         (window as any).onYouTubeIframeAPIReady = () => resolve();
         document.body.appendChild(tag);
       });
 
-    let cancelled = false;
-    void (async () => {
-      await loadYouTubeApi();
-      if (cancelled) return;
-      const YT = (window as any).YT;
-      if (!YT || !YT.Player) return;
-      const videoId = getYouTubeId(currentLesson.videoUrl);
-      if (!videoId) return;
-      const container = document.getElementById("yt-player");
-      if (!container) return;
+    const initializePlayer = async () => {
+      try {
+        await loadYouTubeApi();
+        
+        const YT = (window as any).YT;
+        if (!YT || !YT.Player) {
+          console.error('YouTube API not available');
+          return;
+        }
 
-      if (ytPlayerRef.current) {
-        // Reuse existing player
-        try {
-          ytPlayerRef.current.loadVideoById(videoId);
-        } catch {}
-      } else {
-        ytPlayerRef.current = new YT.Player("yt-player", {
+        const videoId = getYouTubeId(currentLesson.videoUrl);
+        if (!videoId) {
+          console.error('Invalid YouTube URL:', currentLesson.videoUrl);
+          return;
+        }
+
+        // Wait for DOM element to be available
+        const waitForElement = () => {
+          const container = document.getElementById("yt-player");
+          if (container) {
+            return Promise.resolve(container);
+          }
+          return new Promise<HTMLElement>((resolve) => {
+            const observer = new MutationObserver(() => {
+              const el = document.getElementById("yt-player");
+              if (el) {
+                observer.disconnect();
+                resolve(el);
+              }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+            
+            // Fallback timeout
+            setTimeout(() => {
+              observer.disconnect();
+              const el = document.getElementById("yt-player");
+              if (el) resolve(el);
+            }, 5000);
+          });
+        };
+
+        const container = await waitForElement();
+        if (!container) {
+          console.error('YouTube player container not found');
+          return;
+        }
+
+        // If player already exists, just load the new video
+        if (ytPlayerRef.current && typeof ytPlayerRef.current.loadVideoById === 'function') {
+          try {
+            console.log('Loading new video in existing player:', videoId);
+            ytPlayerRef.current.loadVideoById({
+              videoId: videoId,
+              startSeconds: currentProgress?.watchedDuration || 0
+            });
+            return;
+          } catch (e) {
+            console.warn('Error loading video in existing player, recreating:', e);
+            // Fall through to recreate player
+          }
+        }
+
+        // Destroy existing player if it exists
+        if (ytPlayerRef.current) {
+          try {
+            ytPlayerRef.current.destroy();
+          } catch (e) {
+            console.warn('Error destroying existing YouTube player:', e);
+          }
+          ytPlayerRef.current = null;
+        }
+
+        // Clear the container
+        container.innerHTML = '';
+
+        // Create new player
+        ytPlayerRef.current = new YT.Player(container, {
           videoId,
+          width: '100%',
+          height: '100%',
+          playerVars: {
+            enablejsapi: 1,
+            origin: window.location.origin,
+            modestbranding: 1,
+            rel: 0
+          },
           events: {
+            onReady: (event: any) => {
+              console.log('YouTube player ready for video:', videoId);
+              setIsYouTubePlayerReady(true);
+              // Set initial position if available
+              if (currentProgress?.watchedDuration && currentProgress.watchedDuration > 0) {
+                try {
+                  event.target.seekTo(currentProgress.watchedDuration, true);
+                } catch (e) {
+                  console.warn('Error setting initial position:', e);
+                }
+              }
+            },
             onStateChange: (event: any) => {
               // Start/stop interval when playing/paused
               if (event.data === YT.PlayerState.PLAYING) {
                 if (ytIntervalRef.current) window.clearInterval(ytIntervalRef.current);
                 ytIntervalRef.current = window.setInterval(() => {
-                  const watched = Math.floor(ytPlayerRef.current?.getCurrentTime() || 0);
-                  const total = Math.floor(ytPlayerRef.current?.getDuration() || 0);
-                  const isCompleted = total > 0 && watched >= total * 0.9;
-                  setCurrentTime(watched);
-                  setDuration(total || duration);
-                  updateProgressMutation.mutate({ watchedDuration: watched, isCompleted });
-                }, 5000);
+                  try {
+                    const watched = Math.floor(ytPlayerRef.current?.getCurrentTime() || 0);
+                    const total = Math.floor(ytPlayerRef.current?.getDuration() || 0);
+                    const isCompleted = total > 0 && watched >= total * 0.9;
+                    // Throttle state updates
+                    if (Math.abs(watched - currentTime) >= 1) {
+                      setCurrentTime(watched);
+                    }
+                    if (total > 0 && total !== duration) {
+                      setDuration(total);
+                    }
+                    updateProgressMutation.mutate({ watchedDuration: watched, isCompleted });
+                  } catch (e) {
+                    console.warn('Error updating progress:', e);
+                  }
+                }, 10000); // Update every 10 seconds
               } else {
                 if (ytIntervalRef.current) {
                   window.clearInterval(ytIntervalRef.current);
                   ytIntervalRef.current = null;
                 }
                 if (event.data === YT.PlayerState.ENDED) {
-                  const watched = Math.floor(ytPlayerRef.current?.getDuration() || 0);
-                  const total = Math.floor(ytPlayerRef.current?.getDuration() || 0);
-                  setCurrentTime(watched);
-                  setDuration(total || duration);
-                  updateProgressMutation.mutate({ watchedDuration: watched, isCompleted: true });
+                  try {
+                    const watched = Math.floor(ytPlayerRef.current?.getDuration() || 0);
+                    const total = Math.floor(ytPlayerRef.current?.getDuration() || 0);
+                    setCurrentTime(watched);
+                    setDuration(total || duration);
+                    updateProgressMutation.mutate({ watchedDuration: watched, isCompleted: true });
+                  } catch (e) {
+                    console.warn('Error handling video end:', e);
+                  }
                 }
               }
             },
+            onError: (event: any) => {
+              console.error('YouTube player error:', event.data);
+              // Reset ready state on error
+              setIsYouTubePlayerReady(false);
+              
+              // Show fallback message or retry logic could be added here
+              const container = document.getElementById("yt-player");
+              if (container) {
+                container.innerHTML = `
+                  <div class="flex items-center justify-center h-full text-white text-center">
+                    <div>
+                      <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                      <p class="text-lg mb-2">خطأ في تحميل الفيديو</p>
+                      <p class="text-sm text-gray-300">يرجى المحاولة مرة أخرى</p>
+                    </div>
+                  </div>
+                `;
+              }
+            }
           },
         });
+      } catch (error) {
+        console.error('Error initializing YouTube player:', error);
       }
-    })();
+    };
+
+    let cancelled = false;
+    
+    // Small delay to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        initializePlayer();
+      }
+    }, 100);
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
       if (ytIntervalRef.current) {
         window.clearInterval(ytIntervalRef.current);
         ytIntervalRef.current = null;
       }
+      // Don't destroy player here - let the cleanup effect handle it
     };
-  }, [currentLesson?.videoUrl, updateProgressMutation, duration]);
+  }, [currentLesson?.videoUrl, currentLesson?.id, updateProgressMutation]);
 
-  // Video playback simulation
+  // Cleanup effect to destroy YouTube player when component unmounts
   useEffect(() => {
-    if (isPlaying && currentTime < duration) {
-      intervalRef.current = setInterval(() => {
-        setCurrentTime(prev => {
-          const newTime = prev + 1;
-          if (newTime >= duration) {
-            setIsPlaying(false);
-            // Mark as completed when video ends
-            updateProgressMutation.mutate({
-              watchedDuration: duration,
-              isCompleted: true,
-            });
-          }
-          return newTime;
-        });
-      }, 1000);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    }
-
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (ytPlayerRef.current) {
+        try {
+          ytPlayerRef.current.destroy();
+        } catch (e) {
+          console.warn('Error destroying YouTube player on unmount:', e);
+        }
+        ytPlayerRef.current = null;
       }
+      if (ytIntervalRef.current) {
+        window.clearInterval(ytIntervalRef.current);
+        ytIntervalRef.current = null;
+      }
+      setIsYouTubePlayerReady(false);
     };
-  }, [isPlaying, currentTime, duration, updateProgressMutation]);
+  }, []);
 
-  const togglePlayPause = () => {
-    const video = videoElRef.current;
-    if (!video) return;
-    if (video.paused) {
-      void video.play();
-      setIsPlaying(true);
-    } else {
-      video.pause();
-      setIsPlaying(false);
+  // Handle lesson changes when YouTube player is already ready
+  useEffect(() => {
+    if (!currentLesson?.videoUrl || !/(youtube\.com|youtu\.be)/.test(currentLesson.videoUrl)) {
+      return;
     }
-  };
 
-  const handleSeek = (newTime: number) => {
-    setCurrentTime(newTime);
-  };
+    if (isYouTubePlayerReady && ytPlayerRef.current && typeof ytPlayerRef.current.loadVideoById === 'function') {
+      const videoId = getYouTubeId(currentLesson.videoUrl);
+      if (videoId) {
+        try {
+          console.log('Loading video in ready player:', videoId);
+          ytPlayerRef.current.loadVideoById({
+            videoId: videoId,
+            startSeconds: currentProgress?.watchedDuration || 0
+          });
+        } catch (e) {
+          console.warn('Error loading video in ready player:', e);
+        }
+      }
+    }
+  }, [currentLesson?.id, currentLesson?.videoUrl, isYouTubePlayerReady, currentProgress?.watchedDuration]);
+
+  // Reset YouTube player state when switching to non-YouTube videos
+  useEffect(() => {
+    if (currentLesson?.videoUrl && !/(youtube\.com|youtu\.be)/.test(currentLesson.videoUrl)) {
+      // Reset YouTube player state when switching to non-YouTube video
+      setIsYouTubePlayerReady(false);
+      if (ytPlayerRef.current) {
+        try {
+          ytPlayerRef.current.destroy();
+        } catch (e) {
+          console.warn('Error destroying YouTube player when switching to non-YouTube video:', e);
+        }
+        ytPlayerRef.current = null;
+      }
+      if (ytIntervalRef.current) {
+        window.clearInterval(ytIntervalRef.current);
+        ytIntervalRef.current = null;
+      }
+    }
+  }, [currentLesson?.videoUrl]);
+
+  // Determine if we're still in the initial loading state
+  const isInitialLoading = courseLoading || lessonsLoading || progressLoading;
+  
+  // Determine if there's an actual error (not just loading)
+  const hasError = (courseError || lessonsError || progressError) && !isInitialLoading;
+  
+  // Show loading state while data is being fetched
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50" dir="rtl">
+        <Header />
+        <main className="container mx-auto px-4 py-8 mt-12">
+          <Card className="mb-8">
+            <CardContent className="p-8 text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-500 mx-auto mb-4"></div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">جاري تحميل المحاضرة...</h2>
+              <p className="text-gray-600">يرجى الانتظار</p>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
+  // Show error state if there's a network or server error
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-gray-50" dir="rtl">
+        <Header />
+        <main className="container mx-auto px-4 py-8 mt-12">
+          <Card className="mb-8">
+            <CardContent className="p-8 text-center">
+              <i className="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">خطأ في تحميل البيانات</h2>
+              <p className="text-gray-600 mb-4">حدث خطأ أثناء تحميل بيانات المحاضرة. يرجى المحاولة مرة أخرى.</p>
+              <Button onClick={() => window.location.reload()} className="btn-primary">
+                <i className="fas fa-redo ml-2"></i>
+                إعادة المحاولة
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
+
+
+
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -283,19 +596,38 @@ export default function VideoPlayer() {
     return lessons.find(l => l.order === currentLesson.order - 1);
   };
 
-  if (!currentLesson) {
+  // Only show "lesson not found" if we have lessons data but the specific lesson isn't found
+  if (lessons && !currentLesson) {
     return (
       <div className="min-h-screen bg-gray-50" dir="rtl">
         <Header />
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8 mt-12">
           <Card>
             <CardContent className="p-8 text-center">
               <i className="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
               <h2 className="text-xl font-bold text-gray-900 mb-2">المحاضرة غير موجودة</h2>
               <p className="text-gray-600 mb-4">لم يتم العثور على المحاضرة المطلوبة</p>
-                    <Link href={`/course/${courseIdStr}`}>
+              <Link href={`/course/${courseIdStr}`}>
                 <Button>العودة للمادة</Button>
               </Link>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
+  // If we still don't have lessons data, keep showing loading (this handles edge cases)
+  if (!lessons) {
+    return (
+      <div className="min-h-screen bg-gray-50" dir="rtl">
+        <Header />
+        <main className="container mx-auto px-4 py-8 mt-12">
+          <Card className="mb-8">
+            <CardContent className="p-8 text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-500 mx-auto mb-4"></div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">جاري تحميل المحاضرة...</h2>
+              <p className="text-gray-600">يرجى الانتظار</p>
             </CardContent>
           </Card>
         </main>
@@ -321,13 +653,26 @@ export default function VideoPlayer() {
     <div className="min-h-screen bg-gray-50" dir="rtl">
       <Header />
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 mt-12">
         {/* Video Player */}
         <Card className="mb-8 overflow-hidden">
           <div className="bg-black aspect-video relative flex items-center justify-center">
-            {currentLesson.videoUrl ? (
+            {currentLesson?.videoUrl ? (
               isYouTubeUrl(currentLesson.videoUrl) ? (
-                <div id="yt-player" className="w-full h-full" />
+                <div className="relative w-full h-full min-h-[400px]" style={{ aspectRatio: '16/9' }}>
+                  <div 
+                    id="yt-player" 
+                    className="w-full h-full"
+                  />
+                  {!isYouTubePlayerReady && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                      <div className="text-center text-white">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                        <p>جاري تحميل الفيديو...</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : isVimeoUrl(currentLesson.videoUrl) ? (
                 <iframe
                   key={`vim-${lessonIdStr}`}
@@ -344,15 +689,18 @@ export default function VideoPlayer() {
                   className="w-full h-full"
                   src={currentLesson.videoUrl}
                   controls
+                  preload="metadata"
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
-                  onLoadedMetadata={(e) => setDuration(Math.floor((e.target as HTMLVideoElement).duration))}
+                  onError={(e) => {
+                    console.error('Video loading error:', e);
+                  }}
                 />
               )
             ) : (
               <div className="text-white text-center">
                 <i className="fas fa-play-circle text-6xl mb-4"></i>
-                <p className="text-lg">{currentLesson.title}</p>
+                <p className="text-lg">{currentLesson?.title || 'لا يوجد فيديو'}</p>
                 <p className="text-sm text-gray-300 mt-2">
                   {course?.instructor} - {course?.title}
                 </p>
@@ -363,9 +711,9 @@ export default function VideoPlayer() {
           <CardContent className="p-6">
             <div className="grid md:grid-cols-3 gap-6">
               <div className="md:col-span-2">
-                <h1 className="font-amiri font-bold text-2xl mb-3">{currentLesson.title}</h1>
+                <h1 className="font-amiri font-bold text-2xl mb-3">{currentLesson?.title}</h1>
                 <p className="text-gray-600 mb-4">{course?.instructor}</p>
-                <p className="text-gray-700 leading-relaxed mb-4">{currentLesson.description}</p>
+                <p className="text-gray-700 leading-relaxed mb-4">{currentLesson?.description}</p>
                 
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                   <h4 className="font-semibold text-green-800 mb-2">متطلبات إتمام المحاضرة:</h4>

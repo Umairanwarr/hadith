@@ -143,13 +143,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if ((file.fieldname === 'thumbnail' || file.fieldname === 'image') && file.mimetype.startsWith('image/')) {
         cb(null, true);
       }
-      // Allow PDFs and text files for syllabus field
-      else if (file.fieldname === 'syllabus' && (file.mimetype.startsWith('application/pdf') || file.mimetype.startsWith('text/'))) {
+      // Allow PDFs and text files for syllabus and curriculum fields
+      else if ((file.fieldname === 'syllabus' || file.fieldname === 'curriculum') && 
+               (file.mimetype.startsWith('application/pdf') || 
+                file.mimetype.startsWith('text/') ||
+                file.mimetype === 'application/msword' ||
+                file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
         cb(null, true);
       }
       // Reject other file types
       else {
-        cb(new Error(`Invalid file type for ${file.fieldname}. Thumbnail/Image must be an image, syllabus must be PDF or text.`));
+        cb(new Error(`Invalid file type for ${file.fieldname}. Thumbnail/Image must be an image, syllabus/curriculum must be PDF, Word, or text.`));
       }
     },
   });
@@ -994,6 +998,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // File upload endpoint for course curriculum
+  app.post('/api/upload/curriculum', isAuthenticated, isAdmin,
+    upload.single('curriculum'),
+    async (req: any, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        // Create a temporary file path for Cloudinary upload
+        const tempFilePath = path.join(__dirname, '../temp', `temp-curriculum-${Date.now()}-${req.file.originalname}`);
+        
+        // Ensure temp directory exists
+        const tempDir = path.dirname(tempFilePath);
+        if (!fs.existsSync(tempDir)) {
+          fs.mkdirSync(tempDir, { recursive: true });
+        }
+
+        // Write buffer to temporary file
+        fs.writeFileSync(tempFilePath, req.file.buffer);
+
+        // Upload to Cloudinary
+        const cloudinaryResponse = await uploadOnCloudinary(tempFilePath);
+        
+        // Clean up temporary file
+        if (fs.existsSync(tempFilePath)) {
+          fs.unlinkSync(tempFilePath);
+        }
+
+        if (!cloudinaryResponse) {
+          return res.status(500).json({ message: 'Failed to upload to Cloudinary' });
+        }
+
+        res.json({
+          url: cloudinaryResponse.secure_url,
+          fileName: req.file.originalname,
+          size: req.file.size,
+          cloudinaryId: cloudinaryResponse.public_id,
+          message: 'Curriculum uploaded successfully to Cloudinary',
+        });
+      } catch (error) {
+        console.error('Curriculum upload error:', error);
+        res.status(500).json({ message: 'Failed to upload curriculum' });
+      }
+    }
+  );
+
   // Course management (admin only)
   /**
    * @swagger
@@ -1125,7 +1176,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     upload.fields([
       { name: 'thumbnail', maxCount: 1 },
       { name: 'image', maxCount: 1 },
-      { name: 'syllabus', maxCount: 1 }
+      { name: 'syllabus', maxCount: 1 },
+      { name: 'curriculum', maxCount: 1 }
     ]),
     async (req: any, res) => {
       try {
@@ -1238,6 +1290,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
 
+        // Handle curriculum upload if provided
+        let curriculumUrl = req.body.curriculumUrl;
+        let curriculumFileName = req.body.curriculumFileName;
+        
+        if (req.files && req.files.curriculum && req.files.curriculum[0]) {
+          const curriculumFile = req.files.curriculum[0];
+          
+          // Create a temporary file path for Cloudinary upload
+          const tempCurriculumPath = path.join(__dirname, '../temp', `temp-curriculum-${Date.now()}-${curriculumFile.originalname}`);
+          
+          // Ensure temp directory exists
+          const tempDir = path.dirname(tempCurriculumPath);
+          if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+          }
+          
+          // Write buffer to temporary file
+          fs.writeFileSync(tempCurriculumPath, curriculumFile.buffer);
+          
+          // Upload to Cloudinary as auto (for PDFs and documents - let Cloudinary detect the type)
+          const curriculumResponse = await uploadOnCloudinary(tempCurriculumPath, 'auto');
+          
+          // Clean up temporary file
+          if (fs.existsSync(tempCurriculumPath)) {
+            fs.unlinkSync(tempCurriculumPath);
+          }
+          
+          if (curriculumResponse) {
+            curriculumUrl = curriculumResponse.secure_url;
+            curriculumFileName = curriculumFile.originalname;
+            console.log('✅ Curriculum uploaded to Cloudinary:', curriculumUrl);
+          } else {
+            console.error('❌ Failed to upload curriculum to Cloudinary');
+            return res.status(500).json({ message: 'Failed to upload curriculum to Cloudinary' });
+          }
+        }
+
         // Prepare course data with uploaded URLs
         const courseDataToValidate = {
           ...req.body,
@@ -1245,6 +1334,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           imageUrl: imageUrl || req.body.imageUrl,
           syllabusUrl: syllabusUrl || req.body.syllabusUrl,
           syllabusFileName: syllabusFileName || req.body.syllabusFileName,
+          curriculumUrl: curriculumUrl || req.body.curriculumUrl,
+          curriculumFileName: curriculumFileName || req.body.curriculumFileName,
         };
 
         // Convert string fields to numbers before validation
@@ -1257,6 +1348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Validate the request body using the schema
         const validationResult = createCourseSchema.safeParse(courseDataToValidate);
+
         if (!validationResult.success) {
           console.error('❌ Validation failed:', validationResult.error);
           return res.status(400).json({
@@ -1428,7 +1520,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     upload.fields([
       { name: 'thumbnail', maxCount: 1 },
       { name: 'image', maxCount: 1 },
-      { name: 'syllabus', maxCount: 1 }
+      { name: 'syllabus', maxCount: 1 },
+      { name: 'curriculum', maxCount: 1 }
     ]),
     async (req: any, res) => {
       try {
@@ -1539,6 +1632,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else {
             console.error('❌ Failed to upload syllabus to Cloudinary');
             return res.status(500).json({ message: 'Failed to upload syllabus to Cloudinary' });
+          }
+        }
+
+        // Handle curriculum upload if provided
+        let curriculumUrl = req.body.curriculumUrl;
+        let curriculumFileName = req.body.curriculumFileName;
+        
+        if (req.files && req.files.curriculum && req.files.curriculum[0]) {
+          const curriculumFile = req.files.curriculum[0];
+          
+          // Create a temporary file path for Cloudinary upload
+          const tempCurriculumPath = path.join(__dirname, '../temp', `temp-curriculum-update-${Date.now()}-${curriculumFile.originalname}`);
+          
+          // Ensure temp directory exists
+          const tempDir = path.dirname(tempCurriculumPath);
+          if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+          }
+          
+          // Write buffer to temporary file
+          fs.writeFileSync(tempCurriculumPath, curriculumFile.buffer);
+          
+          // Upload to Cloudinary as auto (for PDFs and documents - let Cloudinary detect the type)
+          const curriculumResponse = await uploadOnCloudinary(tempCurriculumPath, 'auto');
+          
+          // Clean up temporary file
+          if (fs.existsSync(tempCurriculumPath)) {
+            fs.unlinkSync(tempCurriculumPath);
+          }
+          
+          if (curriculumResponse) {
+            curriculumUrl = curriculumResponse.secure_url;
+            curriculumFileName = curriculumFile.originalname;
+            console.log('✅ Curriculum updated on Cloudinary:', curriculumUrl);
+          } else {
+            console.error('❌ Failed to upload curriculum to Cloudinary');
+            return res.status(500).json({ message: 'Failed to upload curriculum to Cloudinary' });
           }
         }
 
@@ -2678,6 +2808,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             honors
           });
 
+          // Find appropriate diploma template for this course
+          const diplomaTemplate = await storage.getDiplomaTemplateForCourse(attempt.courseId);
+          console.log('Selected diploma template:', diplomaTemplate?.id, diplomaTemplate?.title);
+
           const certificate = await storage.createCertificate({
             userId,
             courseId: attempt.courseId,
@@ -2688,6 +2822,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             specialization: course?.title || 'علوم الحديث',
             honors,
             completionDate: new Date(),
+            diplomaTemplateId: diplomaTemplate?.id || null, // Use course-specific template
           });
 
           console.log('Certificate created successfully:', certificate.id);
@@ -3590,7 +3725,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
         ];
 
-        const createdCourses = [];
+        const createdCourses: any[] = [];
         for (const courseData of coursesData) {
           const course = await storage.createCourse(courseData);
           createdCourses.push(course);
@@ -4569,22 +4704,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   );
 
-  // Image upload route
-  app.post('/api/upload-image', isAuthenticated, upload.single('image'), (req, res) => {
+  /**
+   * @swagger
+   * /api/upload-image:
+   *   post:
+   *     summary: Upload image to Cloudinary
+   *     description: Upload an image to Cloudinary and return the secure URL
+   *     tags: [Image Upload]
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         multipart/form-data:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               image:
+   *                 type: string
+   *                 format: binary
+   *                 description: Image file to upload
+   *     responses:
+   *       200:
+   *         description: Image uploaded successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 url:
+   *                   type: string
+   *                   description: Cloudinary secure URL of the uploaded image
+   *                   example: "https://res.cloudinary.com/your-cloud/image/upload/v1/sample.jpg"
+   *                 public_id:
+   *                   type: string
+   *                   description: Cloudinary public ID of the uploaded image
+   *       400:
+   *         description: Bad request - no image file provided
+   *       401:
+   *         description: Unauthorized - authentication required
+   *       500:
+   *         description: Internal server error
+   */
+  app.post('/api/upload-image', isAuthenticated, upload.single('image'), async (req, res) => {
     try {
+      console.log('🔍 Upload request received');
       if (!req.file) {
+        console.log('❌ No file provided');
         return res.status(400).json({ message: 'No image file provided' });
       }
 
-      // Return the URL to access the uploaded image
-      const imageUrl = `/uploads/${req.file.filename}`;
-      res.json({ url: imageUrl });
+      console.log('📁 File received:', {
+        filename: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      });
+
+      // Create a temporary file path for Cloudinary upload
+      const tempImagePath = path.join(__dirname, '../temp', `temp-image-${Date.now()}-${req.file.originalname}`);
+      
+      console.log('📂 Temp file path:', tempImagePath);
+      
+      // Ensure temp directory exists
+      const tempDir = path.dirname(tempImagePath);
+      if (!fs.existsSync(tempDir)) {
+        console.log('📁 Creating temp directory:', tempDir);
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      
+      // Write buffer to temporary file
+      fs.writeFileSync(tempImagePath, req.file.buffer);
+      console.log('💾 File written to temp location');
+      
+      // Upload to Cloudinary
+      console.log('☁️ Uploading to Cloudinary...');
+      const cloudinaryResponse = await uploadOnCloudinary(tempImagePath, 'image');
+      
+      // Clean up temporary file
+      if (fs.existsSync(tempImagePath)) {
+        fs.unlinkSync(tempImagePath);
+        console.log('🗑️ Temp file cleaned up');
+      }
+      
+      if (cloudinaryResponse) {
+        console.log('✅ Image uploaded to Cloudinary:', cloudinaryResponse.secure_url);
+        res.json({ 
+          url: cloudinaryResponse.secure_url,
+          public_id: cloudinaryResponse.public_id
+        });
+      } else {
+        console.error('❌ Failed to upload image to Cloudinary');
+        return res.status(500).json({ message: 'Failed to upload image to Cloudinary' });
+      }
     } catch (error) {
       console.error('Error uploading image:', error);
       res.status(500).json({ message: 'Failed to upload image' });
     }
-  }
-  );
+  });
 
   // Diploma Templates routes
   /**
